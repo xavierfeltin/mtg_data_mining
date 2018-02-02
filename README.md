@@ -43,6 +43,8 @@ In order to exploit the FPGrowth results, I transformed the FPGrowth output so t
 
 ## First results
 At the moment, the input data are 97 000 decks from Magic the gathering tournaments. 
+
+
 The frequent card sets and rules generated from Apriori and FPgrowth are relevant to build consistent decks. The rules suggest common cards for classic deck building approaches (mono color decks, specialized decks, ...)
 
 However, in this game, players look for high value combinations. These combinations bring to the deck a huge victory potential (globally or againt specific decks).
