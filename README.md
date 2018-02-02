@@ -44,11 +44,13 @@ In order to exploit the FPGrowth results, I transformed the FPGrowth output so t
 ## First results
 At the moment, the input data are a bit less of 100 000 decks from Magic the gathering tournaments. 
 
-
 The frequent card sets and rules generated from Apriori and FPgrowth are relevant to build consistent decks. The rules suggest common cards for classic deck building approaches (mono color decks, specialized decks, ...)
 
 However, in this game, players look for high value combinations. These combinations bring to the deck a huge victory potential (globally or againt specific decks).
 These combinations even if they are present in existing decks are difficult to make appear in rules. This is due to the high use of really common cards across decks. These cards are by nature really frequent and tend to diluate specific combinations played more in specific cases.
+
+Card distribution across the deck database:
+![card_distribution](https://github.com/xavierfeltin/mtg_data_mining/blob/master/resources/card_distribution_in_deck_database.png)
 
 I have been able to make appear such a combination by extracting from the data common played cards (present more than 10% across all the decks).
 This combination take advantage of the special rule of each card to give bonuses on the overall : 
