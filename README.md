@@ -42,7 +42,7 @@ The association rules generation is based on an algorithm based on the Apriori a
 In order to exploit the FPGrowth results, I transformed the FPGrowth output so they may be used by the Apriori association rules function.
 
 ## First results
-At the moment, the input data are 97 000 decks from Magic the gathering tournaments. 
+At the moment, the input data are a bit less of 100 000 decks from Magic the gathering tournaments. 
 
 
 The frequent card sets and rules generated from Apriori and FPgrowth are relevant to build consistent decks. The rules suggest common cards for classic deck building approaches (mono color decks, specialized decks, ...)
