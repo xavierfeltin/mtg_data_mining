@@ -5,14 +5,16 @@ import operator
 class MagicLoader:
     def __init__(self, file_type = 'card'):
         self.texts = []
-        self.names = []
+        #self.names = []
         self.type = file_type
         self.lands = []
+        self.hash_name_id = {}
+        self.hash_id_name = {}
 
     def load(self, path):
         read_json = json.load(open(path))
 
-        for card in read_json:
+        for internal_id, card in enumerate(read_json):
             description = self.get_field(read_json[card], 'colors')
             description += ', ' + self.get_field(read_json[card], 'types')
             description += ', ' + self.get_field(read_json[card], 'subtypes')
@@ -20,7 +22,11 @@ class MagicLoader:
             description += ', ' + self.get_field(read_json[card], 'toughness')
             description += ', ' + self.get_field(read_json[card], 'text')
             self.texts.append(description)
-            self.names.append(self.get_field(read_json[card], 'name'))
+
+            name = self.get_field(read_json[card], 'name')
+            #self.names.append(name)
+            self.hash_name_id[name] = internal_id
+            self.hash_id_name[internal_id] = name
 
             if self.get_field(read_json[card],'types') == 'Land':
                 self.lands.append(self.get_field(read_json[card],'name'))
@@ -39,10 +45,11 @@ class DeckManager:
         self.decks = []
         self.cards = set()
 
-    def load_from_csv(self, list_path):
+    def load_from_csv(self, list_path, cards_loader = None):
         """
         Load decks from a list of csv files
         Decks are a list of the cards name building it
+        If loader is set, match the cards with an internal ID
         """
 
         for file in list_path:
@@ -53,7 +60,11 @@ class DeckManager:
                 for row in reader:
                     if nb_line == 0:
                         for card in row:
-                            file_cards.append(card)
+                            card = DeckManager.rename_card(card)
+                            card_id = card
+                            if cards_loader is not None:
+                                card_id = cards_loader.hash_name_id[card]
+                            file_cards.append(card_id)
                     else:
                         deck = []
                         for i, nb_cards in enumerate(row):
@@ -61,6 +72,23 @@ class DeckManager:
                         self.decks.append(deck)
                     nb_line+=1
                 self.cards = set.union(self.cards, set(file_cards))
+
+    @staticmethod
+    def rename_card(name):
+        if name == 'Cut / Ribbons':
+            return 'Ribbons'
+        elif name == 'Fire / Ice':
+            return 'Fire' #could be Ice as well ... no way to know
+        elif name == 'Start / Finish':
+            return 'Start'  # could be Finish as well ... no way to know
+        elif name == 'Wear / Tear':
+            return 'Wear'  # could be Tear as well ... no way to know
+        elif name == 'Rough / Tumble':
+            return 'Rough'  # could be Tumble as well ... no way to know
+        elif name == 'Unkown Card':
+            return ''
+        else:
+            return name
 
     def extract_lands(self, land_cards):
         """
