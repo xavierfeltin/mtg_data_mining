@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from loader_magic import MagicLoader, DeckManager
 from lsa_encoder import DataCleaner, LSAEncoder
 from apriori_analyzer import APrioriAnalyzer
@@ -45,7 +46,7 @@ def find_frequent_items_fpgrowth():
     print('Clean deck')
     deck_loader = DeckManager()
     list_files = os.listdir("./db_decks")  # returns list
-    deck_loader.load_from_csv(list_files)
+    deck_loader.load_from_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands)
 
     cards_usage = APrioriAnalyzer.load_cache_count()

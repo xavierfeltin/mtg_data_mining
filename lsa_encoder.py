@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from random import randint
 from math import ceil
 from nltk.tokenize import word_tokenize
