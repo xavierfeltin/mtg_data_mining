@@ -44,7 +44,7 @@ In order to exploit the FPGrowth results, I transformed the FPGrowth output so t
 ## First results
 The frequent card sets and rules generated from Apriori and FPgrowth are relevant to build consistent decks. The rules suggest common cards for classic deck building approaches (mono color decks, specialized decks, ...)
 
-However, in this game, players look for high value combinations. These combinations bring to the deck a huge victory potential (globally or againt specific decks).
+However, in this game, players look for high value combinations. These combinations bring to the deck a huge victory potential (globally or against specific decks).
 These combinations even if they are present in existing decks are difficult to identify in all the generated rules. This is due to the high use of really common cards across decks. These cards are by nature really frequent and tend to diluate specific combinations played more in specific cases.
 
 Such a high-value combiantion takes advantage of the special rule of each card to give bonuses on the overall. For example: 
