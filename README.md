@@ -45,10 +45,9 @@ In order to exploit the FPGrowth results, I transformed the FPGrowth output so t
 The frequent card sets and rules generated from Apriori and FPgrowth are relevant to build consistent decks. The rules suggest common cards for classic deck building approaches (mono color decks, specialized decks, ...)
 
 However, in this game, players look for high value combinations. These combinations bring to the deck a huge victory potential (globally or againt specific decks).
-These combinations even if they are present in existing decks are difficult to make appear in rules. This is due to the high use of really common cards across decks. These cards are by nature really frequent and tend to diluate specific combinations played more in specific cases.
+These combinations even if they are present in existing decks are difficult to identify in all the generated rules. This is due to the high use of really common cards across decks. These cards are by nature really frequent and tend to diluate specific combinations played more in specific cases.
 
-I have been able to make appear such a combination by extracting from the data common played cards (present more than 10% across all the decks).
-This combination take advantage of the special rule of each card to give bonuses on the overall : 
+Such a high-value combiantion takes advantage of the special rule of each card to give bonuses on the overall. For example: 
   - Goblin King (http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=150140)
   - Gempalm incinerator (http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=166949)
   - Goblin Matron (http://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=184247)
@@ -59,6 +58,8 @@ This combination take advantage of the special rule of each card to give bonuses
 ## Next developments
 Due to its better computing performance, the main approach for frequent card set identification will be FPGrowth.
 The next developments will try to complete/improve the current implementation of this approach (memory usage, reducing non-pertinent and redundant generated rules, ...) 
+
+I will work with data from the website MTGDECKS.NET (http://mtgdecks.net). Its webmaster nicely gave me access to the decks of the last 500 tournaments. 
 
 ## Other developments
 A file is dedicated to encode cards into a vector of descriptors. I used LSA (Latent Semantic Analysis) for this purpose.
@@ -85,3 +86,6 @@ Association rules:
 LSA (Latent Semantic Analysis):
   - http://www.datascienceassn.org/sites/default/files/users/user1/lsa_presentation_final.pdf
   - https://machinelearningmastery.com/clean-text-machine-learning-python/
+
+Data resources:
+  - http://mtgdecks.net
