@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from loader_magic import MagicLoader, DeckManager
 from lsa_encoder import DataCleaner, LSAEncoder
 from apriori_analyzer import APrioriAnalyzer
