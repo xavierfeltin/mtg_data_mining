@@ -2,7 +2,6 @@
 import numpy as np
 from collections import OrderedDict
 from operator import itemgetter
-from math import inf
 
 class LCMAnalyzer:
     """
@@ -137,14 +136,32 @@ class LCMAnalyzer:
         :return: list of merged transactions, list of weights
         """
 
-        merged_transactions = transactions[:]
-        merged_weights = transactions[:]
+        merged_transactions = []
+        merged_weights = []
 
         # Step 1: sort transactions using radix sort
+        sorted_transactions = LCMAnalyzer.radix_sort(transactions)
+
         # Step 2: merge same transactions together and increase matching weights
+        for i, transaction in enumerate(sorted_transactions):
+            if len(merged_transactions) == 0:
+                merged_transactions.append(transaction)
+                merged_weights.append(1)
+            elif len(transaction) != len(merged_transactions[-1]):
+                merged_transactions.append(transaction)
+                merged_weights.append(1)
+            else:
+                j = 0
+                while j < len(transaction) and transaction[j] == merged_transactions[-1][j]:
+                    j +=1
 
-        return merged_transactions, merged_weights
+                if j == len(transaction):
+                    merged_weights[-1] += weights[i]
+                else:
+                    merged_transactions.append(transaction)
+                    merged_weights.append(1)
 
+        return np.asarray(merged_transactions), np.asarray(merged_weights)
 
     def load_data(self, database):
         """
