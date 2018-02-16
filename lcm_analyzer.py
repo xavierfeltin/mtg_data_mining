@@ -2,7 +2,7 @@
 import numpy as np
 from collections import OrderedDict
 from operator import itemgetter
-
+from math import inf
 
 class LCMAnalyzer:
     """
@@ -20,6 +20,7 @@ class LCMAnalyzer:
     ALL_FREQUENT_ITEMSETS = 0
     MAXIMAL_ITEMSETS = 1
     CLOSED_ITEMSETS = 2
+    END_NUMBER = 65000 #In Magic The Gathering, there are 19 000 cards at the moment. Avoid to use Float with math.inf
 
     def __init__(self, min_support = 0.2, c = 12):
         """
@@ -52,36 +53,80 @@ class LCMAnalyzer:
     def radix_sort(database):
         """
         Sort transactions in the database using radix sort
+        example: [[7,6,5,2,1], [5,4,3,2], [9,8,7,2,1]]
+        return: [[9,8,7,2,1], [7,6,5,2,1], [5,4,3,2]]
         :param database: list of transactions to sort
         :return: sorted database
         """
-        def list_to_buckets(array, base, iteration):
-            buckets = [[] for _ in range(base)]
-            for number in array:
-                # Isolate the base-digit from the number
-                digit = (number // (base ** iteration)) % base
-                # Drop the number into the correct bucket
-                buckets[digit].append(number)
+        def list_to_buckets(array_to_sort, database, iteration):
+            """
+            Place the transactions index into buckets matching the set of items at the considered level of the transactions
+            The buckets are sorted by decreasing orders
+            :param array_to_sort: list of transactions index to sort through the buckets
+            :param database: list of all transactions
+            :param iteration: considered level of transactions
+            :return: list of sorted buckets containing the transactions index
+            """
+
+            # Build base for sorting
+            base = []
+            slice = []
+            for index in array_to_sort:
+                transaction = database[index]
+                if len(transaction) > iteration:
+                    if transaction[iteration] not in base:
+                        base.append(transaction[iteration])
+                    slice.append(transaction[iteration])
+                else:
+                    if LCMAnalyzer.END_NUMBER not in base:
+                        base.append(LCMAnalyzer.END_NUMBER)
+                    slice.append(LCMAnalyzer.END_NUMBER)
+            base.sort(reverse=True)
+
+            buckets = [[] for _ in base]
+            for index, number in enumerate(slice):
+                # Drop the into the correct bucket
+                buckets[base.index(number)].append(array_to_sort[index])
             return buckets
 
-        def buckets_to_list(buckets):
-            numbers = []
-            for bucket in buckets:
-                # append the numbers in a bucket
-                # sequentially to the returned array
-                for number in bucket:
-                    numbers.append(number)
-            return numbers
+        def sort_bucket(bucket, database, max_nb_items, iteration):
+            """
+            Recursively sort the buckets if there are more than one element
+            :param bucket: bucket containing the transactions index to sort at the next level
+            :param database: list of all transactions
+            :param max_nb_items: max length of a transaction in the database
+            :param iteration: considered level of transactions
+            :return: sorted transactions index based on the items contained in each transactions
+            """
+            if len(bucket) > 1 and iteration < max_nb_items:
+                new_buckets = list_to_buckets(bucket, database, iteration)
+                sorted_array = []
+                for new_bucket in new_buckets:
+                    sorted_array.extend(sort_bucket(new_bucket, database, max_nb_items, iteration+1))
+                return sorted_array
+            return bucket
 
-        maxval = max(array)
+        index_array = list(range(0,len(database)))
 
+        max_nb_items = 0
+        for i, transaction in enumerate(database):
+            if len(transaction) > max_nb_items: max_nb_items = len(transaction)
+
+        # Sort the transactions by comparing each level of item
         it = 0
-        # Iterate, sorting the array by each base-digit
-        while base ** it <= maxval:
-            array = buckets_to_list(list_to_buckets(array, base, it))
-            it += 1
+        buckets = list_to_buckets(index_array, database, it)
+        sorted_indexes = []
+        for bucket in buckets:
+            sorted_indexes.extend(sort_bucket(bucket, database, max_nb_items, it+1))
 
-        return array
+        #Make a copy of the dataset matching the new order of the transactions
+        sorted_database = np.ndarray(len(database), dtype=object)
+        index = 0
+        for sorted_index in sorted_indexes:
+            sorted_database[index] = database[sorted_index].copy()
+            index += 1
+
+        return sorted_database
 
     @staticmethod
     def merge_transactions(transactions, weights):
