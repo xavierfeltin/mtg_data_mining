@@ -51,7 +51,8 @@ class LCMAnalyzer:
     @staticmethod
     def radix_sort(database):
         """
-        Sort transactions in the database using radix sort
+        Sort transactions in the database using radix sort.
+        The sort does not modify the items order inside the transactions
         example: [[7,6,5,2,1], [5,4,3,2], [9,8,7,2,1]]
         return: [[9,8,7,2,1], [7,6,5,2,1], [5,4,3,2]]
         :param database: list of transactions to sort
@@ -161,7 +162,7 @@ class LCMAnalyzer:
                     merged_transactions.append(transaction)
                     merged_weights.append(1)
 
-        return np.asarray(merged_transactions), np.asarray(merged_weights)
+        return np.asarray(merged_transactions), np.asarray(merged_weights, dtype=int)
 
     def load_data(self, database):
         """
@@ -185,33 +186,37 @@ class LCMAnalyzer:
 
         #Sort the items by increasing frequencies and renumerate the items (most frequent items = biggest number)
         #Skip the items with a frequency lower than the support
-        self.sorted_items = OrderedDict(sorted(self.items.items(), key = (itemgetter(1), itemgetter(0)), reverse = (False, False)))
-        for index, item, freq in enumerate(self.sorted_items.items()):
+        self.sorted_items = OrderedDict(sorted(self.items.items(), key = itemgetter(1, 0), reverse=False))
+        #TODO: remove items with freq < self.support in self.sorted_items
+
+        for index, element in enumerate(self.sorted_items.items()):
+            item = element[0]
+            freq = element[1]
             if freq >= self.support:
                 self.mapping_items[item] = index+1
 
         #Cache the c most frequent items
-        bit_position = self.c -1
-        for i in range(self.c):
-            it = reversed(self.sorted_items.items())
-            self.most_frequent_items[item] = bit_position
-            bit_position -= 1
+        self.c = min(self.c, len(self.sorted_items))
+
+        keys = list(self.sorted_items.keys())
+        for i in reversed(range(self.c)):
+            self.most_frequent_items.append(keys[i])
 
         #Initialize the bitmap representation of the database
         #Reduce the database size by ignoring non frequent items and empty transactions
         self.transactions = np.ndarray(len(database), dtype=object)
         t_index = 0
         for transaction in database:
-            list_items = np.ndarray.zeros(len(transaction)+1)
-            list_items[0] = 0 #bitmap of c most frequent items in the current transaction
+            list_items = np.ndarray(len(transaction)+1, dtype=int)
+            list_items[0] = 0 #bit map of c most frequent items in the current transaction
             index = 1
             for item in transaction:
                 if item in self.most_frequent_items:
-                    list_items[0][self.most_frequent_items[item]] = 1
+                    list_items[0] |= (1 << (self.c - self.most_frequent_items.index(item) - 1))
                 elif item in self.mapping_items:
-                    list_items[index]
+                    list_items[index] = item
                     index += 1
-            list_items.resize(index)
+            list_items.resize(index, refcheck=False)
 
             # Keep non empty transactions : at least 1 item or bitmap > 0
             if index > 1 or list_items.sum() > 0:
@@ -219,14 +224,13 @@ class LCMAnalyzer:
                 t_index += 1
 
         self.transactions.resize(t_index)
-        self.nb_transactions = len(self.transactions)
 
         # By default all transactions have a weight of one
-        self.weights = np.ndarray.ones(self.nb_transactions)
+        self.weights = np.ones(len(self.transactions), dtype=int)
 
         #Reduce database size by merging same transactions together
         self.transactions, self.weights = LCMAnalyzer.merge_transactions(self.transactions, self.weights)
-
+        self.nb_transactions = len(self.transactions)
 
     def mining(self, mode = CLOSED_ITEMSETS):
         """

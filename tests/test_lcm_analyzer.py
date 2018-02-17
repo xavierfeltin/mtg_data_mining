@@ -23,7 +23,14 @@ class TestAPrioriAnalyzer(unittest.TestCase):
         lcm = LCMAnalyzer()
         lcm.load_data(self.dataset)
 
-        self.assertTrue(True)
+        self.assertEqual(len(lcm.transactions), 6)
+        self.assertEqual(lcm.weights.sum(),6)
+        for transaction in lcm.transactions:
+            self.assertEqual(len(transaction), 1) #All fits in bitmap format
+
+        #Check the conversion into bit maps for c most frequent items
+        self.assertEqual("{0:b}".format(lcm.transactions[0][0]), '111101000')
+        self.assertEqual("{0:b}".format(lcm.transactions[1][0]), '111000000')
 
     def test_radix_sort(self):
         sorted = LCMAnalyzer.radix_sort(self.transactions_to_sort)
@@ -45,4 +52,4 @@ class TestAPrioriAnalyzer(unittest.TestCase):
         self.assertListEqual(merged_transactions[4], [7, 6, 5, 2, 1])
         self.assertListEqual(merged_transactions[5], [5, 4, 3, 2])
         self.assertListEqual(merged_transactions[6], [2])
-        self.assertListEqual(list(merged_weights), [1.,2.,1.,1.,1.,1.,2.])
+        self.assertListEqual(list(merged_weights), [1,2,1,1,1,1,2])
