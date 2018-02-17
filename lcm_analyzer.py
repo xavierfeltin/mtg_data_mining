@@ -41,7 +41,7 @@ class LCMAnalyzer:
         self.transactions = []
         self.weights = None #weights of the transactions
 
-        self.complete_prefix_tree = None
+        self.complete_prefix_tree = TreeNode(0, 0, None)
 
         self.occurences = None
         self.bitmap = None
@@ -165,6 +165,17 @@ class LCMAnalyzer:
 
         return np.asarray(merged_transactions), np.asarray(merged_weights, dtype=int)
 
+    @staticmethod
+    def build_complete_prefix_tree(parent, c):
+        """
+        Build complete tree by generating all possible bitmaps corresponding to the c constant
+        Example: if c = 12 => generates a tree with 4096 vertices
+        """
+        for i in reversed(range(c)):
+            node = TreeNode(parent.value | 1 << i, 0, parent)
+            LCMAnalyzer.build_complete_prefix_tree(node, i)
+            parent.add_child(node)
+
     def load_data(self, database):
         """
         Initialize the parser with the transactions present in the database
@@ -230,6 +241,9 @@ class LCMAnalyzer:
         #Reduce database size by merging same transactions together
         self.transactions, self.weights = LCMAnalyzer.merge_transactions(self.transactions, self.weights)
         self.nb_transactions = len(self.transactions)
+
+        #Build complete prefix tree
+        LCMAnalyzer.build_complete_prefix_tree(self.complete_prefix_tree, self.c)
 
     def mining(self, mode = CLOSED_ITEMSETS):
         """

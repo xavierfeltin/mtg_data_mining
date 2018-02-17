@@ -1,7 +1,8 @@
 # coding=utf8
 import unittest
-from lcm_analyzer import LCMAnalyzer
 import numpy as np
+from lcm_analyzer import LCMAnalyzer
+from utils import TreeNode
 
 class TestAPrioriAnalyzer(unittest.TestCase):
     def setUp(self):
@@ -53,3 +54,8 @@ class TestAPrioriAnalyzer(unittest.TestCase):
         self.assertListEqual(merged_transactions[5], [5, 4, 3, 2])
         self.assertListEqual(merged_transactions[6], [2])
         self.assertListEqual(list(merged_weights), [1,2,1,1,1,1,2])
+
+    def test_build_prefix_complete_tree(self):
+        tree = TreeNode(0,0,None)
+        LCMAnalyzer.build_complete_prefix_tree(tree, 4)
+        self.assertEqual(tree.count_nodes(), 16)
