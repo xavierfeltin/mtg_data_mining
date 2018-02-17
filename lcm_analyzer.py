@@ -2,6 +2,7 @@
 import numpy as np
 from collections import OrderedDict
 from operator import itemgetter
+from utils import TreeNode
 
 class LCMAnalyzer:
     """
@@ -186,14 +187,12 @@ class LCMAnalyzer:
 
         #Sort the items by increasing frequencies and renumerate the items (most frequent items = biggest number)
         #Skip the items with a frequency lower than the support
+        database_support = int(self.support * len(database))
+        self.sorted_items = sorted(self.items.items(), key = lambda x: x[1] >= database_support)
         self.sorted_items = OrderedDict(sorted(self.items.items(), key = itemgetter(1, 0), reverse=False))
-        #TODO: remove items with freq < self.support in self.sorted_items
 
-        for index, element in enumerate(self.sorted_items.items()):
-            item = element[0]
-            freq = element[1]
-            if freq >= self.support:
-                self.mapping_items[item] = index+1
+        for index, item in enumerate(self.sorted_items.keys()):
+            self.mapping_items[item] = index+1
 
         #Cache the c most frequent items
         self.c = min(self.c, len(self.sorted_items))
