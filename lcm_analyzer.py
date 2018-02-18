@@ -176,6 +176,62 @@ class LCMAnalyzer:
             LCMAnalyzer.build_complete_prefix_tree(node, i)
             parent.add_child(node)
 
+    @staticmethod
+    def build_conditional_database(database, weights, p_itemset, p_tail, support):
+        """
+        Build the conditional database of the p_itemset:
+        1. remove transactions not including P (database becomes equal to Occ(P))
+        2. remove items no larger than tail(P)
+        3. remove items included in less than θ transactions of Occ(P) (θ is min_support)
+        4. remove items e included in all transactions of Occ(P), and record that “e is included in all transactions”
+        5. after removing items as 2, 3, and 4, remove duplicated transactions
+        :param database: list of all transactions
+        :param p_itemset: itemset (frozenset) to filter the database
+        :return: the conditional database
+        """
+
+        conditional_database = np.ndarray(len(database), dtype=object)
+        conditional_weights = np.ndarray(len(database), dtype=int)
+
+        frequence_items = {}
+        index = 0
+        for i, transaction in enumerate(database):
+            if p_itemset.issubset(frozenset(transaction)):
+                items_bigger_tail = [x for x in transaction if x > p_tail]
+
+                if len(items_bigger_tail) > 0:
+                    conditional_database[index] = items_bigger_tail
+                    conditional_weights[index] = weights[i]
+                    index += 1
+                    for item in items_bigger_tail:
+                        if item in frequence_items:
+                            frequence_items[item] += 1
+                        else:
+                            frequence_items[item] = 1
+        conditional_database.resize(index, refcheck=False)
+        conditional_weights.resize(index, refcheck=False)
+
+        conditional_support = support * len(conditional_database)
+        all_transactions_items = [k for k, v in frequence_items.items() if v == len(conditional_database)]
+        sorted_items = OrderedDict({k: v for k, v in frequence_items.items() if conditional_support <= v < len(conditional_database)})
+
+        #TODO: to confirm if necessary to sort again here ...
+        # sorted_items = OrderedDict(sorted(self.items.items(), key=itemgetter(1, 0), reverse=False))
+
+        for i, transaction in enumerate(conditional_database):
+            new_transaction = np.ndarray(len(transaction), dtype=int)
+            index = 0
+            for item in transaction:
+                if item not in all_transactions_items and item in sorted_items:
+                    new_transaction[index] = item
+                    index += 1
+            new_transaction.resize(index,refcheck=False)
+            conditional_database[i] = new_transaction
+        #empty transactions at this moment still contains the common elements stored in all_transaction_items
+
+        merged_database, merged_weights = LCMAnalyzer.merge_transactions(conditional_database, conditional_weights)
+        return all_transactions_items, merged_database, merged_weights
+
     def load_data(self, database):
         """
         Initialize the parser with the transactions present in the database

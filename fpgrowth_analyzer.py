@@ -93,7 +93,7 @@ class FPGrowthAnalyzer:
     def ascendTree(leafNode, prefixPath):
         "Build the path from the leaf node until the tree root"
         if leafNode.parent != None:
-            prefixPath.append(leafNode.name)
+            prefixPath.append(leafNode.value)
             FPGrowthAnalyzer.ascendTree(leafNode.parent, prefixPath)
 
     @staticmethod

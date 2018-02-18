@@ -59,3 +59,13 @@ class TestAPrioriAnalyzer(unittest.TestCase):
         tree = TreeNode(0,0,None)
         LCMAnalyzer.build_complete_prefix_tree(tree, 4)
         self.assertEqual(tree.count_nodes(), 16)
+
+    def test_build_conditional_database(self):
+
+        weights = np.ones(len(self.transactions_to_merge), dtype=int)
+        p_itemset = frozenset({7})
+        p_tail = 7
+        support = 0.2
+        all_transactions_items, conditional_database, conditional_weights = LCMAnalyzer.build_conditional_database(self.transactions_to_merge, weights, p_itemset, p_tail, support)
+
+        self.assertTrue(True)
