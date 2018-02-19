@@ -241,14 +241,14 @@ class LCMAnalyzer:
         """
         base = [] #list of items in p_database
         buckets = [] #list of buckets for all items in p_database
-        for transaction in p_database:
+        for index, transaction in enumerate(p_database):
             for item in transaction:
                 if item not in base:
                     base.append(item)
-                    buckets.append([item])
+                    buckets.append([index])
                 else:
-                    buckets[base.index(item)].append(item)
-        return buckets
+                    buckets[base.index(item)].append(index)
+        return base, buckets
 
 
     def load_data(self, database):
@@ -320,10 +320,28 @@ class LCMAnalyzer:
         #Build complete prefix tree
         LCMAnalyzer.build_complete_prefix_tree(self.complete_prefix_tree, self.c)
 
-    def mining(self, mode = CLOSED_ITEMSETS):
+    def mining(self, p_itemset, database, weights, min_support=0.2, mode=CLOSED_ITEMSETS):
         """
         Mine the database to extract the frequent items
         :param mode: define the type of frequents itemsets to be extracted
         :return: list of frequent itemsets
         """
-        pass
+        frequent_items = []
+        tail_p = p_itemset[0] #tail is highest item in p_itemset which is ordered in decreasing order
+        sorted_items = get_sorted_items(database)
+
+        base, buckets = LCMAnalyzer.occurence_delivery(database) #buckets are all conditional databases[i] for current p_itemset union base[i]
+
+        for extension in base:
+            #if extension > tail_p: already performed in occurence delivery
+            temp_database = []
+            temp_weights = []
+            for index_transaction in buckets[base.index(extension)]:
+                temp_database.append(database[index_transaction])
+                temp_weights.append(weights[index_transaction])
+
+            conditional_database, conditonal_weights = LCMAnalyzer.build_conditional_database(temp_database, weights, frozenset(p_itemset, extension), extension, min_support)
+            if compute_support(frozenset(p_itemset, extension)) > min_support:
+                frequent_items.append(self.mining(frozenset(p_itemset, extension)), conditional_database, conditonal_weights, min_support, mode)
+
+        return frequent_items

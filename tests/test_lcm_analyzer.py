@@ -78,5 +78,19 @@ class TestAPrioriAnalyzer(unittest.TestCase):
         self.assertNotIn([1, 2, 3, 4, 5, 6, 7], conditional_database[1]) # items < p_tail are deleted
 
     def test_occurence_delivery(self):
-        # TODO: finalize the test of occurence delivery
-        self.assertTrue(False)
+        weights = np.ones(len(self.transactions_to_merge), dtype=int)
+        p_itemset = frozenset({2})
+        p_tail = 2
+        support = 0.2
+        all_transactions_items, conditional_database, conditional_weights = LCMAnalyzer.build_conditional_database(self.transactions_to_merge, weights, p_itemset, p_tail, support)
+
+        base, buckets = LCMAnalyzer.occurence_delivery(conditional_database)
+
+        self.assertListEqual(base,[9,8,7,6,5,4,3])
+        self.assertListEqual(buckets[0], [0,1])
+        self.assertListEqual(buckets[1], [0])
+        self.assertListEqual(buckets[2], [0,1,2])
+        self.assertListEqual(buckets[3], [2])
+        self.assertListEqual(buckets[4], [2,3])
+        self.assertListEqual(buckets[5], [3])
+        self.assertListEqual(buckets[6], [3])
