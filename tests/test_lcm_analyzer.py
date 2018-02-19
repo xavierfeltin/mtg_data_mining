@@ -68,4 +68,15 @@ class TestAPrioriAnalyzer(unittest.TestCase):
         support = 0.2
         all_transactions_items, conditional_database, conditional_weights = LCMAnalyzer.build_conditional_database(self.transactions_to_merge, weights, p_itemset, p_tail, support)
 
-        self.assertTrue(True)
+        self.assertListEqual(all_transactions_items, [9]) #9 is common to all transactions in Tp
+        self.assertEqual(len(conditional_database[0]), 0)  # transactions containing only 9
+        self.assertEqual(conditional_database[1][0], 8)  # other transaction containing 8
+        self.assertEqual(conditional_weights[0], 4) # 4 identical transactions with 9
+        self.assertEqual(conditional_weights[1], 1)  # 1 transaction with 8
+        self.assertNotIn([1,2,3,4,5,6,7], conditional_database[0])
+        self.assertNotIn([1, 2, 3, 4, 5, 6, 7], conditional_database[0]) # items < p_tail are deleted
+        self.assertNotIn([1, 2, 3, 4, 5, 6, 7], conditional_database[1]) # items < p_tail are deleted
+
+    def test_occurence_delivery(self):
+        # TODO: finalize the test of occurence delivery
+        self.assertTrue(False)

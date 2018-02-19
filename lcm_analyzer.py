@@ -232,6 +232,25 @@ class LCMAnalyzer:
         merged_database, merged_weights = LCMAnalyzer.merge_transactions(conditional_database, conditional_weights)
         return all_transactions_items, merged_database, merged_weights
 
+    @staticmethod
+    def occurence_delivery(p_database):
+        """
+        Perform the occurence delivery algorithm to get all the conditional databases P union e, for all items e
+        :param p_database: the conditional database Tp
+        :return: buckets for all items e in p_database
+        """
+        base = [] #list of items in p_database
+        buckets = [] #list of buckets for all items in p_database
+        for transaction in p_database:
+            for item in transaction:
+                if item not in base:
+                    base.append(item)
+                    buckets.append([item])
+                else:
+                    buckets[base.index(item)].append(item)
+        return buckets
+
+
     def load_data(self, database):
         """
         Initialize the parser with the transactions present in the database
