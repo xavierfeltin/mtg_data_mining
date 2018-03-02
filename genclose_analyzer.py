@@ -72,20 +72,30 @@ class GenCloseAnalyzer:
         """
         return self.reverse_db[item]
 
-    def extend_merge(self, tree_level):
+    def extend_merge(self, tree_level, tree_index):
         """
-        :param tree_level:
-        :return:
+        Complete the closure of the nodes in the tree_level in parameters (operator EOB)
+        :param tree_level: slice of the tree containing the nodes to complete
         """
-        pass
+        # TODO: review with indications in "First phase" section
+        # TODO: be sure nodes are sorted by support
+        for i in range(len(tree_level)-1):
+            for j in range(i+1, len(tree_level)):
+                first = tree_level[i]
+                second = tree_level[j]
+                if len(second.closure) == tree_index \
+                        and frozenset(first.transactions).issubset(frozenset(second.transactions)):
+                    first.closure = frozenset(first.closure).union(frozenset(second.closure))
 
     def store_level(self, tree_level, lcg):
         """
-        :param tree_level:
-        :param lcg:
-        :return:
+        Save the closed items in the current tree level inside LCG
+        :param tree_level: level to store
+        :param lcg: store all the closed items
         """
-        pass
+        #TODO: manage double hash for fast indexing here !
+        for node in tree_level:
+            lcg.append(node)
 
     def is_same_folder(self, left_node, right_node):
         """
@@ -98,14 +108,54 @@ class GenCloseAnalyzer:
 
     def compute_diffset(self, node, left_parent):
         """
-        Compute the diffset for the node and the left parent set in argument
-        diffset =
+        Compute the diffset between the current node and it left parent
+        :param node: current node
+        :param left_parent: current node's left parent
         """
-        diffset = frozenset(left_parent.transactions).difference(frozenset(node.transactions))
+        return frozenset(left_parent.transactions).difference(frozenset(node.transactions))
+
+    def update_node_diffset(self, node, left_parent):
+        """
+        Compute the diffset for the node and the left parent set in argument
+        Use essentially for first level of the tree (left_parent will be the root)
+        """
+        diffset = self.compute_diffset(node, left_parent)
         node.support = left_parent.support - len(diffset)
         node.diffset.append(left_parent, diffset, node.generators)
 
-        return diffset,
+        return diffset
+
+    def get_common_left_parent(self, left, right):
+        """
+        Return the common left parent of two nodes
+        :param left: left node to check
+        :param right: right node to check
+        :return: left parent or None if it does not exist
+        """
+        common_left_parent = None
+        i = 0
+        nb_diffsets = len(left.diffsets)
+        while i < nb_diffsets and not common_left_parent:
+            for right_diff in right.diffsets:
+                if left.diffsets[i][0] == right_diff[0]:
+                    common_left_parent = left.diffsets[i][0]
+                    break
+        return common_left_parent
+
+    def update_diffset_join(self, node, left_parent, right_parent):
+        """
+        Define the diffset from joining the left and right node.
+        Update only of they have a common left parent
+        Use essentially for levels after the first one in the tree
+        :param node: node to update
+        :param left_parent: left node to join
+        :param right_parent: right node to join
+        """
+        common_left_parent = self.get_common_left_parent(left_parent, right_parent)
+        if common_left_parent is not None:
+            merge_diffset = frozenset(self.compute_diffset(right_parent, common_left_parent)).difference(self.compute_diffset(right_parent, common_left_parent))
+            node.support = left_parent.support - len(merge_diffset)
+            node.diffset.append(left_parent, merge_diffset, node.generators) #TODO: node.generators may be not correct here => publication says GSj is the set of generators generated from left parents
 
     def mine(self):
         """
