@@ -360,19 +360,22 @@ class GenCloseAnalyzer:
         i = 0 # 0 refers to L1
 
         # Initialiation of layer L1 in the tree
-        L1 = []
+        #L1 = []
+        LCurrent = []
         for item in frequent_items:
             associated_transactions = self.get_transactions_with_item(item)
-            L1.append(GenCloseAnalyzer.Node(len(associated_transactions), item, [item], associated_transactions)) #<support, item, generators, transactions>
-        tree.append(L1)
+            LCurrent.append(GenCloseAnalyzer.Node(len(associated_transactions), item, [item], associated_transactions)) #<support, item, generators, transactions>
+        tree.append(LCurrent)
 
         # Mine the itemsets and generators
         while has_new_level:
-            self.attribute_folders(tree[i],i+1) #dispatch items into folders
-            self.extend_merge(tree[i],i+1) #using EOB (complete function of the nodes of the same level
-            self.store_level(tree[i]) #store the closed itemsets and generators inside LCG
+            self.attribute_folders(LCurrent,i+1) #dispatch items into folders
+            self.extend_merge(LCurrent,i+1) #using EOB (complete function of the nodes of the same level
+            self.store_level(LCurrent) #store the closed itemsets and generators inside LCG
 
-            tree.append([]) #produce (i+1)-generators abd extend corresponding pre-closed itemsets by EOC
+            #tree.append([]) #produce (i+1)-generators abd extend corresponding pre-closed itemsets by EOC
+            LNext = []
+
             #TODO: improve to filter only by folders to avoid uninteresting pair testing ...
             '''
             for left_index, left_node in enumerate(tree[i]):
@@ -393,22 +396,23 @@ class GenCloseAnalyzer:
                     for left_index, left_node in enumerate(nodes):
                         for right_index, right_node in reverse_enumerate(nodes):
                             if left_index < right_index:
-                                self.join(left_node, right_node, tree, i)
+                                self.join(left_node, right_node, LNext, i)
                             else:
                                 break
             else: #no folder in common for the first level of the tree
-                for left_index, left_node in enumerate(tree[i]):
-                    for right_index, right_node in reverse_enumerate(tree[i]):
+                for left_index, left_node in enumerate(LCurrent):
+                    for right_index, right_node in reverse_enumerate(LCurrent):
                         if left_index < right_index:
-                            self.join(left_node, right_node, tree, i)
+                            self.join(left_node, right_node, LNext, i)
                         else:
                             break
 
-            if len(tree[i+1]) == 0: has_new_level = False
+            if len(LNext) == 0: has_new_level = False
+            LCurrent = LNext
             i += 1
         return lcg
 
-    def join(self, left_node, right_node, tree, current_index):
+    def join(self, left_node, right_node, next_level, current_index):
         """
         utility method to package common code
         """
@@ -417,9 +421,9 @@ class GenCloseAnalyzer:
 
         if new_support != left_node.support and new_support != right_node.support and new_support >= self.min_supp:
             new_closure = frozenset(left_node.closure).union(frozenset(right_node.closure))  # using EOA
-            self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, tree[current_index + 1], current_index + 1)  # using Condition (5)
+            self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, next_level, current_index + 1)  # using Condition (5)
 
-    def join_generators(self, left_node, right_node, new_transactions, new_support, new_closure, tree_next_level, index_level):
+    def join_generators(self, left_node, right_node, new_transactions, new_support, new_closure, next_level, index_level):
         """
         Build the L[i+1] level by joining generators from L[i]
         :param left_node: node to merge
@@ -460,4 +464,4 @@ class GenCloseAnalyzer:
 
         if len(new_generators_set) >= 1:
             #new i+1-generators
-            tree_next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node))
+            next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node))
