@@ -197,6 +197,13 @@ class DeckManager:
                     deck.remove(card)
                 i+=1
 
+    def write_frequent_items_into_csv(self, filename, freqIDItemList, card_loader):
+        with open('./output/' + filename + '.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
-
-
+            writer.writerow(['Frequent set of cards'])
+            for itemList in freqIDItemList:
+                line = []
+                for item in itemList:
+                    line.append(card_loader.hash_name_id[item])
+                writer.writerow(line)

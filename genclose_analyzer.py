@@ -43,7 +43,11 @@ class GenCloseAnalyzer:
             :param left_parent: parent node
             """
             self.support = support
-            self.closure = set(closure)
+            if isinstance(closure,int):
+                self.closure = set([closure])
+            else:
+                self.closure = set(closure)
+
             self.i_generator = None #i_generator used for merging with other nodes. Generators are list, order is important
             self.generators = [] #All generators for the node. Generators are list, order is important
 
@@ -94,6 +98,14 @@ class GenCloseAnalyzer:
                 list_closed.extend(closed_list)
         return list_closed
 
+    def get_closed_items_closures(self):
+        list_closures = []
+        for key_sum in self.LCG.keys():
+            for key_supp, closed_list in self.LCG[key_sum].items():
+                for closed in closed_list:
+                    list_closures.append(list(closed.closure))
+        return list_closures
+
     def clean_database(self):
         """
         Return a list of items with a support greater than min_support
@@ -101,16 +113,15 @@ class GenCloseAnalyzer:
         """
         items = {}
         database_size = 0
+        self.reverse_db.clear()
 
         # Scan the database to initialize the frequence of all items used in the transactions
         for index, transaction in enumerate(self.database):
             for item in transaction:
                 if item in items:
                     items[item] += 1
-                    self.reverse_db[item].append(index)
                 else:
                     items[item] = 1
-                    self.reverse_db[item] = [index]
 
                 database_size += 1
 
@@ -121,12 +132,20 @@ class GenCloseAnalyzer:
 
         # Reduce the database size by ignoring non frequent items and empty transactions
         transactions = []
-        for transaction in self.database:
+        for index, transaction in enumerate(self.database):
             list_items = []
             for item in transaction:
                 if item in self.sorted_items:
                     list_items.append(item)
-            transactions.append(transaction)
+
+                    if item in self.reverse_db:
+                        self.reverse_db[item].append(index)
+                    else:
+                        self.reverse_db[item] = [index]
+
+            #transactions.append(list_items)
+            transactions.append(list_items)
+
         self.database = transactions
 
     def get_transactions_with_item(self, item):
@@ -369,7 +388,9 @@ class GenCloseAnalyzer:
         Mine the closed itemsets of the database and the associated generators
         :return: list of nodes <closed itemset, support, generators>
         """
+        print('Clean database function of support')
         self.clean_database()
+
         frequent_items = self.sorted_items.keys()
         lcg = []
         tree = []
@@ -377,6 +398,7 @@ class GenCloseAnalyzer:
         i = 0 # 0 refers to L1
 
         # Initialiation of layer L1 in the tree
+        print('Initialize first layer')
         #L1 = []
         LCurrent = []
         for item in frequent_items:
@@ -386,8 +408,13 @@ class GenCloseAnalyzer:
 
         # Mine the itemsets and generators
         while has_new_level:
+            print('L' + str(i + 1) + ': Attribute folders')
             self.attribute_folders(LCurrent,i+1) #dispatch items into folders
+
+            print('L' + str(i + 1) + ': Extend merge (EOB)')
             self.extend_merge(LCurrent,i+1) #using EOB (complete function of the nodes of the same level
+
+            print('L' + str(i+1) + ': Store ' + str(len(LCurrent)) + ' items (EOC)')
             self.store_level(LCurrent) #store the closed itemsets and generators inside LCG
 
             #tree.append([]) #produce (i+1)-generators abd extend corresponding pre-closed itemsets by EOC
@@ -408,6 +435,7 @@ class GenCloseAnalyzer:
                         break
             '''
 
+            print('L' + str(i + 1) + ': Generate new level by join (EOA)')
             if i > 0:
                 for key, nodes in self.L_folders.items():
                     for left_index, left_node in enumerate(nodes):

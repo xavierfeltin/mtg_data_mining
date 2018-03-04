@@ -3,6 +3,8 @@ from loader_magic import MagicLoader, DeckManager
 from lsa_encoder import DataCleaner, LSAEncoder
 from apriori_analyzer import APrioriAnalyzer
 from fpgrowth_analyzer import FPGrowthAnalyzer
+from genclose_analyzer import GenCloseAnalyzer as GCA
+
 import os
 
 def encoding_magic_card():
@@ -85,8 +87,27 @@ def find_frequent_items_fpgrowth():
     print('Writing rules')
     analyzer.export_rules('generated_rules', rules)
 
+def find_closed_items():
+    print('Load deck')
+    card_loader = MagicLoader()
+    card_loader.load('./data/AllCards-x.json')
+
+    print('Clean deck')
+    deck_loader = DeckManager()
+    list_files = os.listdir("./db_decks")  # returns list
+    deck_loader.load_from_csv(list_files, card_loader)
+    deck_loader.extract_lands(card_loader.lands)
+
+    analyzer = GCA(deck_loader.decks, 0.1)
+
+    print('Start mining')
+    analyzer.mine()
+    print('nb closed items = ' + str(len(analyzer.lcg_into_list())))
+    deck_loader.write_frequent_items_into_csv('genclose_results', analyzer.get_closed_items_closures(), card_loader)
+
 if __name__ == "__main__":
     # execute only if run as a script
     #encoding_magic_card
     #find_frequent_items_apriori()
-    find_frequent_items_fpgrowth()
+    #find_frequent_items_fpgrowth()
+    find_closed_items()
