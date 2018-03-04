@@ -374,6 +374,7 @@ class GenCloseAnalyzer:
 
             tree.append([]) #produce (i+1)-generators abd extend corresponding pre-closed itemsets by EOC
             #TODO: improve to filter only by folders to avoid uninteresting pair testing ...
+            '''
             for left_index, left_node in enumerate(tree[i]):
                 for right_index, right_node in reverse_enumerate(tree[i]):
                     if left_index < right_index and (i == 0 or left_node.folder == right_node.folder):
@@ -385,9 +386,38 @@ class GenCloseAnalyzer:
                             self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, tree[i+1],i+1) #using Condition (5)
                     elif left_index >= right_index:
                         break
+            '''
+
+            if i > 0:
+                for key, nodes in self.L_folders.items():
+                    for left_index, left_node in enumerate(nodes):
+                        for right_index, right_node in reverse_enumerate(nodes):
+                            if left_index < right_index:
+                                self.join(left_node, right_node, tree, i)
+                            else:
+                                break
+            else: #no folder in common for the first level of the tree
+                for left_index, left_node in enumerate(tree[i]):
+                    for right_index, right_node in reverse_enumerate(tree[i]):
+                        if left_index < right_index:
+                            self.join(left_node, right_node, tree, i)
+                        else:
+                            break
+
             if len(tree[i+1]) == 0: has_new_level = False
             i += 1
         return lcg
+
+    def join(self, left_node, right_node, tree, current_index):
+        """
+        utility method to package common code
+        """
+        new_transactions = frozenset(left_node.transactions).intersection(frozenset(right_node.transactions))
+        new_support = len(new_transactions)
+
+        if new_support != left_node.support and new_support != right_node.support and new_support >= self.min_supp:
+            new_closure = frozenset(left_node.closure).union(frozenset(right_node.closure))  # using EOA
+            self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, tree[current_index + 1], current_index + 1)  # using Condition (5)
 
     def join_generators(self, left_node, right_node, new_transactions, new_support, new_closure, tree_next_level, index_level):
         """
