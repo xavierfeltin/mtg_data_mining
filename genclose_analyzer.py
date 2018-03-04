@@ -79,9 +79,9 @@ class GenCloseAnalyzer:
         self.sorted_items = None
         self.reverse_db = {} #fast access to transactions containing a particular item
         self.L_folders = {} #folders regrouping nodes with common prefixes
-        #self.LCG = {} #double hash store (transaction sum + support)
+        self.LCG = {} #double hash store (transaction sum + support)
         #TODO: implement double hash with diffset
-        self.LCG = [] #double hash store (transaction sum + support)
+        #self.LCG = [] #double hash store (transaction sum + support)
 
     def lcg_into_list(self):
         """
@@ -134,7 +134,14 @@ class GenCloseAnalyzer:
         Return a list of transactions containing the item
         :return: list of transactions
         """
-        return self.reverse_db[item]
+        if isinstance(item, list):
+            transactions = self.reverse_db[item[0]]
+            for i in range(1,len(item)):
+                transactions = frozenset(transactions).intersection(frozenset(self.reverse_db[item[i]]))
+            return transactions
+        else:
+            return self.reverse_db[item]
+
 
     def extend_merge(self, tree_level, index_level):
         """
@@ -195,7 +202,7 @@ class GenCloseAnalyzer:
         :param tree_level: level to store
         :param lcg: store all the closed items
         """
-        '''
+
         for node in tree_level:
             key = node.get_sum_transaction()
             if key in self.LCG:
@@ -212,15 +219,17 @@ class GenCloseAnalyzer:
                                 if generator not in closed.generators:
                                     closed.generators.append(generator)
                             break
+
                     if not_exist:
-                        self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None)]
+                        self.LCG[key][node.support].append(GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None))
                 else:
                     self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None)]
             else:
                 self.LCG[key] = {}
                 self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure,node.generators, None)]
-        '''
+
         #TODO: implement double hash with diffset
+        '''
         for node in tree_level:
             not_exist = True
             for closed in self.LCG:
@@ -233,6 +242,7 @@ class GenCloseAnalyzer:
 
             if not_exist:
                 self.LCG.append(GenCloseAnalyzer.Node(node.support, node.closure,node.generators, None))
+        '''
 
     @staticmethod
     def key_folder(key_list):
@@ -322,27 +332,34 @@ class GenCloseAnalyzer:
         :return: node or None if not found
         """
 
-        '''
-        key_sum = node.left_parent.get_sum_transaction()
+        transactions = self.get_transactions_with_item(generator)
+        key_sum = sum(transactions)
+        support = len(transactions)
+
+        #key_sum = node.left_parent.get_sum_transaction()
         if key_sum in self.LCG:
-            if node.support in self.LCG[key_sum]:
-                for closed in self.LCG[key_sum][node.support]:
+            if support in self.LCG[key_sum]:
+            #if node.support in self.LCG[key_sum]:
+                for closed in self.LCG[key_sum][support]:
+                #for closed in self.LCG[key_sum][node.support]:
                     for gen in closed.generators:
                         if frozenset(gen) == frozenset(generator):
                             return closed
         return None
-        '''
+
 
         #TODO: implement double hash with diffset
+        '''
         for closed in self.LCG:
             for gen in closed.generators:
                 if frozenset(gen) == frozenset(generator):
                     return closed
         return None
+        '''
 
     def search_node_with_closure(self, search):
         # TODO: implement double hash with diffset
-        for closed in self.LCG:
+        for closed in self.lcg_into_list():
             if frozenset(search) == frozenset(closed.closure):
                 return closed
         return None
