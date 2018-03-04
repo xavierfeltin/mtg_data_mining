@@ -205,5 +205,5 @@ class DeckManager:
             for itemList in freqIDItemList:
                 line = []
                 for item in itemList:
-                    line.append(card_loader.hash_name_id[item])
+                    line.append(card_loader.hash_id_name[item])
                 writer.writerow(line)

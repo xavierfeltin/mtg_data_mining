@@ -98,7 +98,7 @@ def find_closed_items():
     deck_loader.load_from_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands)
 
-    analyzer = GCA(deck_loader.decks, 0.1)
+    analyzer = GCA(deck_loader.decks, 0.01)
 
     print('Start mining')
     analyzer.mine()

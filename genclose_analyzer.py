@@ -1,4 +1,5 @@
 import hashlib
+from tqdm import tqdm
 from collections import OrderedDict
 from operator import itemgetter
 
@@ -127,8 +128,10 @@ class GenCloseAnalyzer:
 
         # Sort the items by increasing frequencies and renumerate the items (most frequent items = biggest number)
         # Skip the items with a frequency lower than the support
-        self.sorted_items = sorted(items.items(), key=lambda x: x[1] >= self.min_supp)
-        self.sorted_items = OrderedDict(sorted(items.items(), key=itemgetter(1, 0), reverse=False))
+        #self.sorted_items = sorted(items.items(), key=lambda x: x[1] >= self.min_supp)
+        #self.sorted_items = sorted(items.items(), key=lambda x: x[1] >= self.min_supp)
+        self.sorted_items = {k: v for k, v in items.items() if v >= self.min_supp}
+        self.sorted_items = OrderedDict(sorted(self.sorted_items.items(), key=itemgetter(1, 0), reverse=False))
 
         # Reduce the database size by ignoring non frequent items and empty transactions
         transactions = []
@@ -168,24 +171,27 @@ class GenCloseAnalyzer:
         :param tree_level: slice of the tree containing the nodes to complete
         :param index_level: current level index in the referential 1..N (and not 0..N-1)
         """
-        for i in range(len(tree_level)-1):
+        for i in tqdm(range(len(tree_level)-1)):
             j = i+1
             while j < len(tree_level):
                 X = tree_level[i]
                 Y = tree_level[j]
 
+                frozen_X = frozenset(X.transactions)
+                frozen_Y = frozenset(Y.transactions)
+
                 # Case 1: In the case that X.O C Y.O, we extend X.H by Y.H: X.H = X.H union Y.H.
-                if frozenset(X.transactions) < (frozenset(Y.transactions)):
+                if frozen_X < frozen_Y:
                     X.closure = frozenset(X.closure).union(frozenset(Y.closure))
                     j += 1
 
                 # Case 2: If X.O includes Y.O, we add X.H to Y.H.
-                elif frozenset(X.transactions) > (frozenset(Y.transactions)):
+                elif frozen_X > frozen_Y:
                     Y.closure = frozenset(Y.closure).union(frozenset(X.closure))
                     j += 1
 
                 # Case 3: In the remaining case, this procedure merges Y to X. It pushes all generators in Y.GS to X.GS, adds Y.H to X.H, and discards Y
-                elif frozenset(X.transactions) == (frozenset(Y.transactions)):
+                elif frozen_X == frozen_Y:
                     #Recall that we join only i-generators of G1 and G2 ( in the nodes at L[i]),
                     # with common i-1 first items, called the common prefix.
                     i_generators = []
@@ -198,16 +204,21 @@ class GenCloseAnalyzer:
                         X.generators.extend(i_generators)
                         X.closure = frozenset(X.closure).union(frozenset(Y.closure))
 
+                        X_key = GenCloseAnalyzer.key_folder(X.folder)
+                        Y_key = GenCloseAnalyzer.key_folder(Y.folder)
+
                         # Hence, if Y is not in the same folder with X, we move all nodes that are in the folder containing
                         # Y to the folder containing X. Thus, X also has the prefixes of Y.
-                        if GenCloseAnalyzer.key_folder(Y.folder) != GenCloseAnalyzer.key_folder(X.folder):
-                            folder_to_delete = Y.folder
-                            for node in self.L_folders[GenCloseAnalyzer.key_folder(Y.folder)]:
+                        if Y_key != X_key:
+                            #folder_to_delete = Y.folder
+                            for node in self.L_folders[Y_key]:
                                 node.folder = X.folder
-                                self.L_folders[GenCloseAnalyzer.key_folder(X.folder)].append(node)
-                            del self.L_folders[GenCloseAnalyzer.key_folder(folder_to_delete)]
+                                self.L_folders[X_key].append(node)
+                            #del self.L_folders[GenCloseAnalyzer.key_folder(folder_to_delete)]
+                            del self.L_folders[Y_key]
 
-                        self.L_folders[GenCloseAnalyzer.key_folder(Y.folder)].remove(Y)
+                        #self.L_folders[GenCloseAnalyzer.key_folder(Y.folder)].remove(Y)
+                        self.L_folders[X_key].remove(Y)
                         del tree_level[j]
                     else:
                         j += 1
