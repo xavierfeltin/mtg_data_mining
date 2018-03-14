@@ -286,6 +286,7 @@ class LCMAnalyzer:
         keys = list(self.sorted_items.keys())
         for i in reversed(range(self.c)):
             self.most_frequent_items.append(keys[i])
+            if keys[i] > max_item: max_item = keys[i]
 
         #Initialize the bitmap representation of the database
         #Reduce the database size by ignoring non frequent items and empty transactions
@@ -317,8 +318,8 @@ class LCMAnalyzer:
         self.transactions, self.weights = LCMAnalyzer.merge_transactions(self.transactions, self.weights)
         self.nb_transactions = len(self.transactions)
 
-        #Build complete prefix tree
-        LCMAnalyzer.build_complete_prefix_tree(self.complete_prefix_tree, self.c)
+        #Build complete prefix tree, for items > c
+        LCMAnalyzer.build_complete_prefix_tree(self.complete_prefix_tree, self.sorted_items[0] - self.c)
 
     def mining(self, p_itemset, database, weights, min_support=0.2, mode=CLOSED_ITEMSETS):
         """
