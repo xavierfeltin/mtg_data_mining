@@ -1,5 +1,7 @@
 import unittest
 from genclose_analyzer import GenCloseAnalyzer as GCA
+from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
+from genclose_analyzer import is_in_generators
 
 class TestGenCloseAnalyzer(unittest.TestCase):
     def setUp(self):
@@ -15,6 +17,15 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         self.db.append(['b','c','e','f','g','h'])
         self.db.append(['b','c','e'])
         self.db.append(['b','c'])
+
+        self.db_rules = [] #database used for rules association mining
+        self.db_rules.append(['a', 'c', 'e', 'g', 'i'])
+        self.db_rules.append(['a', 'c', 'f', 'h', 'i'])
+        self.db_rules.append(['a', 'd', 'f', 'h', 'i'])
+        self.db_rules.append(['b', 'c', 'e', 'g', 'i'])
+        self.db_rules.append(['a', 'c', 'e', 'g', 'i'])
+        self.db_rules.append(['b', 'c', 'e', 'g', 'i'])
+        self.db_rules.append(['a', 'c', 'f', 'h', 'i'])
 
         self.analyzer = GCA([], 1)
         root = None
@@ -148,31 +159,33 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         analyzer.mine()
         #closed_items = analyzer.lcg_into_list() for double hash
 
+        db_size = len(self.db)
+
         expected_LGC = []
-        expected_LGC.append(GCA.Node(2,set(['a','d','f','h']),[['d'],['a','f']],None))
-        expected_LGC.append(GCA.Node(3,set(['a','h']),[['a']],None))
-        expected_LGC.append(GCA.Node(3,set(['f','h']),[['f']],None))
-        expected_LGC.append(GCA.Node(3,set(['e','g','h']),[['g'],['e','h']],None))
-        expected_LGC.append(GCA.Node(4,set(['b','c']),[['b']],None))
-        expected_LGC.append(GCA.Node(4,set(['e']),[['e']],None))
-        expected_LGC.append(GCA.Node(4,set(['h']),[['h']],None))
-        expected_LGC.append(GCA.Node(5,set(['c']),[['c']],None))
-        expected_LGC.append(GCA.Node(1,set(['a','d','f','h','e','g']),[['d','g'],['d','e'],['a','f','g'],['a','f','e']],None))
-        expected_LGC.append(GCA.Node(1,set(['a','d','f','h','c']),[['d','c'], ['a','f','c']],None))
+        expected_LGC.append(GCA.Node(2/db_size,set(['a','d','f','h']),[['d'],['a','f']],None))
+        expected_LGC.append(GCA.Node(3/db_size,set(['a','h']),[['a']],None))
+        expected_LGC.append(GCA.Node(3/db_size,set(['f','h']),[['f']],None))
+        expected_LGC.append(GCA.Node(3/db_size,set(['e','g','h']),[['g'],['e','h']],None))
+        expected_LGC.append(GCA.Node(4/db_size,set(['b','c']),[['b']],None))
+        expected_LGC.append(GCA.Node(4/db_size,set(['e']),[['e']],None))
+        expected_LGC.append(GCA.Node(4/db_size,set(['h']),[['h']],None))
+        expected_LGC.append(GCA.Node(5/db_size,set(['c']),[['c']],None))
+        expected_LGC.append(GCA.Node(1/db_size,set(['a','d','f','h','e','g']),[['d','g'],['d','e'],['a','f','g'],['a','f','e']],None))
+        expected_LGC.append(GCA.Node(1/db_size,set(['a','d','f','h','c']),[['d','c'], ['a','f','c']],None))
 
         #TODO: check with publication's authors since aheg appears in two transactions in the database.
         #TODO: the example illustration shows an error with support of 1 but two transactions 1 and 3
         #expected_LGC.append(GCA.Node(1,set(['a','h','e','g']),[['a','g'],['a','e']],None))
 
-        expected_LGC.append(GCA.Node(2,set(['a','h','e','g']),[['a','g'],['a','e']],None))
-        expected_LGC.append(GCA.Node(1,set(['a','h','b','c','e','g']),[['a','b'],['a','g','c'],['a','e','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['a','h','c']),[['a','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['f','h','e','g']),[['f','g'],['f','e']],None))
-        expected_LGC.append(GCA.Node(1,set(['f','h','b','c','e','g']),[['f','b'],['f','g','c'],['f','e','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['f','h','c']),[['f','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['e','g','h','b','c']),[['g','b'],['g','c'],['b','h'],['c','e','h']],None))
-        expected_LGC.append(GCA.Node(3,set(['b','c','e']),[['b','e'],['c','e']],None))
-        expected_LGC.append(GCA.Node(3,set(['h','c']),[['h','c']],None))
+        expected_LGC.append(GCA.Node(2/db_size,set(['a','h','e','g']),[['a','g'],['a','e']],None))
+        expected_LGC.append(GCA.Node(1/db_size,set(['a','h','b','c','e','g']),[['a','b'],['a','g','c'],['a','e','c']],None))
+        expected_LGC.append(GCA.Node(2/db_size,set(['a','h','c']),[['a','c']],None))
+        expected_LGC.append(GCA.Node(2/db_size,set(['f','h','e','g']),[['f','g'],['f','e']],None))
+        expected_LGC.append(GCA.Node(1/db_size,set(['f','h','b','c','e','g']),[['f','b'],['f','g','c'],['f','e','c']],None))
+        expected_LGC.append(GCA.Node(2/db_size,set(['f','h','c']),[['f','c']],None))
+        expected_LGC.append(GCA.Node(2/db_size,set(['e','g','h','b','c']),[['g','b'],['g','c'],['b','h'],['c','e','h']],None))
+        expected_LGC.append(GCA.Node(3/db_size,set(['b','c','e']),[['b','e'],['c','e']],None))
+        expected_LGC.append(GCA.Node(3/db_size,set(['h','c']),[['h','c']],None))
 
         #TODO: check with publication's authors if it is a mistake that afc is seperated from dc
         #TODO: since they have the same closure and the same support
@@ -191,6 +204,214 @@ class TestGenCloseAnalyzer(unittest.TestCase):
                 match = analyzer.search_node_with_generator(None, generator)
                 self.assertIsNotNone(match)
 
-        self.assertEqual(len(expected_LGC),len(analyzer.LCG))
+        self.assertEqual(len(expected_LGC),len(analyzer.lcg_into_list()))
 
+    def test_mine_db_rules(self):
+        analyzer = GCA(self.db_rules, 1/7)  #percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
 
+        self.assertEqual(len(analyzer.lcg_into_list()), 10)
+
+        expected_LGC = []
+        expected_LGC.append(GCA.Node(2/7, set(['a', 'c', 'e', 'g', 'i']), [['a','e'], ['a', 'g']], None))
+        expected_LGC.append(GCA.Node(2/7, set(['b', 'c','e','g','i']), [['b']], None))
+        expected_LGC.append(GCA.Node(2/7, set(['a', 'c','f','h','i']), [['c','f'],['c','h']], None))
+        expected_LGC.append(GCA.Node(1/7, set(['a', 'd','f','h','i']), [['d']], None))
+        expected_LGC.append(GCA.Node(4/7, set(['c', 'e', 'g','i']), [['e'], ['g']], None))
+        expected_LGC.append(GCA.Node(4/7, set(['a', 'c', 'i']), [['a','c']], None))
+        expected_LGC.append(GCA.Node(3/7, set(['a', 'f','h','i']), [['f'],['h']], None))
+        expected_LGC.append(GCA.Node(6/7, set(['c', 'i']), [['c']], None))
+        expected_LGC.append(GCA.Node(5/7, set(['a', 'i']), [['a']], None))
+        expected_LGC.append(GCA.Node(7/7, set(['i']), [['i']], None))
+
+        for index,expected in enumerate(expected_LGC):
+            #check closure
+            match = analyzer.search_node_with_closure(expected.closure)
+            self.assertSequenceEqual(expected.closure, match.closure)
+
+            #check support
+            self.assertEqual(expected.support, match.support)
+
+            #check generators
+            for generator in expected.generators:
+                match = analyzer.search_node_with_generator(None, generator)
+                self.assertIsNotNone(match)
+
+    def test_MFCS_FromLattice(self):
+        analyzer = GCA(self.db_rules, 1/7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        lcg_S = rule_miner.MFCS_FromLattice(rule_miner.lcg, set(['a','c','f','h','i']), rule_miner._get_support(set(['a','c','f','h','i'])),1/7, 1)
+
+        self.assertEqual(len(lcg_S), 6)
+
+        expected_LGC = []
+        expected_LGC.append(GCA.Node(2/7, set(['a', 'c', 'f', 'h', 'i']), [['c', 'f'], ['c', 'h']], None))
+        expected_LGC.append(GCA.Node(4/7, set(['a', 'c', 'i']), [['a', 'c']], None))
+        expected_LGC.append(GCA.Node(3/7, set(['a', 'f', 'h', 'i']), [['f'], ['h']], None))
+        expected_LGC.append(GCA.Node(6/7, set(['c', 'i']), [['c']], None))
+        expected_LGC.append(GCA.Node(5/7, set(['a', 'i']), [['a']], None))
+        expected_LGC.append(GCA.Node(7/7, set(['i']), [['i']], None))
+
+        for index, expected in enumerate(expected_LGC):
+            # check closure
+            match = analyzer.search_node_with_closure(expected.closure, lcg_S)
+            self.assertSequenceEqual(expected.closure, match.closure)
+
+            # check support
+            self.assertEqual(expected.support, match.support)
+
+            # check generators
+            for generator in expected.generators:
+                self.assertTrue(is_in_generators(generator, match.generators, True))
+
+    def test_MFS_RestrictMaxSC_1(self):
+        # From publication example 3.a
+        analyzer = GCA(self.db_rules, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        lcg_S = rule_miner.MFCS_FromLattice(rule_miner.lcg, set(['c', 'e', 'a', 'g', 'i']), 2/7, 1/7, 1)
+
+        #Enumerate left side
+        Y = set(['c','e','g'])
+        X = set([])
+        Z1 = set(['c','e','g'])
+        match = analyzer.search_node_with_closure(Y, lcg_S)
+        gen_X_Y = match.generators
+        fs_star_Y = rule_miner.MFS_RestrictMaxSC(Y, X, Z1, gen_X_Y)
+
+        self.assertEqual(len(fs_star_Y), 6)
+        expected_itemsets = []
+        expected_itemsets.append(set(['e']))
+        expected_itemsets.append(set(['e','c']))
+        expected_itemsets.append(set(['e','g']))
+        expected_itemsets.append(set(['e','c','g']))
+        expected_itemsets.append(set(['g']))
+        expected_itemsets.append(set(['g','c']))
+        for itemset in expected_itemsets:
+            self.assertIn(itemset, fs_star_Y)
+
+        #Enumerate right side in accordance with left hand side 'e'
+        Y = frozenset(['c', 'e', 'a', 'g', 'i']).difference(frozenset('e'))
+        X = set(['e'])
+        Z1 = set(['a', 'i'])
+        match = analyzer.search_node_with_closure(Y, lcg_S)
+        gen_X_Y = match.generators
+        fs_star_Y = rule_miner.MFS_RestrictMaxSC(Y, X, Z1, gen_X_Y)
+
+        self.assertEqual(len(fs_star_Y), 2)
+        expected_itemsets = []
+        expected_itemsets.append(set(['a']))
+        expected_itemsets.append(set(['a', 'i']))
+        for itemset in expected_itemsets:
+            self.assertIn(itemset, fs_star_Y)
+
+    def test_MFS_RestrictMaxSC_2(self):
+        # From publication example 3.b
+        analyzer = GCA(self.db_rules, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        lcg_S = rule_miner.MFCS_FromLattice(rule_miner.lcg, set(['a', 'c', 'f', 'h', 'i']), 2/7, 1/7, 1)
+
+        # Enumerate left side
+        Y = set(['a'])
+        X = set([])
+        Z1 = set(['a'])
+        match = analyzer.search_node_with_closure(Y, lcg_S)
+        gen_X_Y = match.generators
+        fs_star_Y = rule_miner.MFS_RestrictMaxSC(Y, X, Z1, gen_X_Y)
+
+        self.assertEqual(len(fs_star_Y), 1)
+        expected_itemsets = []
+        expected_itemsets.append(set(['a']))
+        for itemset in expected_itemsets:
+            self.assertIn(itemset, fs_star_Y)
+
+        # Enumerate right side in accordance with left hand side 'a'
+        Y = frozenset(['a', 'c', 'f', 'h', 'i']).difference(frozenset('a'))
+        X = set(['a'])
+        Z1 = set(['c', 'f', 'h', 'i'])
+        match = analyzer.search_node_with_closure(Y, lcg_S)
+        gen_X_Y = match.generators
+        fs_star_Y = rule_miner.MFS_RestrictMaxSC(Y, X, Z1, gen_X_Y)
+
+        self.assertEqual(len(fs_star_Y), 6)
+        expected_itemsets = []
+        expected_itemsets.append(set(['c', 'f']))
+        expected_itemsets.append(set(['c', 'f', 'i']))
+        expected_itemsets.append(set(['c', 'f', 'h']))
+        expected_itemsets.append(set(['c', 'f', 'h', 'i']))
+        expected_itemsets.append(set(['c', 'h']))
+        expected_itemsets.append(set(['c', 'h', 'i']))
+        for itemset in expected_itemsets:
+            self.assertIn(itemset, fs_star_Y)
+
+    def test_MAR_MaxSC_OneClass(self):
+
+        # From publication example 3.a
+        analyzer = GCA(self.db_rules, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        lcg_S = rule_miner.MFCS_FromLattice(rule_miner.lcg, set(['c', 'e', 'a', 'g', 'i']), 2 / 7, 1 / 7, 1)
+
+        # Generate rules for S_star_S1 = set(['c', 'e', 'a', 'g', 'i'])
+        L_C1 = set(['c','e','g'])
+        match = analyzer.search_node_with_closure(L_C1, lcg_S)
+        gen_L_C1 = match.generators
+        R1 = set(['a', 'i'])
+        S_star_S1 = set(['c', 'e', 'a', 'g', 'i'])
+        match = analyzer.search_node_with_closure(S_star_S1, lcg_S)
+        gen_S_star_S1 = match.generators
+        S1 = set(['c', 'e', 'a', 'g', 'i'])
+
+        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S1)
+
+        self.assertEqual(len(rules), 12)
+        expected_rules = []
+        expected_rules.append(RAMCM.Rule(set(['e']), set(['a'])))
+        expected_rules.append(RAMCM.Rule(set(['e']), set(['a','i'])))
+        expected_rules.append(RAMCM.Rule(set(['c','e']), set(['a'])))
+        expected_rules.append(RAMCM.Rule(set(['c','e']), set(['a','i'])))
+        expected_rules.append(RAMCM.Rule(set(['e','g']), set(['a'])))
+        expected_rules.append(RAMCM.Rule(set(['e','g']), set(['a','i'])))
+        expected_rules.append(RAMCM.Rule(set(['c','e','g']), set(['a'])))
+        expected_rules.append(RAMCM.Rule(set(['c','e','g']), set(['a','i'])))
+        expected_rules.append(RAMCM.Rule(set(['g']), set(['a'])))
+        expected_rules.append(RAMCM.Rule(set(['g']), set(['a','i'])))
+        expected_rules.append(RAMCM.Rule(set(['c','g']), set(['a'])))
+        expected_rules.append(RAMCM.Rule(set(['c','g']), set(['a','i'])))
+
+    def test_mine_rules_1(self):
+        # From publication example 3.a
+        analyzer = GCA(self.db_rules, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        L1 = set({'c','e','g'})
+        R1 = set(['a','i'])
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        rule_miner.mine(1/7,5/7,1/3,0.9,L1,R1)
+
+        self.assertEqual(len(rule_miner.ars),14)
+
+    def test_mine_rules_2(self):
+        # From publication example 3.b
+        analyzer = GCA(self.db_rules, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        L1 = set({'a'})
+        R1 = set(['c','f', 'h', 'i'])
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        rule_miner.mine(1/7,5/7,1/3,0.9,L1,R1)
+
+        self.assertEqual(len(rule_miner.ars),6)

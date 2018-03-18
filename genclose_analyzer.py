@@ -1,6 +1,7 @@
 import hashlib
 from tqdm import tqdm
 from collections import OrderedDict
+from itertools import combinations
 from operator import itemgetter
 
 #Utilities
@@ -32,7 +33,7 @@ class GenCloseAnalyzer:
         """
         Data structure to manage node in the tree of closed items
         """
-        def __init__(self, support, closure, generators, transactions, left_parent=None):
+        def __init__(self, support, closure, generators, transactions=None, left_parent=None):
             """
             Init
             :param support: support of the itemset
@@ -79,6 +80,7 @@ class GenCloseAnalyzer:
 
     def __init__(self, database, min_support = 1.0):
         self.database = database
+        self.db_length = len(self.database)
         self.ratio_min_supp = min_support
         self.min_supp = round(len(self.database) * self.ratio_min_supp)
         self.sorted_items = None
@@ -97,6 +99,8 @@ class GenCloseAnalyzer:
         for key_sum in self.LCG.keys():
             for key_supp, closed_list in self.LCG[key_sum].items():
                 list_closed.extend(closed_list)
+
+        list_closed = sorted(list_closed, key=lambda item: item.support)
         return list_closed
 
     def get_closed_items_closures(self):
@@ -113,7 +117,7 @@ class GenCloseAnalyzer:
         :return: list of items
         """
         items = {}
-        database_size = 0
+        database_size = len(self.database)
         self.reverse_db.clear()
 
         # Scan the database to initialize the frequence of all items used in the transactions
@@ -124,13 +128,9 @@ class GenCloseAnalyzer:
                 else:
                     items[item] = 1
 
-                database_size += 1
-
         # Sort the items by increasing frequencies and renumerate the items (most frequent items = biggest number)
         # Skip the items with a frequency lower than the support
-        #self.sorted_items = sorted(items.items(), key=lambda x: x[1] >= self.min_supp)
-        #self.sorted_items = sorted(items.items(), key=lambda x: x[1] >= self.min_supp)
-        self.sorted_items = {k: v for k, v in items.items() if v >= self.min_supp}
+        self.sorted_items = {k: (v/database_size) for k, v in items.items() if v >= self.min_supp}
         self.sorted_items = OrderedDict(sorted(self.sorted_items.items(), key=itemgetter(1, 0), reverse=False))
 
         # Reduce the database size by ignoring non frequent items and empty transactions
@@ -146,10 +146,10 @@ class GenCloseAnalyzer:
                     else:
                         self.reverse_db[item] = [index]
 
-            #transactions.append(list_items)
             transactions.append(list_items)
 
         self.database = transactions
+        self.db_length = len(self.database)
 
     def get_transactions_with_item(self, item):
         """
@@ -210,14 +210,11 @@ class GenCloseAnalyzer:
                         # Hence, if Y is not in the same folder with X, we move all nodes that are in the folder containing
                         # Y to the folder containing X. Thus, X also has the prefixes of Y.
                         if Y_key != X_key:
-                            #folder_to_delete = Y.folder
                             for node in self.L_folders[Y_key]:
                                 node.folder = X.folder
                                 self.L_folders[X_key].append(node)
-                            #del self.L_folders[GenCloseAnalyzer.key_folder(folder_to_delete)]
                             del self.L_folders[Y_key]
 
-                        #self.L_folders[GenCloseAnalyzer.key_folder(Y.folder)].remove(Y)
                         self.L_folders[X_key].remove(Y)
                         del tree_level[j]
                     else:
@@ -364,14 +361,11 @@ class GenCloseAnalyzer:
 
         transactions = self.get_transactions_with_item(generator)
         key_sum = sum(transactions)
-        support = len(transactions)
+        support = len(transactions)/self.db_length
 
-        #key_sum = node.left_parent.get_sum_transaction()
         if key_sum in self.LCG:
             if support in self.LCG[key_sum]:
-            #if node.support in self.LCG[key_sum]:
                 for closed in self.LCG[key_sum][support]:
-                #for closed in self.LCG[key_sum][node.support]:
                     for gen in closed.generators:
                         if frozenset(gen) == frozenset(generator):
                             return closed
@@ -387,10 +381,20 @@ class GenCloseAnalyzer:
         return None
         '''
 
-    def search_node_with_closure(self, search):
+    def search_node_with_closure(self, search, lcg = []):
         # TODO: implement double hash with diffset
-        for closed in self.lcg_into_list():
+        if len(lcg) == 0:
+            lcg = self.lcg_into_list()
+
+        '''
+        for closed in lcg:
             if frozenset(search) == frozenset(closed.closure):
+                return closed
+        return None
+        '''
+
+        for closed in reversed(lcg):
+            if frozenset(search).issubset(frozenset(closed.closure)):
                 return closed
         return None
 
@@ -410,11 +414,10 @@ class GenCloseAnalyzer:
 
         # Initialiation of layer L1 in the tree
         print('Initialize first layer')
-        #L1 = []
         LCurrent = []
         for item in frequent_items:
             associated_transactions = self.get_transactions_with_item(item)
-            LCurrent.append(GenCloseAnalyzer.Node(len(associated_transactions), item, [item], associated_transactions)) #<support, item, generators, transactions>
+            LCurrent.append(GenCloseAnalyzer.Node(len(associated_transactions)/self.db_length, item, [item], associated_transactions)) #<support, item, generators, transactions>
         tree.append(LCurrent)
 
         # Mine the itemsets and generators
@@ -428,23 +431,7 @@ class GenCloseAnalyzer:
             print('L' + str(i+1) + ': Store ' + str(len(LCurrent)) + ' items (EOC)')
             self.store_level(LCurrent) #store the closed itemsets and generators inside LCG
 
-            #tree.append([]) #produce (i+1)-generators abd extend corresponding pre-closed itemsets by EOC
             LNext = []
-
-            #TODO: improve to filter only by folders to avoid uninteresting pair testing ...
-            '''
-            for left_index, left_node in enumerate(tree[i]):
-                for right_index, right_node in reverse_enumerate(tree[i]):
-                    if left_index < right_index and (i == 0 or left_node.folder == right_node.folder):
-                        new_transactions = frozenset(left_node.transactions).intersection(frozenset(right_node.transactions))
-                        new_support = len(new_transactions)
-
-                        if new_support != left_node.support and new_support != right_node.support and new_support >= self.min_supp:
-                            new_closure = frozenset(left_node.closure).union(frozenset(right_node.closure)) #using EOA
-                            self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, tree[i+1],i+1) #using Condition (5)
-                    elif left_index >= right_index:
-                        break
-            '''
 
             print('L' + str(i + 1) + ': Generate new level by join (EOA)')
             if i > 0:
@@ -473,9 +460,9 @@ class GenCloseAnalyzer:
         utility method to package common code
         """
         new_transactions = frozenset(left_node.transactions).intersection(frozenset(right_node.transactions))
-        new_support = len(new_transactions)
+        new_support = len(new_transactions)/self.db_length
 
-        if new_support != left_node.support and new_support != right_node.support and new_support >= self.min_supp:
+        if new_support != left_node.support and new_support != right_node.support and new_support >= self.ratio_min_supp:
             new_closure = frozenset(left_node.closure).union(frozenset(right_node.closure))  # using EOA
             self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, next_level, current_index + 1)  # using Condition (5)
 
@@ -521,3 +508,229 @@ class GenCloseAnalyzer:
         if len(new_generators_set) >= 1:
             #new i+1-generators
             next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node))
+
+def is_in_generators(searched_gen, list_generators, is_strict = False):
+    set_search_gen = frozenset(searched_gen)
+    for gen in list_generators:
+        if is_strict:
+            if set_search_gen == frozenset(gen):
+                return True
+        else:
+            if set_search_gen.issubset(frozenset(gen)):
+                return True
+    return False
+
+class RulesAssociationMaximalConstraintMiner:
+    '''
+    Rules association miner with configuration on items, support and confidence, based on the following publication:
+    - Efficiently mining association rules based on maximum single constraints, Anh Tran, Tin C Truong, Bac Le, 2017
+    source: https://link.springer.com/article/10.1007/s40595-017-0096-2
+    '''
+
+    class Rule:
+        def __init__(self,left,right):
+            self.left = left
+            self.right = right
+
+        def to_str(self):
+            return  '+'.join([str(item) for item in self.left]) + '-->' + '+'.join([str(item) for item in self.right])
+
+    def __init__(self, lcg):
+        '''
+        Initialize the rule association miner
+        :param s0: minimal support
+        :param s1: maximal support (1 is the common configuration)
+        :param c0: minimal confidence
+        :param c1: maximal confidence (1 is the common configuration)
+        :param l1: constrained items for the left side of the rules
+        :param r1: constrained items for the right side of the rules
+        :param lcg: lattice of closed itemsets and their generators (with support)
+        '''
+
+        self.s0 = 0
+        self.s1 = 1
+        self.c0 = 0
+        self.c1 = 1
+        self.l1 = []
+        self.r1 = []
+        self.lcg = lcg
+        self.ars = [] #list of mined rules
+
+    def _get_support(self, itemset):
+        '''
+        Get the highest support from the lattice of closed generators
+        The lattice is sorted by support.
+        :param itemset: itemset to find the support
+        :return: support of the itemset
+        '''
+
+        for closed in reversed(self.lcg):
+            if frozenset(itemset).issubset(closed.closure):
+                return closed.support
+        return 0
+
+    def mine(self, s0, s1, c0, c1, l1, r1):
+        '''
+        Mine non redundant rules from LCG based on the constraints set in parameters
+        :param s0: minimal support
+        :param s1: maximal support (1 is the common configuration)
+        :param c0: minimal confidence
+        :param c1: maximal confidence (1 is the common configuration)
+        :param l1: constrained items for the left side of the rules
+        :param r1: constrained items for the right side of the rules
+        '''
+
+        self.ars = []
+        if s0 > s1 or c0 > c1: return
+
+        S1_star = frozenset(l1).union(frozenset(r1))
+        C1 = l1
+        supp_C1 = self._get_support(C1)
+
+        #TODO: what is R0? not used after in algorithm...
+        #R0_star = R0
+
+        s0_star = max(s0, c0 * supp_C1)
+        s1_star = s1
+
+        fcs_S1_star = self.MFCS_FromLattice(self.lcg, S1_star, self._get_support(S1_star), s0_star, s1_star) #TODO: from examples looks like S = S1_star ...
+        for S1_closed_item in fcs_S1_star:
+            s0_prime = S1_closed_item.support/c1
+            s1_prime = min(1, S1_closed_item.support/c0)
+            fcs_C1 = self.MFCS_FromLattice(fcs_S1_star, C1, supp_C1, s0_prime, s1_prime)
+            for C1_closed_item in fcs_C1:
+                AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,
+                                                  S1_closed_item.closure, S1_closed_item.generators, S1_star)  #TODO: from examples looks like S = S1_star ...
+
+                self.ars.extend(AR_star)
+
+    def MFCS_FromLattice(self, lcg, C1, supp_C1, s0, s1):
+        '''
+        Extract the frequent closed itemsets from LCG projected onto C1 and fulfilling the support constraint [s0,s1]
+        :param lcg: lattice of closed generators
+        :param C1: itemsets constraint
+        :param supp_C1: support of C1
+        :param s0: minimum support
+        :param s1: maximum support
+        :return: lcg projected onto C1
+        '''
+
+        fcs_C1 = []
+        if s0 > s1 or supp_C1 > s1: return fcs_C1
+
+        comb_Li = []
+        for i in range(len(C1)):
+            comb_Li.extend(combinations(C1, i + 1))
+
+        for closed in lcg:
+            generators_C1 = []
+            if s0 <= closed.support <= s1:
+                #if there is Li in G(L) and Li included or equal in C1 then
+
+                for li in comb_Li:
+                    #if frozenset(li).issubset(C1):
+                    if is_in_generators(li, closed.generators, True):
+                        generators_C1.append(list(li))
+
+                if len(generators_C1) > 0:
+                    L_C1 = frozenset(closed.closure).intersection(frozenset(C1))
+                    fcs_C1.append(GenCloseAnalyzer.Node(closed.support, L_C1, generators_C1))
+        return fcs_C1
+
+    def MFS_RestrictMaxSC(self, Y, X, Z1, gen_X_Y):
+        '''
+        Compute frequent sub itemsets restricted on X with upper bound Z1
+        Used to enumerate items of left and right side of the rules
+        :param Y: closure that will be constrained on X
+        :param X: itemset constraint with X intersect Y = empty set
+        :param Z1: uppper bound and Z1 included or equal to Y, Z1 is not an empty set
+        :param gen_X_Y: generators of X union Y
+        :return: list of frequent sub itemsets
+        '''
+
+        fs_star_Y = []
+
+        # Begin Compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
+        minimals = []
+        min_len = len(Z1)
+        for Sk in gen_X_Y:
+            Rk = frozenset(Sk).difference(frozenset(X))
+            if is_in_generators(Rk, gen_X_Y):
+                minimals.append(Rk)
+                if min_len > len(Rk):
+                    min_len = len(Rk)
+
+        if len(minimals) == 0: return fs_star_Y
+        else:
+            # End compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
+            R_min = []
+            for min in minimals:
+                if len(min) == min_len:
+                    R_min.append(min)
+
+            if len(R_min) == 0: #empty set
+                for R_second in Z1:
+                    fs_star_Y.append(R_second) #includin the empty set
+            else:
+                R_k_prev = set([])
+                R_U_k_prev = set([])
+                R_dash_k_prev = Z1
+
+                for k, R_k in enumerate(R_min):
+                    R_U_k = frozenset(frozenset(R_U_k_prev).union(frozenset(R_k_prev))).difference(R_k)
+                    R_U_k = list(R_U_k)
+                    comb_R_U_k = []
+                    for i in range(len(R_U_k)):
+                        comb_R_U_k.extend(combinations(R_U_k, i + 1))
+                    comb_R_U_k.append(frozenset([]))  # simulate empty element
+
+                    for R_k_prime in comb_R_U_k:
+                        is_duplicate = False
+                        for j in range(k):
+                            R_j = R_min[j]
+                            if frozenset(R_j).issubset(frozenset(R_k).union(frozenset(R_k_prime))):
+                                is_duplicate = True
+                                break
+
+                        if not is_duplicate:
+                            R_dash_k = frozenset(R_dash_k_prev).difference(frozenset(R_k))
+                            R_dash_k = list(R_dash_k)
+                            comb_R_dash_k = []
+                            for i in range(len(R_dash_k)):
+                                comb_R_dash_k.extend(combinations(R_dash_k,i+1))
+                            comb_R_dash_k.append(frozenset([]))  # simulate empty element
+
+                            #for R_tild_k in R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
+                            for R_tild_k in comb_R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
+                                fs_star_Y.append(frozenset(R_k).union(frozenset(R_k_prime)).union(frozenset(R_tild_k)))
+
+                    #update k variables
+                    R_U_k_prev = R_U_k
+                    R_k_prev = R_k
+                    R_dash_k_prev = R_dash_k
+
+        return fs_star_Y
+
+    def MAR_MaxSC_OneClass(self, L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S):
+        '''
+        Generates association rules with the constraints AR*incL1,incR1(L,S) for each pair (L,S) in NFCSincL1,incR1(s0,s1,c0,c1)
+        :param L_C1: itemset constraints for rules left side
+        :param gen_L_C1: associated generators for L_C1
+        :param R1: itemset constraints for rules right side
+        :param S_star_S1: closure of considered frequent closed itemsets in LCG(S) to generate rules from
+        :param gen_S_star_S1: associated generators for S_star_S1
+        :param S: global itemset constraint (L1 union R1)
+        :return: associations rules AR*incL1,incR1(L,S)
+        '''
+
+        AR_star = []
+        FS_star_left = self.MFS_RestrictMaxSC(L_C1,set([]), L_C1,gen_L_C1)
+        S_inter_R1 = frozenset(S).intersection(frozenset(R1))
+        for L_prime in FS_star_left:
+            R1_star = S_inter_R1.difference(L_prime)
+            if len(R1_star) > 0: #not empty set
+                FS_star_right = self.MFS_RestrictMaxSC(frozenset(S_star_S1).difference(frozenset(L_prime)),L_prime, R1_star, gen_S_star_S1)
+                for R_prime in FS_star_right:
+                    AR_star.append(RulesAssociationMaximalConstraintMiner.Rule(L_prime,R_prime))
+
+        return AR_star
