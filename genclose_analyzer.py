@@ -599,9 +599,7 @@ class RulesAssociationMaximalConstraintMiner:
             s1_prime = min(1, S1_closed_item.support/c0)
             fcs_C1 = self.MFCS_FromLattice(fcs_S1_star, C1, supp_C1, s0_prime, s1_prime)
             for C1_closed_item in fcs_C1:
-                AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,
-                                                  S1_closed_item.closure, S1_closed_item.generators, S1_star)  #TODO: from examples looks like S = S1_star ...
-
+                AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,S1_closed_item.closure, S1_closed_item.generators, S1_star)  #TODO: from examples looks like S = S1_star ...
                 self.ars.extend(AR_star)
 
     def MFCS_FromLattice(self, lcg, C1, supp_C1, s0, s1):
@@ -660,7 +658,8 @@ class RulesAssociationMaximalConstraintMiner:
                 if min_len > len(Rk):
                     min_len = len(Rk)
 
-        if len(minimals) == 0: return fs_star_Y
+        #if len(minimals) == 0: return fs_star_Y
+        if len(gen_X_Y) == 0: return fs_star_Y
         else:
             # End compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
             R_min = []
