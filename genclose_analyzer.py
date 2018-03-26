@@ -33,7 +33,7 @@ class GenCloseAnalyzer:
         """
         Data structure to manage node in the tree of closed items
         """
-        def __init__(self, support, closure, generators, transactions=None, left_parent=None):
+        def __init__(self, support, closure, generators, transactions=None, left_parent=None, right_parent=None):
             """
             Init
             :param support: support of the itemset
@@ -70,6 +70,7 @@ class GenCloseAnalyzer:
             self.key = 0 #hash key based on sum transactions
             self.folder = None
             self.left_parent = left_parent
+            self.right_parent = right_parent
 
         def get_sum_transaction(self):
             """
@@ -248,12 +249,12 @@ class GenCloseAnalyzer:
                             break
 
                     if not_exist:
-                        self.LCG[key][node.support].append(GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None))
+                        self.LCG[key][node.support].append(GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None, node.left_parent, node.right_parent))
                 else:
-                    self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None)]
+                    self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure, node.generators, None, node.left_parent, node.right_parent)]
             else:
                 self.LCG[key] = {}
-                self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure,node.generators, None)]
+                self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure,node.generators, None, node.left_parent, node.right_parent)]
 
         #TODO: implement double hash with diffset
         '''
@@ -507,7 +508,7 @@ class GenCloseAnalyzer:
 
         if len(new_generators_set) >= 1:
             #new i+1-generators
-            next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node))
+            next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node, right_node))
 
 def is_in_generators(searched_gen, list_generators, is_strict = False):
     set_search_gen = frozenset(searched_gen)
@@ -569,6 +570,44 @@ class RulesAssociationMaximalConstraintMiner:
                 return closed.support
         return 0
 
+    @staticmethod
+    def get_minimals(X, Z1, gen_X_Y):
+        '''
+        Return Minimal{Rk = Sk\X | Sk belongs to G(X+Y), Rk included or equal to Z1}
+        :return: array of minimals
+        '''
+
+        if len(gen_X_Y) == 0: return []
+
+        minimals = []
+        min_len = len(Z1)
+        z1_combination = []
+        for i in range(len(Z1)):
+            z1_combination.extend(combinations(Z1, i + 1))
+        z1_combination.append(frozenset([]))  # simulate empty element
+
+        for Sk in gen_X_Y:
+            Rk = frozenset(Sk).difference(frozenset(X))
+            # if is_in_generators(Rk, gen_X_Y):
+            if len(Rk) == 0:
+                minimals.append(frozenset([]))
+            else:
+                found = False
+                for comb in z1_combination:
+                    if Rk == frozenset(comb):
+                        found = True
+                        break
+                if found:
+                    minimals.append(Rk)
+                    if min_len > len(Rk):
+                        min_len = len(Rk)
+
+        for min in minimals:
+            if len(min) > min_len:
+                minimals.remove(min)
+
+        return minimals
+
     def mine(self, s0, s1, c0, c1, l1, r1):
         '''
         Mine non redundant rules from LCG based on the constraints set in parameters
@@ -597,9 +636,11 @@ class RulesAssociationMaximalConstraintMiner:
         for S1_closed_item in fcs_S1_star:
             s0_prime = S1_closed_item.support/c1
             s1_prime = min(1, S1_closed_item.support/c0)
-            fcs_C1 = self.MFCS_FromLattice(fcs_S1_star, C1, supp_C1, s0_prime, s1_prime)
+
+            lcg_s = self.MFCS_FromLattice(self.lcg, S1_closed_item.closure, S1_closed_item.support, 0, 1)
+            fcs_C1 = self.MFCS_FromLattice(lcg_s, C1, supp_C1, s0_prime, s1_prime)
             for C1_closed_item in fcs_C1:
-                AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,S1_closed_item.closure, S1_closed_item.generators, S1_star)  #TODO: from examples looks like S = S1_star ...
+                AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,S1_closed_item.closure, S1_closed_item.generators, S1_closed_item.closure)  #TODO: from examples looks like S = S1_star ...
                 self.ars.extend(AR_star)
 
     def MFCS_FromLattice(self, lcg, C1, supp_C1, s0, s1):
@@ -648,65 +689,52 @@ class RulesAssociationMaximalConstraintMiner:
 
         fs_star_Y = []
 
-        # Begin Compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
-        minimals = []
-        min_len = len(Z1)
-        for Sk in gen_X_Y:
-            Rk = frozenset(Sk).difference(frozenset(X))
-            if is_in_generators(Rk, gen_X_Y):
-                minimals.append(Rk)
-                if min_len > len(Rk):
-                    min_len = len(Rk)
+        #Compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
+        minimals = RulesAssociationMaximalConstraintMiner.get_minimals(X, Z1, gen_X_Y)
+        if len(minimals) == 0: return []
 
-        #if len(minimals) == 0: return fs_star_Y
-        if len(gen_X_Y) == 0: return fs_star_Y
+        R_min = minimals
+
+        if len(R_min) == 0: #empty set
+            for R_second in Z1:
+                fs_star_Y.append(R_second) #includin the empty set
         else:
-            # End compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
-            R_min = []
-            for min in minimals:
-                if len(min) == min_len:
-                    R_min.append(min)
+            R_k_prev = set([])
+            R_U_k_prev = set([])
+            R_dash_k_prev = Z1
 
-            if len(R_min) == 0: #empty set
-                for R_second in Z1:
-                    fs_star_Y.append(R_second) #includin the empty set
-            else:
-                R_k_prev = set([])
-                R_U_k_prev = set([])
-                R_dash_k_prev = Z1
+            for k, R_k in enumerate(R_min):
+                R_U_k = frozenset(frozenset(R_U_k_prev).union(frozenset(R_k_prev))).difference(R_k)
+                R_U_k = list(R_U_k)
+                comb_R_U_k = []
+                for i in range(len(R_U_k)):
+                    comb_R_U_k.extend(combinations(R_U_k, i + 1))
+                comb_R_U_k.append(frozenset([]))  # simulate empty element
 
-                for k, R_k in enumerate(R_min):
-                    R_U_k = frozenset(frozenset(R_U_k_prev).union(frozenset(R_k_prev))).difference(R_k)
-                    R_U_k = list(R_U_k)
-                    comb_R_U_k = []
-                    for i in range(len(R_U_k)):
-                        comb_R_U_k.extend(combinations(R_U_k, i + 1))
-                    comb_R_U_k.append(frozenset([]))  # simulate empty element
+                for R_k_prime in comb_R_U_k:
+                    is_duplicate = False
+                    for j in range(k):
+                        R_j = R_min[j]
+                        if frozenset(R_j).issubset(frozenset(R_k).union(frozenset(R_k_prime))):
+                            is_duplicate = True
+                            break
 
-                    for R_k_prime in comb_R_U_k:
-                        is_duplicate = False
-                        for j in range(k):
-                            R_j = R_min[j]
-                            if frozenset(R_j).issubset(frozenset(R_k).union(frozenset(R_k_prime))):
-                                is_duplicate = True
-                                break
+                    if not is_duplicate:
+                        R_dash_k = frozenset(R_dash_k_prev).difference(frozenset(R_k))
+                        R_dash_k = list(R_dash_k)
+                        comb_R_dash_k = []
+                        for i in range(len(R_dash_k)):
+                            comb_R_dash_k.extend(combinations(R_dash_k,i+1))
+                        comb_R_dash_k.append(frozenset([]))  # simulate empty element
 
-                        if not is_duplicate:
-                            R_dash_k = frozenset(R_dash_k_prev).difference(frozenset(R_k))
-                            R_dash_k = list(R_dash_k)
-                            comb_R_dash_k = []
-                            for i in range(len(R_dash_k)):
-                                comb_R_dash_k.extend(combinations(R_dash_k,i+1))
-                            comb_R_dash_k.append(frozenset([]))  # simulate empty element
+                        #for R_tild_k in R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
+                        for R_tild_k in comb_R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
+                            fs_star_Y.append(frozenset(R_k).union(frozenset(R_k_prime)).union(frozenset(R_tild_k)))
 
-                            #for R_tild_k in R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
-                            for R_tild_k in comb_R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
-                                fs_star_Y.append(frozenset(R_k).union(frozenset(R_k_prime)).union(frozenset(R_tild_k)))
-
-                    #update k variables
-                    R_U_k_prev = R_U_k
-                    R_k_prev = R_k
-                    R_dash_k_prev = R_dash_k
+                #update k variables
+                R_U_k_prev = R_U_k
+                R_k_prev = R_k
+                R_dash_k_prev = R_dash_k
 
         return fs_star_Y
 

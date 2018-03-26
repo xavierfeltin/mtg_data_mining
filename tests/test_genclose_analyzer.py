@@ -366,6 +366,7 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         # Generate rules for S_star_S1 = set(['c', 'e', 'a', 'g', 'i'])
         L_C1 = set(['c','e','g'])
         match = analyzer.search_node_with_closure(L_C1, lcg_S)
+
         gen_L_C1 = match.generators
         R1 = set(['a', 'i'])
         S_star_S1 = set(['c', 'e', 'a', 'g', 'i'])
@@ -373,7 +374,7 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         gen_S_star_S1 = match.generators
         S1 = set(['c', 'e', 'a', 'g', 'i'])
 
-        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S1)
+        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S_star_S1)
 
         self.assertEqual(len(rules), 12)
         expected_rules = []
@@ -410,7 +411,7 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         gen_S_star_S1 = match.generators
         S1 = set(['a', 'c', 'f', 'h', 'i'])
 
-        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S1)
+        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S_star_S1)
 
         self.assertEqual(len(rules), 6)
         expected_rules = []
@@ -441,7 +442,7 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         gen_S_star_S1 = match.generators
         S1 = set(['a', 'c', 'f', 'h', 'i'])
 
-        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S1)
+        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S_star_S1)
 
         self.assertEqual(len(rules), 6)
         expected_rules = []
@@ -451,6 +452,31 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         expected_rules.append(RAMCM.Rule(set(['a']), set(['h', 'i'])))
         expected_rules.append(RAMCM.Rule(set(['a']), set(['f', 'h'])))
         expected_rules.append(RAMCM.Rule(set(['a']), set(['f', 'h', 'i'])))
+
+    def test_MAR_MaxSC_OneClass_4(self):
+
+        # From publication example 3.a
+        analyzer = GCA(self.db_rules, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        lcg_S = rule_miner.MFCS_FromLattice(rule_miner.lcg, set(['c', 'e', 'a', 'g', 'i']), 2/7, 1/7, 5/7)
+
+        # Generate rules for S_star_S1 = set(['c', 'e', 'a', 'g', 'i'])
+        L_C1 = set(['c', 'e', 'g'])
+        match = analyzer.search_node_with_closure(L_C1, lcg_S)
+        gen_L_C1 = match.generators
+        R1 = set(['a', 'i'])
+        S_star_S1 = set(['a', 'c', 'i'])
+        match = analyzer.search_node_with_closure(S_star_S1, lcg_S)
+        gen_S_star_S1 = match.generators
+        S1 = set(['c', 'e', 'a', 'g', 'i'])
+
+        rules = rule_miner.MAR_MaxSC_OneClass(L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S_star_S1)
+
+        self.assertEqual(len(rules), 2)
+        expected_rules = []
 
     def test_mine_rules_1(self):
         # From publication example 3.a
@@ -476,4 +502,4 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         rule_miner = RAMCM(analyzer.lcg_into_list())
         rule_miner.mine(1/7,5/7,1/3,0.9,L1,R1)
 
-        self.assertEqual(len(rule_miner.ars),6)
+        self.assertEqual(len(rule_miner.ars),12)
