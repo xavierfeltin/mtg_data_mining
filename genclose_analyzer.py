@@ -79,6 +79,9 @@ class GenCloseAnalyzer:
             """
             return sum(self.transactions)
 
+        def to_str(self):
+            return '<' + str(self.closure) + ', ' + str(round(self.support,4)) + ', ' + str(self.generators) + '>'
+
     def __init__(self, database, min_support = 1.0):
         self.database = database
         self.db_length = len(self.database)
@@ -619,6 +622,8 @@ class RulesAssociationMaximalConstraintMiner:
         :param r1: constrained items for the right side of the rules
         '''
 
+        print('MAR_MaxSC(' + str(round(s0,4)) + ', ' + str(round(s1,4)) + ' , ' + str(round(c0,4)) + ', ' + str(round(c1,4)) + ', ' + str(l1) + ', ' + str(r1) + ')')
+
         self.ars = []
         if s0 > s1 or c0 > c1: return
 
@@ -629,19 +634,61 @@ class RulesAssociationMaximalConstraintMiner:
         #TODO: what is R0? not used after in algorithm...
         #R0_star = R0
 
+        print('\ninitial conditions: ')
+        print('s0: ' + str(round(s0, 4)) + ', s1: ' + str(round(s1, 4)) + ', c0: ' + str(round(c0, 4)) + ', c1: ' + str(round(c1, 4)))
+        print('L1: ' + str(l1) + ', R1: ' + str(r1))
+
         s0_star = max(s0, c0 * supp_C1)
         s1_star = s1
+        print('s0* = max(s0, c0 x supp(C1)) => ' + str(round(s0_star)))
+        print('s1* = s1 => ' + str(round(s1_star)))
 
         fcs_S1_star = self.MFCS_FromLattice(self.lcg, S1_star, self._get_support(S1_star), s0_star, s1_star) #TODO: from examples looks like S = S1_star ...
+        print('FCS⊆S1* = MFCS_FromLattice(LCG, S1*, supp(S1*), s0*, s1*)')
+        str_fcs =''
+        for item in fcs_S1_star:
+            str_fcs += '  - ' + item.to_str() + '\n'
+        print('result FCS⊆S1*: \n' + str(str_fcs))
+
+        print('for each <Ss1*, supp(Ss1*), GS1*(S)> ∈ FCS⊆S1*(s0*, s1*) do')
         for S1_closed_item in fcs_S1_star:
+            print('  - Ss1*: <'+str(S1_closed_item.closure) +', ' + str(round(S1_closed_item.support,4)) +', '+ str(S1_closed_item.generators) +'>')
             s0_prime = S1_closed_item.support/c1
             s1_prime = min(1, S1_closed_item.support/c0)
+            print('s\'0 = supp(Ss1*)/c1 => ' + str(round(s0_prime,4)))
+            print('s\'1 = min(1,supp(Ss1*)/c0) => ' + str(round(s1_prime,4)))
 
             lcg_s = self.MFCS_FromLattice(self.lcg, S1_closed_item.closure, S1_closed_item.support, 0, 1)
+            print('LCG_S = MFCS_FromLattice(LCG, S, supp(S), 0, 1)')
+            str_lcg_s = ''
+            for item in lcg_s:
+                str_lcg_s += '  - ' + item.to_str() + '\n'
+            print('result LCG_S: \n' + str(str_lcg_s))
+
             fcs_C1 = self.MFCS_FromLattice(lcg_s, C1, supp_C1, s0_prime, s1_prime)
-            for C1_closed_item in fcs_C1:
-                AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,S1_closed_item.closure, S1_closed_item.generators, S1_closed_item.closure)  #TODO: from examples looks like S = S1_star ...
-                self.ars.extend(AR_star)
+            print('FCS⊆C1(s\'0,s\'1) = MFCS_FromLattice(LCG_S, C1, supp(S), s\'0, s\'1)')
+            str_fcs_C1 = ''
+            for item in fcs_C1:
+                str_fcs_C1 += '  - ' + item.to_str() + '\n'
+            if len(str_fcs_C1) == 0:
+                print('result FCS⊆C1(s\'0,s\'1): None')
+            else:
+                print('result FCS⊆C1(s\'0,s\'1): \n' + str(str_fcs_C1))
+                print('for each <LC1, supp(LC1), GC1(L)> ∈ FCS⊆C1(s\'0, s\'1) do')
+                for C1_closed_item in fcs_C1:
+                    print('  - LC1: <' + str(C1_closed_item.closure) + ', ' + str(round(C1_closed_item.support, 4)) + ', ' + str(C1_closed_item.generators) + '>')
+                    print('AR*⊆L1⊆R1(L,S) = MAR_MaxSC_OneClass(LC1,GC1(L),R1,Ss1*,GS1*(S),S)')
+                    AR_star = self.MAR_MaxSC_OneClass(C1_closed_item.closure, C1_closed_item.generators, r1,S1_closed_item.closure, S1_closed_item.generators, S1_closed_item.closure)  #TODO: from examples looks like S = S1_star ...
+                    str_AR_star = ''
+                    for item in AR_star:
+                        str_AR_star += '  - ' + item.to_str() + '\n'
+                    print('result AR*⊆L1⊆R1(L,S): \n' + str(str_AR_star))
+                    self.ars.extend(AR_star)
+
+        str_AR = ''
+        for item in self.ars:
+            str_AR += '  - ' + item.to_str() + '\n'
+        print('\n\n Final result ARS⊆L1⊆R1(s0,s1,c0,c1): \n' + str(str_AR))
 
     def MFCS_FromLattice(self, lcg, C1, supp_C1, s0, s1):
         '''
@@ -687,18 +734,37 @@ class RulesAssociationMaximalConstraintMiner:
         :return: list of frequent sub itemsets
         '''
 
+        print('\ncall MFS_RestrictMaxSC(' + str(set(Y)) + ', ' + str(set(X)) + ' , ' + str(set(Z1)) + ', ' + str(gen_X_Y))
+
         fs_star_Y = []
 
         #Compute Rmin = Minimal({Rk = Sk\X | Sk belongs to Gen_X_Y, Rk included or equal to Z1})
         minimals = RulesAssociationMaximalConstraintMiner.get_minimals(X, Z1, gen_X_Y)
-        if len(minimals) == 0: return []
+        if len(minimals) == 0:
+            print('GX+Z1(X+Y) = Ø, return Ø')
+            return []
 
         R_min = minimals
 
-        if len(R_min) == 0: #empty set
-            for R_second in Z1:
-                fs_star_Y.append(R_second) #includin the empty set
+        print('Rmin = Minimal{Rk = Sk\X | Sk ∈ G(X+Y), Rk ⊆ Z1} => ' + str(R_min))
+
+        if len(R_min) == 1 and R_min[0] == frozenset([]): #empty set
+            print('if Rmin = {Ø}  => True')
+            z1_combination = []
+            for i in range(len(Z1)):
+                z1_combination.extend(combinations(Z1, i + 1))
+            z1_combination.append(frozenset([]))  # simulate empty element
+
+            for R_second in z1_combination:
+                fs_star_Y.append(R_second) #including the empty set
+
+            str_fs_star_Y = ''
+            for item in fs_star_Y:
+                str_fs_star_Y += '  - ' + str(set(item)) + '\n'
+            print('result FS*(Y)X⊆Z1*: \n' + str(str_fs_star_Y))
+
         else:
+            print('if Rmin = {Ø}  => False')
             R_k_prev = set([])
             R_U_k_prev = set([])
             R_dash_k_prev = Z1
@@ -730,12 +796,19 @@ class RulesAssociationMaximalConstraintMiner:
                         #for R_tild_k in R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
                         for R_tild_k in comb_R_dash_k: #for Rmin different from singleton with empty item, we know Rk + R_k_prime + R_tild_k not empty
                             fs_star_Y.append(frozenset(R_k).union(frozenset(R_k_prime)).union(frozenset(R_tild_k)))
+                            print('  - Add in FS*(Y)X⊆Z1*: Rk('+ str(set(R_k)) + ')' + ', R\'k(' + str(set(R_k_prime)) + '), R~k(' + str(set(R_tild_k)) + ')')
 
                 #update k variables
                 R_U_k_prev = R_U_k
                 R_k_prev = R_k
                 R_dash_k_prev = R_dash_k
 
+                str_fs_star_Y = ''
+                for item in fs_star_Y:
+                    str_fs_star_Y += '  - ' + str(set(item)) + '\n'
+                print('result FS*(Y)X⊆Z1*: \n' + str(str_fs_star_Y))
+
+        print('end call MFS_RestrictMaxSC\n')
         return fs_star_Y
 
     def MAR_MaxSC_OneClass(self, L_C1, gen_L_C1, R1, S_star_S1, gen_S_star_S1, S):
@@ -750,14 +823,35 @@ class RulesAssociationMaximalConstraintMiner:
         :return: associations rules AR*incL1,incR1(L,S)
         '''
 
+        print('\ncall MAR_MaxSC_OneClass(' + str(L_C1) +', ' + str(gen_L_C1) +' , ' + str(R1) + ', '+ str(S_star_S1) + ', ' + str(gen_S_star_S1) + ', ' + str(S))
+
         AR_star = []
+
+        print('FS*⊆LC1 = MFS_RestrictMaxSC(LC1, Ø, LC1, G(LC1))')
         FS_star_left = self.MFS_RestrictMaxSC(L_C1,set([]), L_C1,gen_L_C1)
+        str_FS_star_left = ''
+        for item in FS_star_left:
+            str_FS_star_left += '  - ' + str(set(item)) + '\n'
+        print('result FS*⊆LC1: \n' + str(str_FS_star_left))
+
+        print('for each L\' ∈ FS*⊆LC1 and (S∩R1)\L\' != Ø) do')
         S_inter_R1 = frozenset(S).intersection(frozenset(R1))
         for L_prime in FS_star_left:
             R1_star = S_inter_R1.difference(L_prime)
+            print('L\': ' + str(set(L_prime)) + ', R1* = (S∩R1)\L\' => ' + str(set(R1_star)))
+
             if len(R1_star) > 0: #not empty set
+                print('FS*(Ss1*\L\')L\'⊆R1* = MFS_RestrictMaxSC(Ss1*\L\', L\', R1*, G(Ss1*))')
                 FS_star_right = self.MFS_RestrictMaxSC(frozenset(S_star_S1).difference(frozenset(L_prime)),L_prime, R1_star, gen_S_star_S1)
+                str_FS_star_right= ''
+                for item in FS_star_right:
+                    str_FS_star_right+= '  - ' + str(set(item)) + '\n'
+                print('result FS*(Ss1*\L\')L\'⊆R1*: \n' + str(str_FS_star_right))
+
                 for R_prime in FS_star_right:
                     AR_star.append(RulesAssociationMaximalConstraintMiner.Rule(L_prime,R_prime))
+                    print(' - Add rule ' + RulesAssociationMaximalConstraintMiner.Rule(L_prime,R_prime).to_str())
+
+        print('end call MAR_MaxSC_OneClass\n')
 
         return AR_star
