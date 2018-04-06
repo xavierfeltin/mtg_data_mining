@@ -3,6 +3,7 @@ from tqdm import tqdm
 from collections import OrderedDict
 from itertools import combinations
 from operator import itemgetter
+from math import inf
 
 #Utilities
 def reverse_enumerate(iterable):
@@ -524,39 +525,19 @@ def is_in_generators(searched_gen, list_generators, is_strict = False):
                 return True
     return False
 
-class RulesAssociationMaximalConstraintMiner:
-    '''
-    Rules association miner with configuration on items, support and confidence, based on the following publication:
-    - Efficiently mining association rules based on maximum single constraints, Anh Tran, Tin C Truong, Bac Le, 2017
-    source: https://link.springer.com/article/10.1007/s40595-017-0096-2
-    '''
 
-    class Rule:
-        def __init__(self,left,right):
-            self.left = left
-            self.right = right
+class Rule:
+    def __init__(self, left, right, support = 1.0, confidence = 1.0):
+        self.left = left
+        self.right = right
+        self.support= support
+        self.confidence = confidence
 
-        def to_str(self):
-            return  '+'.join([str(item) for item in self.left]) + '-->' + '+'.join([str(item) for item in self.right])
+    def to_str(self):
+        return '+'.join([str(item) for item in self.left]) + '-->' + '+'.join([str(item) for item in self.right])
 
+class RulesAssociation:
     def __init__(self, lcg):
-        '''
-        Initialize the rule association miner
-        :param s0: minimal support
-        :param s1: maximal support (1 is the common configuration)
-        :param c0: minimal confidence
-        :param c1: maximal confidence (1 is the common configuration)
-        :param l1: constrained items for the left side of the rules
-        :param r1: constrained items for the right side of the rules
-        :param lcg: lattice of closed itemsets and their generators (with support)
-        '''
-
-        self.s0 = 0
-        self.s1 = 1
-        self.c0 = 0
-        self.c1 = 1
-        self.l1 = []
-        self.r1 = []
         self.lcg = lcg
         self.ars = [] #list of mined rules
 
@@ -572,6 +553,38 @@ class RulesAssociationMaximalConstraintMiner:
             if frozenset(itemset).issubset(closed.closure):
                 return closed.support
         return 0
+
+
+
+    def mine(self):
+        pass
+
+class RulesAssociationMaximalConstraintMiner(RulesAssociation):
+    '''
+    Rules association miner with configuration on items, support and confidence, based on the following publication:
+    - Efficiently mining association rules based on maximum single constraints, Anh Tran, Tin C Truong, Bac Le, 2017
+    source: https://link.springer.com/article/10.1007/s40595-017-0096-2
+    '''
+
+    def __init__(self, lcg):
+        '''
+        Initialize the rule association miner
+        :param s0: minimal support
+        :param s1: maximal support (1 is the common configuration)
+        :param c0: minimal confidence
+        :param c1: maximal confidence (1 is the common configuration)
+        :param l1: constrained items for the left side of the rules
+        :param r1: constrained items for the right side of the rules
+        :param lcg: lattice of closed itemsets and their generators (with support)
+        '''
+
+        RulesAssociation.__init__(self, lcg)
+        self.s0 = 0
+        self.s1 = 1
+        self.c0 = 0
+        self.c1 = 1
+        self.l1 = []
+        self.r1 = []
 
     @staticmethod
     def get_minimals(X, Z1, gen_X_Y):
@@ -704,19 +717,20 @@ class RulesAssociationMaximalConstraintMiner:
         fcs_C1 = []
         if s0 > s1 or supp_C1 > s1: return fcs_C1
 
-        comb_Li = []
-        for i in range(len(C1)):
-            comb_Li.extend(combinations(C1, i + 1))
+        #comb_Li = []
+        #for i in range(len(C1)):
+        #    comb_Li.extend(combinations(C1, i + 1))
 
         for closed in lcg:
             generators_C1 = []
             if s0 <= closed.support <= s1:
                 #if there is Li in G(L) and Li included or equal in C1 then
 
-                for li in comb_Li:
-                    #if frozenset(li).issubset(C1):
-                    if is_in_generators(li, closed.generators, True):
-                        generators_C1.append(list(li))
+                for i in range(len(C1)):
+                    for li in combinations(C1, i + 1):
+                        #if frozenset(li).issubset(C1):
+                        if is_in_generators(li, closed.generators, True):
+                            generators_C1.append(list(li))
 
                 if len(generators_C1) > 0:
                     L_C1 = frozenset(closed.closure).intersection(frozenset(C1))
@@ -849,9 +863,58 @@ class RulesAssociationMaximalConstraintMiner:
                 print('result FS*(Ss1*\L\')L\'⊆R1*: \n' + str(str_FS_star_right))
 
                 for R_prime in FS_star_right:
-                    AR_star.append(RulesAssociationMaximalConstraintMiner.Rule(L_prime,R_prime))
-                    print(' - Add rule ' + RulesAssociationMaximalConstraintMiner.Rule(L_prime,R_prime).to_str())
+                    AR_star.append(Rule(L_prime,R_prime))
+                    print(' - Add rule ' + Rule(L_prime,R_prime).to_str())
 
         print('end call MAR_MaxSC_OneClass\n')
 
         return AR_star
+
+class RuleAssociationMinMin(RulesAssociation):
+    '''
+    Rules association miner with generation of all basic rules and the consequent rules
+    - Structure of Association	Rule Set	Based on MinMin Basic Rules, Anh Tran, Tin C Truong, Thong Trab, 2010
+    source: https://www.researchgate.net/publication/261319771
+    '''
+
+    def __init__(self, lcg):
+        RulesAssociation.__init__(self, lcg)
+
+    @staticmethod
+    def get_minimals(Li, S):
+        '''
+        Return Rmin(L’, S) = {R*ik:=Sk\L’ | Sk∈G(S), Sk\Li is minimal for each Li∈G(L’)}
+        :param Li: one of generator from G(L')
+        :param S: list of generators of S
+        :return: array of minimals
+        '''
+
+        minimals = []
+        min_len = inf
+        for Sk in S:
+            Rk = frozenset(Sk).difference(frozenset(Li))
+            minimals.append(Rk)
+            if min_len > len(Rk):
+                min_len = len(Rk)
+
+        for min in minimals:
+            if len(min) > min_len:
+                minimals.remove(min)
+
+        return minimals
+
+    def mine(self, L, S):
+        '''
+        Mine all the basic rules for the frequent itemsets L and S
+        :param L: node containing L
+        :param S: node containing S
+        :return: all basic rules
+        '''
+        B_L_S = []
+        c = S.support/ L.support
+        for Li in L.generators:
+            MS = RuleAssociationMinMin.get_minimals(Li, S.generators)
+            for Rk in MS:
+                B_L_S.append(Rule(Li,Rk,S.support,c))
+        return B_L_S
+

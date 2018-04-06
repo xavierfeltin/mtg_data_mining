@@ -4,6 +4,9 @@ from lsa_encoder import DataCleaner, LSAEncoder
 from apriori_analyzer import APrioriAnalyzer
 from fpgrowth_analyzer import FPGrowthAnalyzer
 from genclose_analyzer import GenCloseAnalyzer as GCA
+from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
+from genclose_analyzer import RuleAssociationMinMin as RAMM
+from itertools import combinations
 
 import os
 
@@ -90,12 +93,12 @@ def find_frequent_items_fpgrowth():
 def find_closed_items():
     print('Load deck')
     card_loader = MagicLoader()
-    card_loader.load('./data/AllCards-x.json')
+    card_loader.load('./data/magic_cards/AllCards-x.json')
 
     print('Clean deck')
     deck_loader = DeckManager()
-    list_files = os.listdir("./db_decks")  # returns list
-    deck_loader.load_from_csv(list_files, card_loader)
+    list_files = os.listdir("./data/decks_mtgdeck_net")  # returns list
+    deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands)
 
     analyzer = GCA(deck_loader.decks, 0.01)
@@ -103,7 +106,41 @@ def find_closed_items():
     print('Start mining')
     analyzer.mine()
     print('nb closed items = ' + str(len(analyzer.lcg_into_list())))
-    deck_loader.write_frequent_items_into_csv('genclose_results', analyzer.get_closed_items_closures(), card_loader)
+    #deck_loader.write_frequent_items_into_csv('genclose_results', analyzer.get_closed_items_closures(), card_loader)
+
+    frequent_items = analyzer.lcg_into_list()
+    nb_frequent_items = len(frequent_items)
+
+    generated_rules = []
+    '''
+    rule_miner = RAMCM(frequent_items)
+    for pair in combinations(list(range(nb_frequent_items)), 2):
+        L1 = frequent_items[pair[0]].closure
+        R1 = frequent_items[pair[1]].closure
+        rule_miner.mine(0.3, 1.0, 0.33, 1.0, L1, R1)
+        generated_rules.extend(rule_miner.ars)
+    '''
+
+    rule_miner = RAMM(frequent_items)
+    index = 0
+    for pair in combinations(list(range(nb_frequent_items)), 2):
+        L = frequent_items[pair[0]]
+        S = frequent_items[pair[1]]
+        rules = rule_miner.mine(L,S)
+
+        for rule in rules:
+            left = []
+            for item in rule.left:
+                left.append(card_loader.hash_id_name[item])
+
+            right = []
+            for item in rule.right:
+                right.append(card_loader.hash_id_name[item])
+
+            print(str(index + 1) + ': ' + '+'.join([str(item) for item in left]) + '-->' + '+'.join(
+                [str(item) for item in right]))
+
+            index += 1
 
 if __name__ == "__main__":
     # execute only if run as a script

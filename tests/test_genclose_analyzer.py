@@ -2,6 +2,7 @@ import unittest
 from genclose_analyzer import GenCloseAnalyzer as GCA
 from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
 from genclose_analyzer import is_in_generators
+from genclose_analyzer import Rule
 
 class TestGenCloseAnalyzer(unittest.TestCase):
     def setUp(self):
@@ -26,6 +27,15 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         self.db_rules.append(['a', 'c', 'e', 'g', 'i'])
         self.db_rules.append(['b', 'c', 'e', 'g', 'i'])
         self.db_rules.append(['a', 'c', 'f', 'h', 'i'])
+
+        self.db_rules_integer = []  # database used for rules association mining with integer
+        self.db_rules_integer.append([1, 3, 5, 7, 9])
+        self.db_rules_integer.append([1, 3, 6, 8, 9])
+        self.db_rules_integer.append([1, 4, 6, 8, 9])
+        self.db_rules_integer.append([2, 3, 5, 7, 9])
+        self.db_rules_integer.append([1, 3, 5, 7, 9])
+        self.db_rules_integer.append([2, 3, 5, 7, 9])
+        self.db_rules_integer.append([1, 3, 6, 8, 9])
 
         self.analyzer = GCA([], 1)
         root = None
@@ -378,18 +388,18 @@ class TestGenCloseAnalyzer(unittest.TestCase):
 
         self.assertEqual(len(rules), 12)
         expected_rules = []
-        expected_rules.append(RAMCM.Rule(set(['e']), set(['a'])))
-        expected_rules.append(RAMCM.Rule(set(['e']), set(['a','i'])))
-        expected_rules.append(RAMCM.Rule(set(['c','e']), set(['a'])))
-        expected_rules.append(RAMCM.Rule(set(['c','e']), set(['a','i'])))
-        expected_rules.append(RAMCM.Rule(set(['e','g']), set(['a'])))
-        expected_rules.append(RAMCM.Rule(set(['e','g']), set(['a','i'])))
-        expected_rules.append(RAMCM.Rule(set(['c','e','g']), set(['a'])))
-        expected_rules.append(RAMCM.Rule(set(['c','e','g']), set(['a','i'])))
-        expected_rules.append(RAMCM.Rule(set(['g']), set(['a'])))
-        expected_rules.append(RAMCM.Rule(set(['g']), set(['a','i'])))
-        expected_rules.append(RAMCM.Rule(set(['c','g']), set(['a'])))
-        expected_rules.append(RAMCM.Rule(set(['c','g']), set(['a','i'])))
+        expected_rules.append(Rule(set(['e']), set(['a'])))
+        expected_rules.append(Rule(set(['e']), set(['a','i'])))
+        expected_rules.append(Rule(set(['c','e']), set(['a'])))
+        expected_rules.append(Rule(set(['c','e']), set(['a','i'])))
+        expected_rules.append(Rule(set(['e','g']), set(['a'])))
+        expected_rules.append(Rule(set(['e','g']), set(['a','i'])))
+        expected_rules.append(Rule(set(['c','e','g']), set(['a'])))
+        expected_rules.append(Rule(set(['c','e','g']), set(['a','i'])))
+        expected_rules.append(Rule(set(['g']), set(['a'])))
+        expected_rules.append(Rule(set(['g']), set(['a','i'])))
+        expected_rules.append(Rule(set(['c','g']), set(['a'])))
+        expected_rules.append(Rule(set(['c','g']), set(['a','i'])))
 
     def test_MAR_MaxSC_OneClass_2(self):
 
@@ -415,12 +425,12 @@ class TestGenCloseAnalyzer(unittest.TestCase):
 
         self.assertEqual(len(rules), 6)
         expected_rules = []
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['c','f'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['c','f','i'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['c','f','h'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['c','f','h','i'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['c','h'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['c','h','i'])))
+        expected_rules.append(Rule(set(['a']), set(['c','f'])))
+        expected_rules.append(Rule(set(['a']), set(['c','f','i'])))
+        expected_rules.append(Rule(set(['a']), set(['c','f','h'])))
+        expected_rules.append(Rule(set(['a']), set(['c','f','h','i'])))
+        expected_rules.append(Rule(set(['a']), set(['c','h'])))
+        expected_rules.append(Rule(set(['a']), set(['c','h','i'])))
 
     def test_MAR_MaxSC_OneClass_3(self):
 
@@ -446,12 +456,12 @@ class TestGenCloseAnalyzer(unittest.TestCase):
 
         self.assertEqual(len(rules), 6)
         expected_rules = []
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['f'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['f', 'i'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['h'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['h', 'i'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['f', 'h'])))
-        expected_rules.append(RAMCM.Rule(set(['a']), set(['f', 'h', 'i'])))
+        expected_rules.append(Rule(set(['a']), set(['f'])))
+        expected_rules.append(Rule(set(['a']), set(['f', 'i'])))
+        expected_rules.append(Rule(set(['a']), set(['h'])))
+        expected_rules.append(Rule(set(['a']), set(['h', 'i'])))
+        expected_rules.append(Rule(set(['a']), set(['f', 'h'])))
+        expected_rules.append(Rule(set(['a']), set(['f', 'h', 'i'])))
 
     def test_MAR_MaxSC_OneClass_4(self):
 
@@ -503,3 +513,28 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         rule_miner.mine(1/7,5/7,1/3,0.9,L1,R1)
 
         self.assertEqual(len(rule_miner.ars),12)
+
+    def test_mine_rules_1_integer(self):
+        analyzer = GCA(self.db_rules_integer, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        L1 = set({3, 5, 7})
+        R1 = set([1, 9])
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        rule_miner.mine(1 / 7, 5 / 7, 1 / 3, 0.9, L1, R1)
+
+        self.assertEqual(len(rule_miner.ars), 14)
+
+    def test_mine_rules_2_integer(self):
+        # From publication example 3.b
+        analyzer = GCA(self.db_rules_integer, 1 / 7)  # percentage indicated in publication
+        analyzer.clean_database()
+        analyzer.mine()
+
+        L1 = set({1})
+        R1 = set([3, 6, 8, 9])
+        rule_miner = RAMCM(analyzer.lcg_into_list())
+        rule_miner.mine(1 / 7, 5 / 7, 1 / 3, 0.9, L1, R1)
+
+        self.assertEqual(len(rule_miner.ars), 12)

@@ -5,9 +5,26 @@ import codecs
 import csv
 import operator
 import sys
+import re
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 class MagicLoader:
     SPECIAL_INDEX = 30000 #Index to manage double cards
+    DUAL_CARDS = ['Cut/Ribbons','Fire/Ice','Start/Finish','Rough/Tumble','Wear/Tear','Far/Away','Turn/Burn','Hit/Run','Appeal/Authority',
+                 'Hide/Seek','Commit/Memory','Consign/Oblivion','Rise/Fall','Flesh/Blood','Boom/Bust','Struggle/Survive',
+                 'Dead/Gone','Life/Death','Breaking/Entering','Farm/Market','Alive/Well','Reduce/Rubble','Grind/Dust','Claim/Fame',
+                 'Driven/Despair','Ready/Willing','Crime/Punishment','Bound/Determined','Insult/Injury','Profit/Loss','Beck/Call',
+                 'Never/Return','Dusk/Dawn','Spring/Mind','Onward/Victory','Dusk/Dawn','Never/Return','Heaven/Earth','Failure/Comply',
+                 'Destined/Lead','Rags/Riches','Prepare/Fight','Rags/Riches','Toil/Trouble','Order/Chaos','Armed/Dangerous',
+                 'Refuse/Cooperate','Reason/Believe','Leave/Chance','Mouth/Feed','Wax/Wane','Assault/Battery','Stand/Deliver',
+                 'Spite/Malice','Trial/Error','Odds/Ends','Research/Development','Supply/Demand','Pain/Suffering','Catch/Release',
+                 'Pure/Simple','Down/Dirty']
 
     def __init__(self, file_type = 'card'):
         self.texts = []
@@ -164,11 +181,56 @@ class DeckManager:
                     nb_line+=1
                 self.cards = set.union(self.cards, set(file_cards))
 
+    def load_from_mtgdeck_csv(self,list_path,cards_loader = None):
+        """
+        Load decks from a list of csv files from MTGDECK website
+        Decks are a list of the cards name building it
+        If loader is set, match the cards with an internal ID
+        """
+        list_cards = []
+        if cards_loader:
+            list_cards = cards_loader.hash_name_id.keys()
+
+        for file in list_path:
+            print('file: ' + file)
+            with open('./data/decks_mtgdeck_net/' + file) as csvfile:
+                reader = csvfile.read()
+                rows = reader.split('\n')
+                nb_line = 0
+                file_cards = []
+                error_index = []
+                for row in rows:
+                    # Remove number of cards, unused in frequent items rule associations approach
+                    csv_row = re.subn("( )?\d+ ",';', row)
+                    csv_row = re.subn("\"", '', csv_row[0])
+                    deck_cards = list(filter(None, csv_row[0].split(';')))
+
+                    deck = []
+                    for index, card in enumerate(deck_cards):
+                        card = DeckManager.rename_card(card)
+                        if card in list_cards:
+                            if cards_loader:
+                                file_cards.append(cards_loader.hash_name_id[card])
+                            else:
+                                file_cards.append(card)
+                        else:
+                            if card != 'Unknown Card':
+                                print('Error: ' + card + ' is not present in the Magic card database', file=sys.stderr)
+                            error_index.append(index)
+                            file_cards.append(card)
+
+                        if file_cards[index] not in deck: deck.append(file_cards[index])
+                    self.decks.append(deck)
+                self.cards = set.union(self.cards, set(file_cards))
+
     @staticmethod
     def rename_card(card):
         "Adapt card name to the reference database"
         if card == 'Stone golem':
             return 'Stone Golem'
+        if card in MagicLoader.DUAL_CARDS:
+            items = card.split('/')
+            return items[0] + ' / ' + items[1]
         else:
             return card
 
