@@ -65,63 +65,126 @@ class MagicLoader:
         self.hash_name_id['Start / Finish'] = MagicLoader.SPECIAL_INDEX + 2
         self.hash_name_id['Rough / Tumble'] = MagicLoader.SPECIAL_INDEX + 3
         self.hash_name_id['Wear / Tear'] = MagicLoader.SPECIAL_INDEX + 4
-        self.hash_name_id['Far / Away'] = MagicLoader.SPECIAL_INDEX + 4
-        self.hash_name_id['Turn / Burn'] = MagicLoader.SPECIAL_INDEX + 5
-        self.hash_name_id['Hit / Run'] = MagicLoader.SPECIAL_INDEX + 6
-        self.hash_name_id['Appeal / Authority'] = MagicLoader.SPECIAL_INDEX + 7
-        self.hash_name_id['Hide / Seek'] = MagicLoader.SPECIAL_INDEX + 8
-        self.hash_name_id['Commit / Memory'] = MagicLoader.SPECIAL_INDEX + 9
-        self.hash_name_id['Consign / Oblivion'] = MagicLoader.SPECIAL_INDEX + 10
-        self.hash_name_id['Rise / Fall'] = MagicLoader.SPECIAL_INDEX + 11
-        self.hash_name_id['Flesh / Blood'] = MagicLoader.SPECIAL_INDEX + 12
-        self.hash_name_id['Boom / Bust'] = MagicLoader.SPECIAL_INDEX + 13
-        self.hash_name_id['Struggle / Survive'] = MagicLoader.SPECIAL_INDEX + 14
-        self.hash_name_id['Dead / Gone'] = MagicLoader.SPECIAL_INDEX + 15
-        self.hash_name_id['Life / Death'] = MagicLoader.SPECIAL_INDEX + 16
-        self.hash_name_id['Breaking / Entering'] = MagicLoader.SPECIAL_INDEX + 17
-        self.hash_name_id['Farm / Market'] = MagicLoader.SPECIAL_INDEX + 18
-        self.hash_name_id['Alive / Well'] = MagicLoader.SPECIAL_INDEX + 19
-        self.hash_name_id['Reduce / Rubble'] = MagicLoader.SPECIAL_INDEX + 20
-        self.hash_name_id['Grind / Dust'] = MagicLoader.SPECIAL_INDEX + 21
-        self.hash_name_id['Claim / Fame'] = MagicLoader.SPECIAL_INDEX + 22
-        self.hash_name_id['Driven / Despair'] = MagicLoader.SPECIAL_INDEX + 23
-        self.hash_name_id['Ready / Willing'] = MagicLoader.SPECIAL_INDEX + 24
-        self.hash_name_id['Crime / Punishment'] = MagicLoader.SPECIAL_INDEX + 25
-        self.hash_name_id['Bound / Determined'] = MagicLoader.SPECIAL_INDEX + 26
-        self.hash_name_id['Insult / Injury'] = MagicLoader.SPECIAL_INDEX + 27
-        self.hash_name_id['Profit / Loss'] = MagicLoader.SPECIAL_INDEX + 28
-        self.hash_name_id['Beck / Call'] = MagicLoader.SPECIAL_INDEX + 29
-        self.hash_name_id['Never / Return'] = MagicLoader.SPECIAL_INDEX + 30
-        self.hash_name_id['Dusk / Dawn'] = MagicLoader.SPECIAL_INDEX + 31
-        self.hash_name_id['Spring / Mind'] = MagicLoader.SPECIAL_INDEX + 32
-        self.hash_name_id['Onward / Victory'] = MagicLoader.SPECIAL_INDEX + 33
-        self.hash_name_id['Dusk / Dawn'] = MagicLoader.SPECIAL_INDEX + 34
-        self.hash_name_id['Never / Return'] = MagicLoader.SPECIAL_INDEX + 35
-        self.hash_name_id['Heaven / Earth'] = MagicLoader.SPECIAL_INDEX + 36
-        self.hash_name_id['Failure / Comply'] = MagicLoader.SPECIAL_INDEX + 37
-        self.hash_name_id['Destined / Lead'] = MagicLoader.SPECIAL_INDEX + 38
-        self.hash_name_id['Rags / Riches'] = MagicLoader.SPECIAL_INDEX + 39
-        self.hash_name_id['Prepare / Fight'] = MagicLoader.SPECIAL_INDEX + 40
-        self.hash_name_id['Rags / Riches'] = MagicLoader.SPECIAL_INDEX + 41
-        self.hash_name_id['Toil / Trouble'] = MagicLoader.SPECIAL_INDEX + 42
-        self.hash_name_id['Order / Chaos'] = MagicLoader.SPECIAL_INDEX + 43
-        self.hash_name_id['Armed / Dangerous'] = MagicLoader.SPECIAL_INDEX + 44
-        self.hash_name_id['Refuse / Cooperate'] = MagicLoader.SPECIAL_INDEX + 45
-        self.hash_name_id['Reason / Believe'] = MagicLoader.SPECIAL_INDEX + 46
-        self.hash_name_id['Leave / Chance'] = MagicLoader.SPECIAL_INDEX + 47
-        self.hash_name_id['Mouth / Feed'] = MagicLoader.SPECIAL_INDEX + 48
-        self.hash_name_id['Wax / Wane'] = MagicLoader.SPECIAL_INDEX + 49
-        self.hash_name_id['Assault / Battery'] = MagicLoader.SPECIAL_INDEX + 50
-        self.hash_name_id['Stand / Deliver'] = MagicLoader.SPECIAL_INDEX + 51
-        self.hash_name_id['Spite / Malice'] = MagicLoader.SPECIAL_INDEX + 52
-        self.hash_name_id['Trial / Error'] = MagicLoader.SPECIAL_INDEX + 53
-        self.hash_name_id['Odds / Ends'] = MagicLoader.SPECIAL_INDEX + 54
-        self.hash_name_id['Research / Development'] = MagicLoader.SPECIAL_INDEX + 55
-        self.hash_name_id['Supply / Demand'] = MagicLoader.SPECIAL_INDEX + 56
-        self.hash_name_id['Pain / Suffering'] = MagicLoader.SPECIAL_INDEX + 57
-        self.hash_name_id['Catch / Release'] = MagicLoader.SPECIAL_INDEX + 58
-        self.hash_name_id['Pure / Simple'] = MagicLoader.SPECIAL_INDEX + 59
-        self.hash_name_id['Down / Dirty'] = MagicLoader.SPECIAL_INDEX + 60
+        self.hash_name_id['Far / Away'] = MagicLoader.SPECIAL_INDEX + 5
+        self.hash_name_id['Turn / Burn'] = MagicLoader.SPECIAL_INDEX + 6
+        self.hash_name_id['Hit / Run'] = MagicLoader.SPECIAL_INDEX + 6*7
+        self.hash_name_id['Appeal / Authority'] = MagicLoader.SPECIAL_INDEX + 8
+        self.hash_name_id['Hide / Seek'] = MagicLoader.SPECIAL_INDEX + 9
+        self.hash_name_id['Commit / Memory'] = MagicLoader.SPECIAL_INDEX + 10
+        self.hash_name_id['Consign / Oblivion'] = MagicLoader.SPECIAL_INDEX + 11
+        self.hash_name_id['Rise / Fall'] = MagicLoader.SPECIAL_INDEX + 12
+        self.hash_name_id['Flesh / Blood'] = MagicLoader.SPECIAL_INDEX + 13
+        self.hash_name_id['Boom / Bust'] = MagicLoader.SPECIAL_INDEX + 14
+        self.hash_name_id['Struggle / Survive'] = MagicLoader.SPECIAL_INDEX + 15
+        self.hash_name_id['Dead / Gone'] = MagicLoader.SPECIAL_INDEX + 16
+        self.hash_name_id['Life / Death'] = MagicLoader.SPECIAL_INDEX + 17
+        self.hash_name_id['Breaking / Entering'] = MagicLoader.SPECIAL_INDEX + 18
+        self.hash_name_id['Farm / Market'] = MagicLoader.SPECIAL_INDEX + 19
+        self.hash_name_id['Alive / Well'] = MagicLoader.SPECIAL_INDEX + 20
+        self.hash_name_id['Reduce / Rubble'] = MagicLoader.SPECIAL_INDEX + 21
+        self.hash_name_id['Grind / Dust'] = MagicLoader.SPECIAL_INDEX + 22
+        self.hash_name_id['Claim / Fame'] = MagicLoader.SPECIAL_INDEX + 23
+        self.hash_name_id['Driven / Despair'] = MagicLoader.SPECIAL_INDEX + 24
+        self.hash_name_id['Ready / Willing'] = MagicLoader.SPECIAL_INDEX + 25
+        self.hash_name_id['Crime / Punishment'] = MagicLoader.SPECIAL_INDEX + 26
+        self.hash_name_id['Bound / Determined'] = MagicLoader.SPECIAL_INDEX + 27
+        self.hash_name_id['Insult / Injury'] = MagicLoader.SPECIAL_INDEX + 28
+        self.hash_name_id['Profit / Loss'] = MagicLoader.SPECIAL_INDEX + 29
+        self.hash_name_id['Beck / Call'] = MagicLoader.SPECIAL_INDEX + 30
+        self.hash_name_id['Never / Return'] = MagicLoader.SPECIAL_INDEX + 31
+        self.hash_name_id['Dusk / Dawn'] = MagicLoader.SPECIAL_INDEX + 32
+        self.hash_name_id['Spring / Mind'] = MagicLoader.SPECIAL_INDEX + 33
+        self.hash_name_id['Onward / Victory'] = MagicLoader.SPECIAL_INDEX + 34
+        self.hash_name_id['Dusk / Dawn'] = MagicLoader.SPECIAL_INDEX + 35
+        self.hash_name_id['Never / Return'] = MagicLoader.SPECIAL_INDEX + 36
+        self.hash_name_id['Heaven / Earth'] = MagicLoader.SPECIAL_INDEX + 37
+        self.hash_name_id['Failure / Comply'] = MagicLoader.SPECIAL_INDEX + 38
+        self.hash_name_id['Destined / Lead'] = MagicLoader.SPECIAL_INDEX + 39
+        self.hash_name_id['Rags / Riches'] = MagicLoader.SPECIAL_INDEX + 40
+        self.hash_name_id['Prepare / Fight'] = MagicLoader.SPECIAL_INDEX + 41
+        self.hash_name_id['Rags / Riches'] = MagicLoader.SPECIAL_INDEX + 42
+        self.hash_name_id['Toil / Trouble'] = MagicLoader.SPECIAL_INDEX + 43
+        self.hash_name_id['Order / Chaos'] = MagicLoader.SPECIAL_INDEX + 44
+        self.hash_name_id['Armed / Dangerous'] = MagicLoader.SPECIAL_INDEX + 45
+        self.hash_name_id['Refuse / Cooperate'] = MagicLoader.SPECIAL_INDEX + 46
+        self.hash_name_id['Reason / Believe'] = MagicLoader.SPECIAL_INDEX + 47
+        self.hash_name_id['Leave / Chance'] = MagicLoader.SPECIAL_INDEX + 48
+        self.hash_name_id['Mouth / Feed'] = MagicLoader.SPECIAL_INDEX + 49
+        self.hash_name_id['Wax / Wane'] = MagicLoader.SPECIAL_INDEX + 50
+        self.hash_name_id['Assault / Battery'] = MagicLoader.SPECIAL_INDEX + 51
+        self.hash_name_id['Stand / Deliver'] = MagicLoader.SPECIAL_INDEX + 52
+        self.hash_name_id['Spite / Malice'] = MagicLoader.SPECIAL_INDEX + 53
+        self.hash_name_id['Trial / Error'] = MagicLoader.SPECIAL_INDEX + 54
+        self.hash_name_id['Odds / Ends'] = MagicLoader.SPECIAL_INDEX + 55
+        self.hash_name_id['Research / Development'] = MagicLoader.SPECIAL_INDEX + 56
+        self.hash_name_id['Supply / Demand'] = MagicLoader.SPECIAL_INDEX + 57
+        self.hash_name_id['Pain / Suffering'] = MagicLoader.SPECIAL_INDEX + 58
+        self.hash_name_id['Catch / Release'] = MagicLoader.SPECIAL_INDEX + 59
+        self.hash_name_id['Pure / Simple'] = MagicLoader.SPECIAL_INDEX + 60
+        self.hash_name_id['Down / Dirty'] = MagicLoader.SPECIAL_INDEX + 61
+
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX] = 'Cut / Ribbons'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 1] = 'Fire / Ice'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 2] = 'Start / Finish'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 3] = 'Rough / Tumble'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 4] = 'Wear / Tear'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 5] = 'Far / Away'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 6] = 'Turn / Burn'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 7] = 'Hit / Run'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 8] = 'Appeal / Authority'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 9] = 'Hide / Seek'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 10] = 'Commit / Memory'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 11] = 'Consign / Oblivion'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 12] = 'Rise / Fall'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 13] = 'Flesh / Blood'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 14] = 'Boom / Bust'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 15] = 'Struggle / Survive'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 16] = 'Dead / Gone'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 17] = 'Life / Death'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 18] = 'Breaking / Entering'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 19] = 'Farm / Market'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 20] = 'Alive / Well'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 21] = 'Reduce / Rubble'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 22] = 'Grind / Dust'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 23] = 'Claim / Fame'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 24] = 'Driven / Despair'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 25] = 'Ready / Willing'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 26] = 'Crime / Punishment'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 27] = 'Bound / Determined'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 28] = 'Insult / Injury'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 29] = 'Profit / Loss'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 30] = 'Beck / Call'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 31] = 'Never / Return'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 32] = 'Dusk / Dawn'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 33] = 'Spring / Mind'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 34] = 'Onward / Victory'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 35] = 'Dusk / Dawn'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 36] = 'Never / Return'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 37] = 'Heaven / Earth'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 38] = 'Failure / Comply'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 39] = 'Destined / Lead'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 40] = 'Rags / Riches'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 41] = 'Prepare / Fight'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 42] = 'Rags / Riches'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 43] = 'Toil / Trouble'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 44] = 'Order / Chaos'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 45] = 'Armed / Dangerous'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 46] = 'Refuse / Cooperate'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 47] = 'Reason / Believe'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 48] = 'Leave / Chance'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 49] = 'Mouth / Feed'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 50] = 'Wax / Wane'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 51] = 'Assault / Battery'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 52] = 'Stand / Deliver'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 53] = 'Spite / Malice'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 54] = 'Trial / Error'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 55] = 'Odds / Ends'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 56] = 'Research / Development'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 57] = 'Supply / Demand'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 58] = 'Pain / Suffering'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 59] = 'Catch / Release'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 60] = 'Pure / Simple'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 61] = 'Down / Dirty'
 
     def get_field(self, card_json, field):
         if field in card_json:
@@ -234,14 +297,14 @@ class DeckManager:
         else:
             return card
 
-    def extract_lands(self, land_cards):
+    def extract_lands(self, land_cards, cards_loader):
         """
         Extract the lands from the decks
         """
         for deck in self.decks:
             for card in land_cards:
-                if card in deck:
-                    deck.remove(card)
+                if cards_loader.hash_name_id[card] in deck:
+                    deck.remove(cards_loader.hash_name_id[card])
 
     def extract_high_used_cards(self, cards_usage, max_usage):
         """

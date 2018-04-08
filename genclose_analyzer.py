@@ -4,6 +4,8 @@ from collections import OrderedDict
 from itertools import combinations
 from operator import itemgetter
 from math import inf
+from time import time
+from collections import deque
 
 #Utilities
 def reverse_enumerate(iterable):
@@ -63,7 +65,7 @@ class GenCloseAnalyzer:
                 self.i_generator = generators
 
             if transactions is not None:
-                self.transactions = set(transactions)
+                self.transactions = frozenset(transactions)
             else:
                 self.transactions = None
 
@@ -82,6 +84,8 @@ class GenCloseAnalyzer:
 
         def to_str(self):
             return '<' + str(self.closure) + ', ' + str(round(self.support,4)) + ', ' + str(self.generators) + '>'
+
+    cumulative_time = 0
 
     def __init__(self, database, min_support = 1.0):
         self.database = database
@@ -182,24 +186,24 @@ class GenCloseAnalyzer:
                 X = tree_level[i]
                 Y = tree_level[j]
 
-                frozen_X = frozenset(X.transactions)
-                frozen_Y = frozenset(Y.transactions)
+                frozen_X = X.transactions
+                frozen_Y = Y.transactions
 
                 # Case 1: In the case that X.O C Y.O, we extend X.H by Y.H: X.H = X.H union Y.H.
                 if frozen_X < frozen_Y:
-                    X.closure = frozenset(X.closure).union(frozenset(Y.closure))
+                    X.closure = X.closure.union(Y.closure)
                     j += 1
 
                 # Case 2: If X.O includes Y.O, we add X.H to Y.H.
                 elif frozen_X > frozen_Y:
-                    Y.closure = frozenset(Y.closure).union(frozenset(X.closure))
+                    Y.closure = Y.closure.union(X.closure)
                     j += 1
 
                 # Case 3: In the remaining case, this procedure merges Y to X. It pushes all generators in Y.GS to X.GS, adds Y.H to X.H, and discards Y
                 elif frozen_X == frozen_Y:
                     #Recall that we join only i-generators of G1 and G2 ( in the nodes at L[i]),
                     # with common i-1 first items, called the common prefix.
-                    i_generators = []
+                    i_generators = deque()
                     for generator in Y.generators:
                         if len(generator) == index_level \
                             and (len(frozenset(generator).difference(frozenset(X.i_generator))) == 1):
@@ -207,7 +211,7 @@ class GenCloseAnalyzer:
 
                     if len(i_generators) > 0:
                         X.generators.extend(i_generators)
-                        X.closure = frozenset(X.closure).union(frozenset(Y.closure))
+                        X.closure = X.closure.union(Y.closure)
 
                         X_key = GenCloseAnalyzer.key_folder(X.folder)
                         Y_key = GenCloseAnalyzer.key_folder(Y.folder)
@@ -245,7 +249,7 @@ class GenCloseAnalyzer:
                         #If there exists itemset P in ℒ CG such that supp(P) = X.Supp and P includes or is equal to X.H,
                         # P is the closure that X.H wants to reach.Thus, the new generators in X.GS are pushed into
                         # the generator list of P and X.H becomes P.
-                        if frozenset(closed.closure).issuperset(frozenset(node.closure)):
+                        if closed.closure.issuperset(node.closure):
                             not_exist = False
                             for generator in node.generators:
                                 if generator not in closed.generators:
@@ -283,7 +287,8 @@ class GenCloseAnalyzer:
         :param key_list: generator to convert in key
         :return: hashed key
         """
-        return hashlib.md5(str(key_list).encode('utf-8')).hexdigest()
+        key = hashlib.md5(str(key_list).encode('utf-8')).hexdigest()
+        return key
 
     def attribute_folders(self, tree_level, index_level):
         """
@@ -311,7 +316,7 @@ class GenCloseAnalyzer:
         :param node: current node
         :param left_parent: current node's left parent
         """
-        return frozenset(left_parent.transactions).difference(frozenset(node.transactions))
+        return left_parent.transactions.difference(node.transactions)
 
     def update_node_diffset(self, node, left_parent):
         """
@@ -399,7 +404,7 @@ class GenCloseAnalyzer:
         '''
 
         for closed in reversed(lcg):
-            if frozenset(search).issubset(frozenset(closed.closure)):
+            if search.issubset(closed.closure):
                 return closed
         return None
 
@@ -408,18 +413,19 @@ class GenCloseAnalyzer:
         Mine the closed itemsets of the database and the associated generators
         :return: list of nodes <closed itemset, support, generators>
         """
-        print('Clean database function of support')
+
+        start_time = time()
         self.clean_database()
 
         frequent_items = self.sorted_items.keys()
-        lcg = []
-        tree = []
+        lcg = deque()
+        tree = deque()
         has_new_level = True
         i = 0 # 0 refers to L1
 
         # Initialiation of layer L1 in the tree
         print('Initialize first layer')
-        LCurrent = []
+        LCurrent = deque()
         for item in frequent_items:
             associated_transactions = self.get_transactions_with_item(item)
             LCurrent.append(GenCloseAnalyzer.Node(len(associated_transactions)/self.db_length, item, [item], associated_transactions)) #<support, item, generators, transactions>
@@ -458,17 +464,19 @@ class GenCloseAnalyzer:
             if len(LNext) == 0: has_new_level = False
             LCurrent = LNext
             i += 1
+
+        print('mine time = ' + str((time()-start_time)*1000.0))
         return lcg
 
     def join(self, left_node, right_node, next_level, current_index):
         """
         utility method to package common code
         """
-        new_transactions = frozenset(left_node.transactions).intersection(frozenset(right_node.transactions))
+        new_transactions = left_node.transactions.intersection(right_node.transactions)
         new_support = len(new_transactions)/self.db_length
 
         if new_support != left_node.support and new_support != right_node.support and new_support >= self.ratio_min_supp:
-            new_closure = frozenset(left_node.closure).union(frozenset(right_node.closure))  # using EOA
+            new_closure = left_node.closure.union(right_node.closure)  # using EOA
             self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, next_level, current_index + 1)  # using Condition (5)
 
     def join_generators(self, left_node, right_node, new_transactions, new_support, new_closure, next_level, index_level):
@@ -527,11 +535,14 @@ def is_in_generators(searched_gen, list_generators, is_strict = False):
 
 
 class Rule:
-    def __init__(self, left, right, support = 1.0, confidence = 1.0):
+    def __init__(self, left, right, support = 1.0, confidence = 1.0, lift = 1.0, conviction = 1.0, rpf = 1.0):
         self.left = left
         self.right = right
         self.support= support
         self.confidence = confidence
+        self.lift = lift
+        self.conviction = conviction
+        self.rpf = rpf
 
     def to_str(self):
         return '+'.join([str(item) for item in self.left]) + '-->' + '+'.join([str(item) for item in self.right])
@@ -554,7 +565,18 @@ class RulesAssociation:
                 return closed.support
         return 0
 
-
+    @staticmethod
+    def combination_set(set_to_process, with_empty_set = True):
+        '''
+        Return all the combinations in a set
+        :param set_to_process: set to get all the combinations from
+        :param with_empty_set: True to add an empty set to the generation
+        :return: yield combinations
+        '''
+        for i in range(len(set_to_process)):
+            for combination in combinations(set_to_process, i + 1):
+                yield combination
+        if with_empty_set: yield set([])  # simulate empty element
 
     def mine(self):
         pass
@@ -883,38 +905,203 @@ class RuleAssociationMinMin(RulesAssociation):
     @staticmethod
     def get_minimals(Li, S):
         '''
-        Return Rmin(L’, S) = {R*ik:=Sk\L’ | Sk∈G(S), Sk\Li is minimal for each Li∈G(L’)}
+        Return Rmin(L’, S) = {R*ik:=Sk\L’ | Sk∈G(S), Sk\Li is minimal for each Li∈G(L’), R*ik not empty}
         :param Li: one of generator from G(L')
         :param S: list of generators of S
         :return: array of minimals
         '''
 
         minimals = []
-        min_len = inf
         for Sk in S:
-            Rk = frozenset(Sk).difference(frozenset(Li))
-            minimals.append(Rk)
-            if min_len > len(Rk):
-                min_len = len(Rk)
-
-        for min in minimals:
-            if len(min) > min_len:
-                minimals.remove(min)
-
+            minimals.append(frozenset(Sk).difference(frozenset(Li)))
         return minimals
 
-    def mine(self, L, S):
+    def mine_LS(self, L, S, s0, s1, c0, c1):
         '''
         Mine all the basic rules for the frequent itemsets L and S
         :param L: node containing L
         :param S: node containing S
+        :param s0: min support
+        :param s1: max support
+        :param c0: min confidence
+        :param c1: max confidence
         :return: all basic rules
         '''
         B_L_S = []
+
         c = S.support/ L.support
-        for Li in L.generators:
-            MS = RuleAssociationMinMin.get_minimals(Li, S.generators)
-            for Rk in MS:
-                B_L_S.append(Rule(Li,Rk,S.support,c))
+        lift = c / S.support
+
+        if c == 1.0:
+            conviction = inf
+        else:
+            conviction = (1.0 - S.support) / (1.0 - c)
+
+        rule_power_factor = S.support * c
+
+        if c0 <= c <= c1 and s0 <= S.support <= s1:
+            for Li in L.generators:
+                MS = RuleAssociationMinMin.get_minimals(Li, S.generators)
+                for Rk in MS:
+                    B_L_S.append(Rule(Li,Rk,S.support,c, lift, conviction, rule_power_factor))
         return B_L_S
 
+    def mine_LL(self, L, s0, s1, c0, c1):
+        B_L_L = []
+
+        c = 1.0
+        lift = c / L.support
+        conviction = inf
+        rule_power_factor = L.support
+
+        if c0 <= c <= c1 and s0 <= L.support <= s1:
+            if L.closure not in L.generators:
+                for L0 in L.generators:
+                    a = frozenset(L.closure).difference(frozenset(L0))
+                    B_L_L.append(Rule(L0, a, L.support, c))
+        return B_L_L
+
+    def mine_cars_L_S(self, L, S, s0, s1, c0, c1, gca):
+        B_LS = self.mine_LS(L, S, s0, s1, c0, c1)
+        rules = deque()
+
+        if len(B_LS) > 0:
+            rules_left_generated = self.left_adding_L_S(L,S, B_LS)
+            rules_right_generated = []
+            for left_rule in rules_left_generated:
+                rules_right_generated.extend(self.right_adding(left_rule.left,S, gca))
+
+            rules.extend(rules_left_generated)
+            rules.extend(rules_right_generated)
+        return rules
+
+    def mine_cars_L_L(self, L, s0, s1, c0, c1):
+        B_LL = self.mine_LL(L, s0, s1, c0, c1)
+        rules = deque()
+
+        if len(B_LL) > 0:
+            rules_left_generated = self.left_adding_L_L(L, B_LL)
+            rules_right_generated = []
+            for left_rule in rules_left_generated:
+                rules_right_generated.extend(self.right_adding(left_rule.left, S))
+
+            rules.extend(rules_left_generated)
+            rules.extend(rules_right_generated)
+
+        return rules
+
+    def right_adding(self, L_prime, S, gca):
+        node_lprime = gca.search_node_with_closure(L_prime)
+        right_generated_rules = []
+        MS = RuleAssociationMinMin.get_minimals(L_prime, S.generators)
+        S_U_Lprime = set()
+        for Ri in MS:
+            S_U_Lprime = S_U_Lprime.union(set(Ri))
+
+        K_U_Lprime = set()
+        for Li in node_lprime.generators:
+            K_U_Lprime = K_U_Lprime.union(set(Li))
+
+        S_tild_L = S.closure.difference(K_U_Lprime.union(node_lprime.closure))
+
+        for R_tild in RulesAssociation.combination_set(S_tild_L, False):
+            for i, Ri in enumerate(MS):
+                S_U_Lprime_i = S_U_Lprime.difference(Ri)
+                for Riprime in S_U_Lprime_i:
+                    if len(frozenset([Riprime])) > 0 or len(R_tild) > 0:
+                        repeated = False
+                        if i > 0:
+                            for k in range(i):
+                                Rk = MS[k]
+                                if Rk.issubset(Ri.union(frozenset([Riprime]))):
+                                    repeated = True
+                                    break #for each Rk
+                        if not repeated:
+                            right_generated_rules.append(Rule(L_prime,Ri.union(frozenset([Riprime])).union(frozenset(R_tild))))
+        return right_generated_rules
+
+    def left_adding_L_S(self, L, S, B_LS):
+
+        left_generated_rules = []
+        FS1_L_S = deque()
+        Ku = set()
+        for Li in L.generators:
+            Ku = Ku.union(set(Li))
+
+        right_rules_processed = deque()
+        for rule in B_LS:
+            if rule.right not in right_rules_processed:
+                right_rules_processed.append(rule.right)
+                for i, Li in enumerate(L.generators):
+                    set_Li = frozenset(Li)
+                    Rstar = RuleAssociationMinMin.get_minimals(Li, S.generators)
+                    FS_Li_Rstar = self._build_FS_(Li, Rstar, L, Ku)
+                    K_U_Li = Ku.difference(set_Li)
+
+                    for Li_Ltild in FS_Li_Rstar:
+                        for Lprime_i in RulesAssociation.combination_set(K_U_Li,False):
+                            set_Lprime_i = frozenset(Lprime_i)
+                            repeated = False
+                            if i > 0:
+                                for k in range(i):
+                                    Lk = L.generators[k]
+                                    if frozenset(Lk).issubset(set_Li.union(set_Lprime_i).difference(frozenset(Rstar))):
+                                        repeated = True
+                                        break #for each Lk
+                            if not repeated:
+                                left_generated_rules.append(Rule(Li_Ltild.union(set_Lprime_i).difference(Li), rule.right, rule.support, rule.confidence))
+
+        return left_generated_rules
+
+    def left_adding_L_L(self, L, B_LL):
+
+        left_generated_rules = []
+        FS1_L_S = deque()
+        FS2_L_S = deque()
+        Ku = set()
+        for Li in L.generators:
+            Ku = Ku.union(set(Li))
+
+        for i, Li in enumerate(L.generators):
+            set_Li = frozenset(Li)
+            K_U_Li = Ku.difference(set_Li)
+
+            for Lstar in self.combination_set(L.closure.difference(Li)):
+                set_Lstar = frozenset(Lstar)
+                FS_Li_Lstar = self._build_FS_(set_Li, Lstar, L, Ku)
+                for Li_Ltild in FS_Li_Lstar:
+                    if len(Li_Ltild) > 1 and len(Lstar) >= 1:
+                        for Lprime_i in K_U_Li:
+                            set_Lprime_i = frozenset([Lprime_i])
+                            repeated = False
+                            if i > 0:
+                                for k in range(i):
+                                    Lk = L.generators[k]
+                                    if Lk.subset(set_Li.union(set_Lprime_i).difference(set_Lstar)):
+                                        repeated = True
+                                        break  # for each Li
+                            if not repeated:
+                                FS2_L_S.append(Li_Ltild.union(set_Lprime_i))
+
+            for Lprime in FS2_L_S:
+                for rule in B_LL:
+                    left_generated_rules.append(Rule(Lprime, rule.right, rule.support, rule.confidence))
+
+        return left_generated_rules
+
+    def _build_FS_(self, Li, Star, L, Ku):
+        '''
+        FS_(Li, R) = {Li+L~ | L~⊆K~R}
+        :param Li: Li
+        :param Star: R* or L*
+        :param L: Node L
+        :param Ku: Ku computed outside since common to all Li
+        :return: FS_(Li,Star)
+        '''
+        K_tild_R = L.closure.difference(Ku.union(Star))
+
+        FS_ = deque()
+        for Ltild in RulesAssociation.combination_set(K_tild_R, False):
+            FS_.append(frozenset(Li).union(frozenset(Ltild)))
+
+        return FS_

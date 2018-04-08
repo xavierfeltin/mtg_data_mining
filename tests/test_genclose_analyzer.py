@@ -538,3 +538,4 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         rule_miner.mine(1 / 7, 5 / 7, 1 / 3, 0.9, L1, R1)
 
         self.assertEqual(len(rule_miner.ars), 12)
+

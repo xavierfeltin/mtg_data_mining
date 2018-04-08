@@ -97,13 +97,20 @@ def find_closed_items():
 
     print('Clean deck')
     deck_loader = DeckManager()
+
+    '''
+    list_files = os.listdir("./db_decks")  # returns list
+    deck_loader.load_from_csv(list_files, card_loader)
+    deck_loader.extract_lands(card_loader.lands, card_loader)
+    '''
+
     list_files = os.listdir("./data/decks_mtgdeck_net")  # returns list
     deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
-    deck_loader.extract_lands(card_loader.lands)
+    deck_loader.extract_lands(card_loader.lands, card_loader)
 
-    analyzer = GCA(deck_loader.decks, 0.01)
+    analyzer = GCA(deck_loader.decks, 0.001)
 
-    print('Start mining')
+    print('Start mining ' + str(len(deck_loader.decks)) + ' decks')
     analyzer.mine()
     print('nb closed items = ' + str(len(analyzer.lcg_into_list())))
     #deck_loader.write_frequent_items_into_csv('genclose_results', analyzer.get_closed_items_closures(), card_loader)
@@ -123,24 +130,31 @@ def find_closed_items():
 
     rule_miner = RAMM(frequent_items)
     index = 0
+    nb_rules = 0
     for pair in combinations(list(range(nb_frequent_items)), 2):
-        L = frequent_items[pair[0]]
-        S = frequent_items[pair[1]]
-        rules = rule_miner.mine(L,S)
+        L = frequent_items[pair[1]]
+        S = frequent_items[pair[0]]
 
-        for rule in rules:
-            left = []
-            for item in rule.left:
-                left.append(card_loader.hash_id_name[item])
+        if frozenset(S.closure).issuperset(frozenset(L.closure)):
+            #rules = rule_miner.mine(L,S,0.01,0.5,0.8,1.0)
+            rules = rule_miner.mine_cars_L_L(L,0.01,0.5,0.8,1.0)
+            nb_rules += len(rules)
 
-            right = []
-            for item in rule.right:
-                right.append(card_loader.hash_id_name[item])
+            for rule in rules:
+                left = []
+                for item in rule.left:
+                    left.append(card_loader.hash_id_name[item])
 
-            print(str(index + 1) + ': ' + '+'.join([str(item) for item in left]) + '-->' + '+'.join(
-                [str(item) for item in right]))
+                right = []
+                for item in rule.right:
+                    right.append(card_loader.hash_id_name[item])
 
-            index += 1
+                print(str(index + 1) + ': ' + ' + '.join([str(item) for item in left]) + ' --> ' + ' + '.join(
+                    [str(item) for item in right]) + ', s: ' + str(round(rule.support, 2)) + ', c: ' + str(round(rule.confidence,2)) + ', l: ' + str(round(rule.lift,2)) + ', co: ' + str(round(rule.conviction,2)) + ', rpf: ' + str(round(rule.rpf,2)))
+
+                index += 1
+
+    print('nb rules: ' + str(nb_rules))
 
 if __name__ == "__main__":
     # execute only if run as a script
