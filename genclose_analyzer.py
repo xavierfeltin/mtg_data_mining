@@ -912,9 +912,19 @@ class RuleAssociationMinMin(RulesAssociation):
         '''
 
         minimals = []
+        len_min = inf
         for Sk in S:
-            minimals.append(frozenset(Sk).difference(frozenset(Li)))
-        return minimals
+            min = frozenset(Sk).difference(frozenset(Li))
+            if len(min) <= len_min:
+                minimals.append(min)
+                len_min = len(min)
+
+        filtered = []
+        for min in minimals:
+            if len(min) == len_min:
+                filtered.append(min)
+
+        return filtered
 
     def mine_LS(self, L, S, s0, s1, c0, c1):
         '''
