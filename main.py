@@ -163,16 +163,16 @@ def find_closed_items():
 
     print('nb rules: ' + str(nb_rules))
 
-def use_connect():
+def use_reference(file):
     db = []
-    with open('./data/connect.dat') as csvfile:
+    with open('./data/'+file+'.dat') as csvfile:
         reader = csvfile.read()
         rows = reader.split('\n')
         for row in rows:
             transaction = row.split(' ')
             db.append(transaction)
 
-    analyzer = GCA(db, 0.6)
+    analyzer = GCA(db, 0.05)
     analyzer.mine()
     frequent_items = analyzer.lcg_into_list()
     nb_frequent_items = len(frequent_items)
@@ -192,4 +192,4 @@ def use_connect():
 
 if __name__ == "__main__":
     # execute only if run as a script
-    find_closed_items()
+    use_reference('mushroom')
