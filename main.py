@@ -6,6 +6,7 @@ from fpgrowth_analyzer import FPGrowthAnalyzer
 from genclose_analyzer import GenCloseAnalyzer as GCA
 from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
 from genclose_analyzer import RuleAssociationMinMin as RAMM
+from genclose_analyzer import RuleAssociationMinMax as RAMMax
 from itertools import combinations
 
 import os
@@ -128,7 +129,8 @@ def find_closed_items():
         generated_rules.extend(rule_miner.ars)
     '''
 
-    rule_miner = RAMM(frequent_items)
+    rule_miner2 = RAMM(analyzer.lcg_into_list())
+    rule_miner = RAMMax(analyzer.lcg_into_list())
     index = 0
     nb_rules = 0
     for pair in combinations(list(range(nb_frequent_items)), 2):
@@ -137,7 +139,12 @@ def find_closed_items():
 
         if frozenset(S.closure).issuperset(frozenset(L.closure)):
             #rules = rule_miner.mine(L,S,0.01,0.5,0.8,1.0)
-            rules = rule_miner.mine_cars_L_L(L,0.01,0.5,0.8,1.0)
+            #rules = rule_miner.mine_cars_L_L(L,0.01,0.5,0.8,1.0)
+            rules = []
+            RAR = rule_miner.mine_RAR(L, S,0.2,0.5,0.8,1.0)
+            rules.extend(RAR)
+            rule_miner.mine_CAR2(L, S, RAR, analyzer)
+
             nb_rules += len(rules)
 
             for rule in rules:
@@ -156,9 +163,33 @@ def find_closed_items():
 
     print('nb rules: ' + str(nb_rules))
 
+def use_connect():
+    db = []
+    with open('./data/connect.dat') as csvfile:
+        reader = csvfile.read()
+        rows = reader.split('\n')
+        for row in rows:
+            transaction = row.split(' ')
+            db.append(transaction)
+
+    analyzer = GCA(db, 0.6)
+    analyzer.mine()
+    frequent_items = analyzer.lcg_into_list()
+    nb_frequent_items = len(frequent_items)
+    rule_miner = RAMMax(analyzer.lcg_into_list())
+    nb_rules = 0
+    for pair in combinations(list(range(nb_frequent_items)), 2):
+        L = frequent_items[pair[1]]
+        S = frequent_items[pair[0]]
+
+        rules = []
+        RAR = rule_miner.mine_RAR(L, S, 0.2, 0.5, 0.8, 1.0)
+        rules.extend(RAR)
+        rules.extend(rule_miner.mine_CAR2(L, S, RAR, analyzer))
+        nb_rules += len(rules)
+
+    print('nb rules: ' + str(nb_rules))
+
 if __name__ == "__main__":
     # execute only if run as a script
-    #encoding_magic_card
-    #find_frequent_items_apriori()
-    #find_frequent_items_fpgrowth()
     find_closed_items()

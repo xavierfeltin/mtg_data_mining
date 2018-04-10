@@ -128,5 +128,23 @@ class TestGenCloseAnalyzer(unittest.TestCase):
 
         rule_miner = RAMMax(analyzer.lcg_into_list())
         RAR = rule_miner.mine_RAR(L_node, S_node)
-        CAR = rule_miner.mine_CAR(L_node, S_node, RAR, analyzer)
-        self.assertTrue(True)
+        CAR2 = rule_miner.mine_CAR2(L_node, S_node, RAR, analyzer)
+
+        self.assertTrue(len(CAR2), 13)
+        rules = []
+        rules.append(Rule(set([5]), set([1,7])))
+        rules.append(Rule(set([5]), set([1,3])))
+        rules.append(Rule(set([5]), set([1])))
+        rules.append(Rule(set([7]), set([1, 5])))
+        rules.append(Rule(set([7]), set([1, 3])))
+        rules.append(Rule(set([7]), set([1])))
+        rules.append(Rule(set([3,5]), set([1,7])))
+        rules.append(Rule(set([5,7]), set([1,3])))
+        rules.append(Rule(set([3,5,7]), set([1])))
+        rules.append(Rule(set([5,7]), set([1])))
+        rules.append(Rule(set([3,5]), set([1])))
+        rules.append(Rule(set([3,7]), set([1,5])))
+        rules.append(Rule(set([3,7]), set([1])))
+        for i in range(len(CAR2)):
+            self.assertEqual(frozenset(CAR2[i].left), frozenset(rules[i].left))
+            self.assertEqual(frozenset(CAR2[i].right), frozenset(rules[i].right))

@@ -1124,15 +1124,19 @@ class RuleAssociationMinMax(RulesAssociation):
         RulesAssociation.__init__(self, lcg)
 
 
-    def mine_RAR(self, L, S):
+    def mine_RAR(self, L, S, s0, s1, c0, c1, ):
         '''
         RAR(L, S) ≡ {r0: GenL→S\GenL | GenL∈Gen(L)}
         :return: RAR(L, S)
         '''
 
         rules = deque()
-        for gen_L in L.generators:
-            rules.append(Rule(frozenset(gen_L), S.closure.difference(frozenset(gen_L))))
+        s_rule = S.support
+        c_rule = S.support/ L.support
+
+        if s0 <= s_rule <= s1 and c0 <= c_rule <= 1:
+            for gen_L in L.generators:
+                rules.append(Rule(frozenset(gen_L), S.closure.difference(frozenset(gen_L)), s_rule, c_rule))
         return rules
 
     def mine_CAR(self, L, S, RAR, gca):
@@ -1144,6 +1148,42 @@ class RuleAssociationMinMax(RulesAssociation):
         rules.extend(rm_RAR_rules)
         rules.extend(rm_Rd_rules)
         return rules
+
+    def mine_CAR2(self, L, S, RAR, gca):
+        CAR = []
+        Rd_AR = []
+        Rm_AR = []
+
+        '''
+        N = []
+        processed = []
+        for gen_S in S.generators:
+            S_GenS = S.closure.difference(frozenset(gen_S))
+            if S_GenS not in processed:
+                processed.append(S_GenS)
+                for combination in RulesAssociation.combination_set(S_GenS, False):
+                    if frozenset(combination) not in N:
+                        N.append(frozenset(combination))
+        '''
+
+        for i, rule in enumerate(RAR):
+            Rm_AR.extend(self.MA(rule.left, rule.right, L, S, i, rule.support, rule.confidence))
+            if rule.confidence == 1:
+                for R in self.combination_set(rule.right,False,len(rule.right)-1):
+                    print(Rule(rule.left, R, rule.support, 1).to_str())
+                    #Rd_AR.append(Rule(rule.left, R, rule.support, 1))
+                    Rm_AR.extend(self.MA(rule.left, frozenset(R), L, S, i, rule.support, 1))
+            else:
+                for R in self.combination_set(rule.right, False, len(rule.right) - 1):
+                    node_SR = gca.search_node_with_closure(S.closure.difference(frozenset(R)))
+                    if node_SR.closure == S.closure:
+                        #Rd_AR.append(Rule(rule.left, rule.right.difference(R), rule.support, rule.confidence))
+                        print(Rule(rule.left, R, rule.support, 1).to_str())
+                        Rm_AR.extend(self.MA(rule.left, rule.right.difference(R), L, S, i, rule.support, rule.confidence))
+
+        CAR.extend(Rd_AR)
+        CAR.extend(Rm_AR)
+        return CAR
 
     def mine_Rd(self, S, RAR, gca):
         '''
@@ -1172,6 +1212,25 @@ class RuleAssociationMinMax(RulesAssociation):
 
         return rules
 
+    def MA(self, Li, R, L, S, i, support, confidence):
+        rules = []
+        #node_LiR = gca.search_node_with_closure(frozenset(Li).union(R))
+        #if node_LiR.closure == S.closure:
+        R_inter_L = R.intersection(L.closure)
+        if len(R_inter_L) > 0:
+            for Rprime in self.combination_set(R_inter_L, False):
+                if set(Rprime) != R:
+                    if i == 0:
+                        #rules.append(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime)), support, confidence))
+                        print(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime)), support, confidence).to_str())
+                    else:
+                        for k in range(i):
+                            if not frozenset(L.generators[k]).issubset(frozenset(Li).union(frozenset(Rprime))):
+                                #rules.append(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime)), support, confidence))
+                                print(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime)), support, confidence).to_str())
+
+        return rules
+
     def mine_Rm(self, L, S, RAR, gca):
         '''
         Sm(L, S) ≡ {ri:Li+R’→ R\R’ | h(Li+R)=S, Li∈Gen(L), ∅≠R’⊆R∩L, R’≠R,
@@ -1188,9 +1247,9 @@ class RuleAssociationMinMax(RulesAssociation):
             for i, Li in enumerate(L.generators):
                 node_LiR = gca.search_node_with_closure(frozenset(Li).union(R))
                 if node_LiR.closure == S.closure:
-                    R_inter_Li = R.intersection(Li)
-                    if len(R_inter_Li) > 0:
-                        for Rprime in self.combination_set(R_inter_Li, False):
+                    R_inter_L = R.intersection(L.closure)
+                    if len(R_inter_L) > 0:
+                        for Rprime in self.combination_set(R_inter_L, False):
                             if set(Rprime) != R:
                                 if i == 0:
                                     rules.append(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime))))
