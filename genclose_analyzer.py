@@ -555,14 +555,18 @@ class GenCloseAnalyzer:
             if i > 0:
                 for key, nodes in self.L_folders.items():
                     for left_index, left_node in enumerate(nodes):
-                        for right_index, right_node in reverse_enumerate(nodes):
+                        #for right_index, right_node in reverse_enumerate(nodes):
+                        for right_index in range(left_index+1,len(nodes)):
+                            right_node = nodes[right_index]
                             if left_index < right_index:
                                 self.join(left_node, right_node, LNext, i)
                             else:
                                 break
             else: #no folder in common for the first level of the tree
                 for left_index, left_node in enumerate(LCurrent):
-                    for right_index, right_node in reverse_enumerate(LCurrent):
+                    #for right_index, right_node in reverse_enumerate(LCurrent):
+                    for right_index in range(left_index + 1, len(LCurrent)):
+                        right_node = LCurrent[right_index]
                         if left_index < right_index:
                             self.join(left_node, right_node, LNext, i)
                         else:
