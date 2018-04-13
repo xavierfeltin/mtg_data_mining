@@ -22,6 +22,17 @@ def get_list_intersection(left_gen, right_gen):
             intersection.append(gen)
     return intersection
 
+def combination_set(set_to_process, with_empty_set = True, max_len = None):
+    '''
+    Return all the combinations in a set
+    :param set_to_process: set to get all the combinations from
+    :param with_empty_set: True to add an empty set to the generation
+    :return: yield combinations
+    '''
+    s = list(set_to_process)
+    if max_len is None: max_len = len(s)
+    return chain.from_iterable(combinations(s, r) for r in range(1,max_len + 1))
+
 class GenCloseAnalyzer:
     """
     Mine closed itemsets and associated generators
@@ -105,9 +116,9 @@ class GenCloseAnalyzer:
                 diffset = self.compute_diffset(None, associated_transactions)
 
             if is_root:
-                self.diffset.append((None, diffset, self.generators))
+                self.diffset.append((None, diffset, self.generators[:]))
             else:
-                self.diffset.append((left_parent, diffset, self.generators))
+                self.diffset.append((left_parent, diffset, self.generators[:]))
 
             if left_parent is None:
                 self.support = len(diffset)
@@ -277,7 +288,15 @@ class GenCloseAnalyzer:
                                 and (len(frozenset(generator).difference(frozenset(X.i_generator))) == 1):
                             i_generators.append(generator)
 
-                    X.diffset.extend(Y.diffset)
+                    for Y_diff in Y.diffset:
+                        common_left_parent = False
+                        for X_diff in X.diffset:
+                            if Y_diff[0] == X_diff[0]:
+                                X_diff[2].extend(Y_diff[2])
+                                common_left_parent = True
+                                break
+                        if not common_left_parent:
+                            X.diffset.append(Y_diff)
 
                     if len(i_generators) > 0:
                         X.generators.extend(i_generators)
@@ -462,7 +481,7 @@ class GenCloseAnalyzer:
             node.support = left_parent.support - len(merge_diffset)
             node.diffset.append(left_parent, merge_diffset, node.generators) #TODO: node.generators may be not correct here => publication says GSj is the set of generators generated from left parents
 
-    def search_node_with_generator(self, node, generator):
+    def search_node_with_generator(self, generator):
         """
         Return closure containing the generator given in argument
         :param node: left parent
@@ -470,7 +489,13 @@ class GenCloseAnalyzer:
         :return: node or None if not found
         """
 
-        transactions = self.get_transactions_with_item(generator)
+        transactions = []
+        for gen in combination_set(generator, max_len=1):
+            if len(transactions) == 0:
+                transactions = self.get_transactions_with_item(gen[0])
+            else:
+                transactions = get_list_intersection(transactions, self.get_transactions_with_item(gen[0]))
+
         key_sum = sum(transactions)
         support = len(transactions)/self.db_length
 
@@ -624,6 +649,40 @@ class GenCloseAnalyzer:
         :return: None
         """
 
+        left_generators = []
+        for left_diff in left_node.diffset:
+            for generator in left_diff[2]:
+                left_generators.append((left_diff[0], generator))
+
+        right_generators = []
+        for right_diff in right_node.diffset:
+            for generator in right_diff[2]:
+                right_generators.append((right_diff[0], generator))
+
+        new_generators_set = frozenset([])
+        for g_left in left_generators:
+            for g_right in right_generators:
+                if g_left[0] == g_right[0] \
+                        and len(g_left[1]) == index_level and len(g_right[1]) == index_level \
+                        and len(frozenset(g_left[1]).intersection(frozenset(g_right[1]))) == index_level-1:
+
+                    G = frozenset(g_left[1]).union(frozenset(g_right[1]))
+                    G0 = frozenset(g_left[1]).intersection(frozenset(g_right[1]))
+                    G_is_generator = True
+
+                    for gen in G0: #combination_set(G0, with_empty_set=False, max_len=len(G0)):
+                        Gg = G.difference(gen)
+                        node_g = self.search_node_with_generator(Gg)
+                        if node_g is None or new_support == node_g.support:
+                            G_is_generator = False
+                            break #for each G in G0
+                        else: #G can be generator
+                            new_closure = new_closure.union(node_g.closure) #using EOA
+
+                    if G_is_generator:
+                        new_generators_set = new_generators_set.union(G)
+
+        '''
         #Use only generators from diffset with the same left parents
         new_generators_set = []
         lp_x_index = -1
@@ -636,6 +695,7 @@ class GenCloseAnalyzer:
                     break
             if lp_x_index != -1: break
 
+        #TODO: revoir cette partie avec des frozenset and test if generators have same left parents
         #for left_gen in left_node.generators:
         for left_gen in left_node.diffset[lp_x_index][2]:
             #for right_gen in right_node.generators:
@@ -663,11 +723,12 @@ class GenCloseAnalyzer:
 
                     if candidate_is_generator:
                         new_generators_set.append(generator_candidate)
+        '''
 
         if len(new_generators_set) >= 1:
             #new i+1-generators
             #next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node, right_node))
-            new_node = GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, [], left_node, right_node)
+            new_node = GenCloseAnalyzer.Node(new_support, new_closure, list(new_generators_set), [], left_node, right_node)
             new_node.add_diffset(left_node, new_diffset, compute_diffset = False) #diffset already computed above
             next_level.append(new_node)
 
