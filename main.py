@@ -99,17 +99,17 @@ def find_closed_items():
     print('Clean deck')
     deck_loader = DeckManager()
 
-    '''
     list_files = os.listdir("./db_decks")  # returns list
     deck_loader.load_from_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
-    '''
 
+    '''
     list_files = os.listdir("./data/decks_mtgdeck_net")  # returns list
     deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
+    '''
 
-    analyzer = GCA(deck_loader.decks, 0.001)
+    analyzer = GCA(deck_loader.decks, 0.05)
 
     print('Start mining ' + str(len(deck_loader.decks)) + ' decks')
     analyzer.mine()
@@ -192,4 +192,5 @@ def use_reference(file):
 
 if __name__ == "__main__":
     # execute only if run as a script
-    use_reference('mushroom')
+    #use_reference('connect')
+    find_closed_items()

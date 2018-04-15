@@ -97,7 +97,8 @@ class GenCloseAnalyzer:
                 sum_trans = self.left_parent.sumO
 
             for diff in self.diffset:
-                sum_trans -= sum(list(diff[1]))
+                if diff[0] == self.left_parent:
+                    sum_trans -= sum(list(diff[1]))
 
             #return sum(self.transactions)
             return sum_trans
@@ -222,8 +223,9 @@ class GenCloseAnalyzer:
         """
         if isinstance(item, list):
             transactions = self.reverse_db[item[0]]
+            frozen_transaction = frozenset(transactions)
             for i in range(1,len(item)):
-                transactions = frozenset(transactions).intersection(frozenset(self.reverse_db[item[i]]))
+                transactions = frozen_transaction.intersection(frozenset(self.reverse_db[item[i]]))
             return transactions
         else:
             return self.reverse_db[item]
@@ -283,9 +285,10 @@ class GenCloseAnalyzer:
                     # Recall that we join only i-generators of G1 and G2 ( in the nodes at L[i]),
                     # with common i-1 first items, called the common prefix.
                     i_generators = deque()
+                    frozen_X_igenerator = frozenset(X.i_generator)
                     for generator in Y.generators:
                         if len(generator) == index_level \
-                                and (len(frozenset(generator).difference(frozenset(X.i_generator))) == 1):
+                                and (len(frozenset(generator).difference(frozen_X_igenerator)) == 1):
                             i_generators.append(generator)
 
                     for Y_diff in Y.diffset:
@@ -321,55 +324,6 @@ class GenCloseAnalyzer:
                     # do nothing and process next item
                     j += 1
 
-                '''
-                Previous verrsion without diffsets        
-                frozen_X = X.transactions
-                frozen_Y = Y.transactions
-
-                # Case 1: In the case that X.O C Y.O, we extend X.H by Y.H: X.H = X.H union Y.H.
-                if frozen_X < frozen_Y:
-                    X.closure = X.closure.union(Y.closure)
-                    j += 1
-
-                # Case 2: If X.O includes Y.O, we add X.H to Y.H.
-                elif frozen_X > frozen_Y:
-                    Y.closure = Y.closure.union(X.closure)
-                    j += 1
-
-                # Case 3: In the remaining case, this procedure merges Y to X. It pushes all generators in Y.GS to X.GS, adds Y.H to X.H, and discards Y
-                elif frozen_X == frozen_Y:
-                    #Recall that we join only i-generators of G1 and G2 ( in the nodes at L[i]),
-                    # with common i-1 first items, called the common prefix.
-                    i_generators = deque()
-                    for generator in Y.generators:
-                        if len(generator) == index_level \
-                            and (len(frozenset(generator).difference(frozenset(X.i_generator))) == 1):
-                            i_generators.append(generator)
-
-                    if len(i_generators) > 0:
-                        X.generators.extend(i_generators)
-                        X.closure = X.closure.union(Y.closure)
-
-                        X_key = GenCloseAnalyzer.key_folder(X.folder)
-                        Y_key = GenCloseAnalyzer.key_folder(Y.folder)
-
-                        # Hence, if Y is not in the same folder with X, we move all nodes that are in the folder containing
-                        # Y to the folder containing X. Thus, X also has the prefixes of Y.
-                        if Y_key != X_key:
-                            for node in self.L_folders[Y_key]:
-                                node.folder = X.folder
-                                self.L_folders[X_key].append(node)
-                            del self.L_folders[Y_key]
-
-                        self.L_folders[X_key].remove(Y)
-                        del tree_level[j]
-                    else:
-                        j += 1
-                else:
-                    #do nothing and process next item
-                    j += 1
-                '''
-
     def store_level(self, tree_level):
         """
         Save the closed items in the current tree level inside LCG
@@ -403,22 +357,6 @@ class GenCloseAnalyzer:
                 self.LCG[key] = {}
                 self.LCG[key][node.support] = [GenCloseAnalyzer.Node(node.support, node.closure,node.generators, None, node.left_parent, node.right_parent)]
 
-        #TODO: implement double hash with diffset
-        '''
-        for node in tree_level:
-            not_exist = True
-            for closed in self.LCG:
-                if closed.support == node.support and frozenset(closed.closure).issuperset(frozenset(node.closure)):
-                    not_exist = False
-                    for generator in node.generators:
-                        if generator not in closed.generators:
-                            closed.generators.append(generator)
-                    break
-
-            if not_exist:
-                self.LCG.append(GenCloseAnalyzer.Node(node.support, node.closure,node.generators, None))
-        '''
-
     @staticmethod
     def key_folder(key_list):
         """
@@ -449,85 +387,28 @@ class GenCloseAnalyzer:
                 self.L_folders[GenCloseAnalyzer.key_folder(node.i_generator)] = [node]
                 node.folder = node.i_generator
 
-    def get_common_left_parent(self, left, right):
-        """
-        Return the common left parent of two nodes
-        :param left: left node to check
-        :param right: right node to check
-        :return: left parent or None if it does not exist
-        """
-        common_left_parent = None
-        i = 0
-        nb_diffsets = len(left.diffsets)
-        while i < nb_diffsets and not common_left_parent:
-            for right_diff in right.diffsets:
-                if left.diffsets[i][0] == right_diff[0]:
-                    common_left_parent = left.diffsets[i][0]
-                    break
-        return common_left_parent
-
-    def update_diffset_join(self, node, left_parent, right_parent):
-        """
-        Define the diffset from joining the left and right node.
-        Update only of they have a common left parent
-        Use essentially for levels after the first one in the tree
-        :param node: node to update
-        :param left_parent: left node to join
-        :param right_parent: right node to join
-        """
-        common_left_parent = self.get_common_left_parent(left_parent, right_parent)
-        if common_left_parent is not None:
-            merge_diffset = frozenset(self.compute_diffset(right_parent, common_left_parent)).difference(self.compute_diffset(right_parent, common_left_parent))
-            node.support = left_parent.support - len(merge_diffset)
-            node.diffset.append(left_parent, merge_diffset, node.generators) #TODO: node.generators may be not correct here => publication says GSj is the set of generators generated from left parents
-
-    def search_node_with_generator(self, generator):
+    def search_node_with_generator(self, generator, tree):
         """
         Return closure containing the generator given in argument
         :param node: left parent
         :param generator: generator to search in closed items in LCG
         :return: node or None if not found
         """
+        # TODO: implement double hash with diffset
 
-        transactions = []
-        for gen in combination_set(generator, max_len=1):
-            if len(transactions) == 0:
-                transactions = self.get_transactions_with_item(gen[0])
-            else:
-                transactions = get_list_intersection(transactions, self.get_transactions_with_item(gen[0]))
-
-        key_sum = sum(transactions)
-        support = len(transactions)/self.db_length
-
-        if key_sum in self.LCG:
-            if support in self.LCG[key_sum]:
-                for closed in self.LCG[key_sum][support]:
-                    for gen in closed.generators:
-                        if frozenset(gen) == frozenset(generator):
-                            return closed
+        frozen_generator = frozenset(generator)
+        for index in reversed(range(len(generator)-1, len(tree))):
+            for node in tree[index]:
+                if frozen_generator.issubset(node.closure):
+                    for gen in node.generators:
+                        if frozen_generator == frozenset(gen):
+                            return node
         return None
-
-
-        #TODO: implement double hash with diffset
-        '''
-        for closed in self.LCG:
-            for gen in closed.generators:
-                if frozenset(gen) == frozenset(generator):
-                    return closed
-        return None
-        '''
 
     def search_node_with_closure(self, search, lcg = []):
         # TODO: implement double hash with diffset
         if len(lcg) == 0:
             lcg = self.lcg_into_list()
-
-        '''
-        for closed in lcg:
-            if frozenset(search) == frozenset(closed.closure):
-                return closed
-        return None
-        '''
 
         for closed in reversed(lcg):
             if search.issubset(closed.closure):
@@ -557,11 +438,9 @@ class GenCloseAnalyzer:
         LCurrent = deque()
         for item in frequent_items:
             associated_transactions = self.get_transactions_with_item(item)
-            #LCurrent.append(GenCloseAnalyzer.Node(len(associated_transactions)/self.db_length, item, [item], associated_transactions)) #<support, item, generators, transactions>
             new_node = GenCloseAnalyzer.Node(len(associated_transactions)/self.db_length, item, [item]) #<support, item, generators>
             new_node.add_diffset(root, associated_transactions, is_root = True)
             LCurrent.append(new_node)
-        tree.append(LCurrent)
 
         # Mine the itemsets and generators
         while has_new_level:
@@ -574,26 +453,27 @@ class GenCloseAnalyzer:
             print('L' + str(i+1) + ': Store ' + str(len(LCurrent)) + ' items (EOC)')
             self.store_level(LCurrent) #store the closed itemsets and generators inside LCG
 
-            LNext = []
+            tree.append(LCurrent)
+            LNext = deque()
 
             print('L' + str(i + 1) + ': Generate new level by join (EOA)')
             if i > 0:
-                for key, nodes in self.L_folders.items():
+                for key, nodes in tqdm(self.L_folders.items()):
                     for left_index, left_node in enumerate(nodes):
                         #for right_index, right_node in reverse_enumerate(nodes):
                         for right_index in range(left_index+1,len(nodes)):
                             right_node = nodes[right_index]
                             if left_index < right_index:
-                                self.join(left_node, right_node, LNext, i)
+                                self.join(left_node, right_node, LNext, i, tree)
                             else:
                                 break
             else: #no folder in common for the first level of the tree
-                for left_index, left_node in enumerate(LCurrent):
+                for left_index, left_node in tqdm(enumerate(LCurrent)):
                     #for right_index, right_node in reverse_enumerate(LCurrent):
                     for right_index in range(left_index + 1, len(LCurrent)):
                         right_node = LCurrent[right_index]
                         if left_index < right_index:
-                            self.join(left_node, right_node, LNext, i)
+                            self.join(left_node, right_node, LNext, i, tree)
                         else:
                             break
 
@@ -604,19 +484,12 @@ class GenCloseAnalyzer:
         print('mine time = ' + str((time()-start_time)*1000.0))
         return lcg
 
-    def join(self, left_node, right_node, next_level, current_index):
+    def join(self, left_node, right_node, next_level, current_index, tree):
         """
         utility method to package common code
         """
-        ''' Before diffset
-        new_transactions = left_node.transactions.intersection(right_node.transactions)
-        new_support = len(new_transactions)/self.db_length
 
-        if new_support != left_node.support and new_support != right_node.support and new_support >= self.ratio_min_supp:
-            new_closure = left_node.closure.union(right_node.closure)  # using EOA
-            self.join_generators(left_node, right_node, new_transactions, new_support, new_closure, next_level, current_index + 1)  # using Condition (5)
-        '''
-
+        #Search diffset with common left parent
         lp_x_index = -1
         lp_y_index = -1
         for i, LP_X in enumerate(left_node.diffset):
@@ -633,10 +506,10 @@ class GenCloseAnalyzer:
             new_support = left_node.support - len(new_diffset)
             if new_support != left_node.support and new_support != right_node.support and new_support >= self.ratio_min_supp:
                 new_closure = left_node.closure.union(right_node.closure)  # using EOA
-                self.join_generators(left_node, right_node, new_diffset, new_support, new_closure, next_level,current_index + 1)  # using Condition (5)
+                self.join_generators(left_node, right_node, new_diffset, new_support, new_closure, next_level,current_index + 1, tree, (left_node.diffset[lp_x_index],right_node.diffset[lp_y_index]))  # using Condition (5)
 
     #def join_generators(self, left_node, right_node, new_transactions, new_support, new_closure, next_level, index_level):
-    def join_generators(self, left_node, right_node, new_diffset, new_support, new_closure, next_level, index_level):
+    def join_generators(self, left_node, right_node, new_diffset, new_support, new_closure, next_level, index_level, tree, common_diffset):
         """
         Build the L[i+1] level by joining generators from L[i]
         :param left_node: node to merge
@@ -649,30 +522,32 @@ class GenCloseAnalyzer:
         :return: None
         """
 
-        left_generators = []
+        left_generators = deque()
         for left_diff in left_node.diffset:
             for generator in left_diff[2]:
                 left_generators.append((left_diff[0], generator))
 
-        right_generators = []
+        right_generators = deque()
         for right_diff in right_node.diffset:
             for generator in right_diff[2]:
                 right_generators.append((right_diff[0], generator))
 
-        new_generators_set = frozenset([])
+        new_generators_set = []
         for g_left in left_generators:
+            frozen_g_left_trans = frozenset(g_left[1])
             for g_right in right_generators:
+                frozen_g_right_trans = frozenset(g_right[1])
                 if g_left[0] == g_right[0] \
-                        and len(g_left[1]) == index_level and len(g_right[1]) == index_level \
-                        and len(frozenset(g_left[1]).intersection(frozenset(g_right[1]))) == index_level-1:
+                        and len(frozen_g_left_trans) == index_level and len(frozen_g_right_trans) == index_level \
+                        and len(frozen_g_left_trans.intersection(frozen_g_right_trans)) == index_level-1:
 
-                    G = frozenset(g_left[1]).union(frozenset(g_right[1]))
-                    G0 = frozenset(g_left[1]).intersection(frozenset(g_right[1]))
+                    G = frozen_g_left_trans.union(frozen_g_right_trans)
+                    G0 = frozen_g_left_trans.intersection(frozen_g_right_trans)
                     G_is_generator = True
 
                     for gen in G0: #combination_set(G0, with_empty_set=False, max_len=len(G0)):
-                        Gg = G.difference(gen)
-                        node_g = self.search_node_with_generator(Gg)
+                        Gg = G.difference(frozenset([gen]))
+                        node_g = self.search_node_with_generator(Gg, tree)
                         if node_g is None or new_support == node_g.support:
                             G_is_generator = False
                             break #for each G in G0
@@ -680,55 +555,11 @@ class GenCloseAnalyzer:
                             new_closure = new_closure.union(node_g.closure) #using EOA
 
                     if G_is_generator:
-                        new_generators_set = new_generators_set.union(G)
-
-        '''
-        #Use only generators from diffset with the same left parents
-        new_generators_set = []
-        lp_x_index = -1
-        lp_y_index = -1
-        for i, LP_X in enumerate(left_node.diffset):
-            for j, LP_Y in enumerate(right_node.diffset):
-                if LP_X[0] == LP_Y[0]:
-                    lp_x_index = i
-                    lp_y_index = j
-                    break
-            if lp_x_index != -1: break
-
-        #TODO: revoir cette partie avec des frozenset and test if generators have same left parents
-        #for left_gen in left_node.generators:
-        for left_gen in left_node.diffset[lp_x_index][2]:
-            #for right_gen in right_node.generators:
-            for right_gen in right_node.diffset[lp_y_index][2]:
-                if len(left_gen) == index_level \
-                        and len(right_gen) == index_level \
-                        and len(frozenset(left_gen).intersection(frozenset(right_gen))) == (index_level-1):
-                    generator_candidate = left_gen[:]
-                    for generator in right_gen:
-                        if generator not in generator_candidate:
-                            generator_candidate.append(generator)
-                    common_generators = get_list_intersection(left_gen, right_gen)
-                    candidate_is_generator = True
-
-                    for gen in common_generators:
-                        subset_gen = generator_candidate[:]
-                        subset_gen.remove(gen)
-                        matching_node = self.search_node_with_generator(left_node, subset_gen)
-                        if matching_node is None or new_support == matching_node.support:
-                            candidate_is_generator = False
-                            break #for each gen in common_generators
-                        else:
-                            #generator_candidate can be a generator
-                            new_closure = frozenset(new_closure).union(frozenset(matching_node.closure)) #using EOA
-
-                    if candidate_is_generator:
-                        new_generators_set.append(generator_candidate)
-        '''
+                        new_generators_set.append(list(G))
 
         if len(new_generators_set) >= 1:
             #new i+1-generators
-            #next_level.append(GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, new_transactions, left_node, right_node))
-            new_node = GenCloseAnalyzer.Node(new_support, new_closure, list(new_generators_set), [], left_node, right_node)
+            new_node = GenCloseAnalyzer.Node(new_support, new_closure, new_generators_set, [], left_node, right_node)
             new_node.add_diffset(left_node, new_diffset, compute_diffset = False) #diffset already computed above
             next_level.append(new_node)
 
@@ -1193,7 +1024,7 @@ class RuleAssociationMinMin(RulesAssociation):
             rules.extend(rules_right_generated)
         return rules
 
-    def mine_cars_L_L(self, L, s0, s1, c0, c1):
+    def mine_cars_L_L(self, L, S,s0, s1, c0, c1):
         B_LL = self.mine_LL(L, s0, s1, c0, c1)
         rules = deque()
 
