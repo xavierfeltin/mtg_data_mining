@@ -8,6 +8,7 @@ from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
 from genclose_analyzer import RuleAssociationMinMin as RAMM
 from genclose_analyzer import RuleAssociationMinMax as RAMMax
 from itertools import combinations
+from tqdm import tqdm
 
 import os
 
@@ -99,15 +100,15 @@ def find_closed_items():
     print('Clean deck')
     deck_loader = DeckManager()
 
+    '''
     list_files = os.listdir("./db_decks")  # returns list
     deck_loader.load_from_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
-
     '''
+
     list_files = os.listdir("./data/decks_mtgdeck_net")  # returns list
     deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
-    '''
 
     analyzer = GCA(deck_loader.decks, 0.05)
 
@@ -172,13 +173,18 @@ def use_reference(file):
             transaction = row.split(' ')
             db.append(transaction)
 
-    analyzer = GCA(db, 0.05)
+    min_support = 0.9
+    analyzer = GCA(db, min_support)
     analyzer.mine()
     frequent_items = analyzer.lcg_into_list()
     nb_frequent_items = len(frequent_items)
+    print('Nb frequent items with min_support = ' + str(min_support) +': ' + str(nb_frequent_items))
+
     rule_miner = RAMMax(analyzer.lcg_into_list())
     nb_rules = 0
-    for pair in combinations(list(range(nb_frequent_items)), 2):
+
+    print('Extract rules from frequent items: ')
+    for pair in tqdm(combinations(list(range(nb_frequent_items)), 2)):
         L = frequent_items[pair[1]]
         S = frequent_items[pair[0]]
 
@@ -188,9 +194,11 @@ def use_reference(file):
         rules.extend(rule_miner.mine_CAR2(L, S, RAR, analyzer))
         nb_rules += len(rules)
 
+        print('L:' + str(L.closure)+ ', ''S:' + str(S.closure) + ', nb BR min/max: ' + str(len(RAR)) + ', nb CR: ' + str(nb_rules))
+
     print('nb rules: ' + str(nb_rules))
 
 if __name__ == "__main__":
     # execute only if run as a script
-    #use_reference('connect')
-    find_closed_items()
+    use_reference('connect')
+    #find_closed_items()

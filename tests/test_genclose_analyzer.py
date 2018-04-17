@@ -172,30 +172,30 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         db_size = len(self.db)
 
         expected_LGC = []
-        expected_LGC.append(GCA.Node(2,set(['a','d','f','h']),[['d'],['a','f']],None))
-        expected_LGC.append(GCA.Node(3,set(['a','h']),[['a']],None))
-        expected_LGC.append(GCA.Node(3,set(['f','h']),[['f']],None))
-        expected_LGC.append(GCA.Node(3,set(['e','g','h']),[['g'],['e','h']],None))
-        expected_LGC.append(GCA.Node(4,set(['b','c']),[['b']],None))
-        expected_LGC.append(GCA.Node(4,set(['e']),[['e']],None))
-        expected_LGC.append(GCA.Node(4,set(['h']),[['h']],None))
-        expected_LGC.append(GCA.Node(5,set(['c']),[['c']],None))
-        expected_LGC.append(GCA.Node(1,set(['a','d','f','h','e','g']),[['d','g'],['d','e'],['a','f','g'],['a','f','e']],None))
-        expected_LGC.append(GCA.Node(1,set(['a','d','f','h','c']),[['d','c'], ['a','f','c']],None))
+        expected_LGC.append(GCA.Node(2/analyzer.db_length,set(['a','d','f','h']),[['d'],['a','f']],None))
+        expected_LGC.append(GCA.Node(3/analyzer.db_length,set(['a','h']),[['a']],None))
+        expected_LGC.append(GCA.Node(3/analyzer.db_length,set(['f','h']),[['f']],None))
+        expected_LGC.append(GCA.Node(3/analyzer.db_length,set(['e','g','h']),[['g'],['e','h']],None))
+        expected_LGC.append(GCA.Node(4/analyzer.db_length,set(['b','c']),[['b']],None))
+        expected_LGC.append(GCA.Node(4/analyzer.db_length,set(['e']),[['e']],None))
+        expected_LGC.append(GCA.Node(4/analyzer.db_length,set(['h']),[['h']],None))
+        expected_LGC.append(GCA.Node(5/analyzer.db_length,set(['c']),[['c']],None))
+        expected_LGC.append(GCA.Node(1/analyzer.db_length,set(['a','d','f','h','e','g']),[['d','g'],['d','e'],['a','f','g'],['a','f','e']],None))
+        expected_LGC.append(GCA.Node(1/analyzer.db_length,set(['a','d','f','h','c']),[['d','c'], ['a','f','c']],None))
 
         #TODO: check with publication's authors since aheg appears in two transactions in the database.
         #TODO: the example illustration shows an error with support of 1 but two transactions 1 and 3
-        #expected_LGC.append(GCA.Node(1,set(['a','h','e','g']),[['a','g'],['a','e']],None))
+        #expected_LGC.append(GCA.Node(1/analyzer.db_length,set(['a','h','e','g']),[['a','g'],['a','e']],None))
 
-        expected_LGC.append(GCA.Node(2,set(['a','h','e','g']),[['a','g'],['a','e']],None))
-        expected_LGC.append(GCA.Node(1,set(['a','h','b','c','e','g']),[['a','b'],['a','g','c'],['a','e','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['a','h','c']),[['a','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['f','h','e','g']),[['f','g'],['f','e']],None))
-        expected_LGC.append(GCA.Node(1,set(['f','h','b','c','e','g']),[['f','b'],['f','g','c'],['f','e','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['f','h','c']),[['f','c']],None))
-        expected_LGC.append(GCA.Node(2,set(['e','g','h','b','c']),[['g','b'],['g','c'],['b','h'],['c','e','h']],None))
-        expected_LGC.append(GCA.Node(3,set(['b','c','e']),[['b','e'],['c','e']],None))
-        expected_LGC.append(GCA.Node(3,set(['h','c']),[['h','c']],None))
+        expected_LGC.append(GCA.Node(2/analyzer.db_length,set(['a','h','e','g']),[['a','g'],['a','e']],None))
+        expected_LGC.append(GCA.Node(1/analyzer.db_length,set(['a','h','b','c','e','g']),[['a','b'],['a','g','c'],['a','e','c']],None))
+        expected_LGC.append(GCA.Node(2/analyzer.db_length,set(['a','h','c']),[['a','c']],None))
+        expected_LGC.append(GCA.Node(2/analyzer.db_length,set(['f','h','e','g']),[['f','g'],['f','e']],None))
+        expected_LGC.append(GCA.Node(1/analyzer.db_length,set(['f','h','b','c','e','g']),[['f','b'],['f','g','c'],['f','e','c']],None))
+        expected_LGC.append(GCA.Node(2/analyzer.db_length,set(['f','h','c']),[['f','c']],None))
+        expected_LGC.append(GCA.Node(2/analyzer.db_length,set(['e','g','h','b','c']),[['g','b'],['g','c'],['b','h'],['c','e','h']],None))
+        expected_LGC.append(GCA.Node(3/analyzer.db_length,set(['b','c','e']),[['b','e'],['c','e']],None))
+        expected_LGC.append(GCA.Node(3/analyzer.db_length,set(['h','c']),[['h','c']],None))
 
         for index,expected in enumerate(expected_LGC):
             #check closure

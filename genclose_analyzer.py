@@ -1,4 +1,5 @@
 import hashlib
+from copy import deepcopy
 from tqdm import tqdm
 from collections import OrderedDict
 from itertools import combinations, chain
@@ -163,9 +164,12 @@ class GenCloseAnalyzer:
         list_closed = []
         for key_sum in self.LCG.keys():
             for key_supp, closed_list in self.LCG[key_sum].items():
-                list_closed.extend(closed_list)
+                for closed in closed_list:
+                    list_closed.append(GenCloseAnalyzer.Node(closed.support, closed.closure, closed.generators))
 
         list_closed = sorted(list_closed, key=lambda item: item.support)
+        for item in list_closed:
+            item.support = item.support/self.db_length
         return list_closed
 
     def get_closed_items_closures(self):
@@ -181,6 +185,9 @@ class GenCloseAnalyzer:
         Return a list of items with a support greater than min_support
         :return: list of items
         """
+
+        print('DB original size:' + str(len(self.database)))
+
         items = {}
         database_size = len(self.database)
         self.reverse_db.clear()
@@ -215,6 +222,8 @@ class GenCloseAnalyzer:
 
         self.database = transactions
         self.db_length = len(self.database)
+
+        print('DB after cleaning size:' + str(len(self.database)))
 
     def get_transactions_with_item(self, item):
         """
@@ -492,24 +501,19 @@ class GenCloseAnalyzer:
         #Search diffset with common left parent
         lp_x_index = -1
         lp_y_index = -1
+        common_LP_diffsets = deque()
         for i, LP_X in enumerate(left_node.diffset):
             for j, LP_Y in enumerate(right_node.diffset):
                 if LP_X[0] == LP_Y[0]:
                     lp_x_index = i
                     lp_y_index = j
-                    break
-            if lp_x_index != -1: break
+                    common_LP_diffsets.append((i,j))
 
-        if lp_x_index != -1:
-            new_diffset = right_node.diffset[lp_y_index][1].difference(left_node.diffset[lp_x_index][1])
+        if len(common_LP_diffsets) > 0: #At least one common parent
+            new_closure = left_node.closure.union(right_node.closure)  # using EOA
+            self.join_generators(left_node, right_node, new_closure, next_level,current_index + 1, tree, common_LP_diffsets)  # using Condition (5)
 
-            new_support = left_node.support - len(new_diffset)
-            if new_support != left_node.support and new_support != right_node.support and new_support >= self.ratio_min_supp:
-                new_closure = left_node.closure.union(right_node.closure)  # using EOA
-                self.join_generators(left_node, right_node, new_diffset, new_support, new_closure, next_level,current_index + 1, tree, (left_node.diffset[lp_x_index],right_node.diffset[lp_y_index]))  # using Condition (5)
-
-    #def join_generators(self, left_node, right_node, new_transactions, new_support, new_closure, next_level, index_level):
-    def join_generators(self, left_node, right_node, new_diffset, new_support, new_closure, next_level, index_level, tree, common_diffset):
+    def join_generators(self, left_node, right_node, new_closure, next_level, index_level, tree, common_LP_diffsets):
         """
         Build the L[i+1] level by joining generators from L[i]
         :param left_node: node to merge
@@ -522,40 +526,48 @@ class GenCloseAnalyzer:
         :return: None
         """
 
-        left_generators = deque()
-        for left_diff in left_node.diffset:
+        new_generators_set = []
+        for diffsets in common_LP_diffsets:
+            left_generators = deque()
+            right_generators = deque()
+
+            left_diff = left_node.diffset[diffsets[0]]
             for generator in left_diff[2]:
                 left_generators.append((left_diff[0], generator))
 
-        right_generators = deque()
-        for right_diff in right_node.diffset:
+            right_diff = right_node.diffset[diffsets[1]]
             for generator in right_diff[2]:
                 right_generators.append((right_diff[0], generator))
 
-        new_generators_set = []
-        for g_left in left_generators:
-            frozen_g_left_trans = frozenset(g_left[1])
-            for g_right in right_generators:
-                frozen_g_right_trans = frozenset(g_right[1])
-                if g_left[0] == g_right[0] \
-                        and len(frozen_g_left_trans) == index_level and len(frozen_g_right_trans) == index_level \
-                        and len(frozen_g_left_trans.intersection(frozen_g_right_trans)) == index_level-1:
+            new_diffset = right_diff[1].difference(left_diff[1])
+            new_support = left_node.support - len(new_diffset)
+            if new_support != left_node.support and new_support != right_node.support and new_support >= self.min_supp:
 
-                    G = frozen_g_left_trans.union(frozen_g_right_trans)
-                    G0 = frozen_g_left_trans.intersection(frozen_g_right_trans)
-                    G_is_generator = True
+                for g_left in left_generators:
+                    frozen_g_left_trans = frozenset(g_left[1])
+                    for g_right in right_generators:
+                        frozen_g_right_trans = frozenset(g_right[1])
 
-                    for gen in G0: #combination_set(G0, with_empty_set=False, max_len=len(G0)):
-                        Gg = G.difference(frozenset([gen]))
-                        node_g = self.search_node_with_generator(Gg, tree)
-                        if node_g is None or new_support == node_g.support:
-                            G_is_generator = False
-                            break #for each G in G0
-                        else: #G can be generator
-                            new_closure = new_closure.union(node_g.closure) #using EOA
+                        if g_left[0] == g_right[0] \
+                                and len(frozen_g_left_trans) == index_level and len(frozen_g_right_trans) == index_level \
+                                and len(frozen_g_left_trans.intersection(frozen_g_right_trans)) == index_level-1:
 
-                    if G_is_generator:
-                        new_generators_set.append(list(G))
+                            G = frozen_g_left_trans.union(frozen_g_right_trans)
+                            G0 = frozen_g_left_trans.intersection(frozen_g_right_trans)
+                            G_is_generator = True
+
+                            #for gen in G0: #combination_set(G0, with_empty_set=False, max_len=len(G0))
+                            for gen in combination_set(G0, with_empty_set=False, max_len=len(G0)):
+                                Gg = G.difference(frozenset([gen]))
+                                node_g = self.search_node_with_generator(Gg, tree)
+                                if node_g is None or new_support == node_g.support:
+                                    G_is_generator = False
+                                    break #for each G in G0
+                                else: #G can be generator
+                                    new_closure = new_closure.union(node_g.closure) #using EOA
+
+                            if G_is_generator:
+                                new_generators_set.append(list(G))
 
         if len(new_generators_set) >= 1:
             #new i+1-generators
@@ -614,6 +626,7 @@ class RulesAssociation:
         :param with_empty_set: True to add an empty set to the generation
         :return: yield combinations
         '''
+        if max_len is None: max_len = len(set_to_process)
         s = list(set_to_process)
         return chain.from_iterable(combinations(s, r) for r in range(max_len + 1))
 
@@ -1206,7 +1219,7 @@ class RuleAssociationMinMax(RulesAssociation):
             Rm_AR.extend(self.MA(rule.left, rule.right, L, S, i, rule.support, rule.confidence))
             if rule.confidence == 1:
                 for R in self.combination_set(rule.right,False,len(rule.right)-1):
-                    print(Rule(rule.left, R, rule.support, 1).to_str())
+                    #print(Rule(rule.left, R, rule.support, 1).to_str())
                     #Rd_AR.append(Rule(rule.left, R, rule.support, 1))
                     Rm_AR.extend(self.MA(rule.left, frozenset(R), L, S, i, rule.support, 1))
             else:
@@ -1214,7 +1227,7 @@ class RuleAssociationMinMax(RulesAssociation):
                     node_SR = gca.search_node_with_closure(S.closure.difference(frozenset(R)))
                     if node_SR.closure == S.closure:
                         #Rd_AR.append(Rule(rule.left, rule.right.difference(R), rule.support, rule.confidence))
-                        print(Rule(rule.left, R, rule.support, 1).to_str())
+                        #print(Rule(rule.left, R, rule.support, 1).to_str())
                         Rm_AR.extend(self.MA(rule.left, rule.right.difference(R), L, S, i, rule.support, rule.confidence))
 
         CAR.extend(Rd_AR)
@@ -1257,13 +1270,13 @@ class RuleAssociationMinMax(RulesAssociation):
             for Rprime in self.combination_set(R_inter_L, False):
                 if set(Rprime) != R:
                     if i == 0:
-                        #rules.append(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime)), support, confidence))
-                        print(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime)), support, confidence).to_str())
+                        rules.append(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime)), support, confidence))
+                        #print(Rule(frozenset(Li).union(frozenset(Rprime)), R.difference(frozenset(Rprime)), support, confidence).to_str())
                     else:
                         for k in range(i):
                             if not frozenset(L.generators[k]).issubset(frozenset(Li).union(frozenset(Rprime))):
-                                #rules.append(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime)), support, confidence))
-                                print(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime)), support, confidence).to_str())
+                                rules.append(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime)), support, confidence))
+                                #print(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime)), support, confidence).to_str())
 
         return rules
 
