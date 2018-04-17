@@ -408,10 +408,10 @@ class GenCloseAnalyzer:
         frozen_generator = frozenset(generator)
         for index in reversed(range(len(generator)-1, len(tree))):
             for node in tree[index]:
-                if frozen_generator.issubset(node.closure):
-                    for gen in node.generators:
-                        if frozen_generator == frozenset(gen):
-                            return node
+                #if frozen_generator.issubset(node.closure):
+                for gen in node.generators:
+                    if frozen_generator == frozenset(gen):
+                        return node
         return None
 
     def search_node_with_closure(self, search, lcg = []):
@@ -544,21 +544,21 @@ class GenCloseAnalyzer:
             if new_support != left_node.support and new_support != right_node.support and new_support >= self.min_supp:
 
                 for g_left in left_generators:
-                    frozen_g_left_trans = frozenset(g_left[1])
+                    frozen_g_left_generators = frozenset(g_left[1])
                     for g_right in right_generators:
-                        frozen_g_right_trans = frozenset(g_right[1])
+                        frozen_g_right_generators = frozenset(g_right[1])
 
                         if g_left[0] == g_right[0] \
-                                and len(frozen_g_left_trans) == index_level and len(frozen_g_right_trans) == index_level \
-                                and len(frozen_g_left_trans.intersection(frozen_g_right_trans)) == index_level-1:
+                                and len(frozen_g_left_generators) == index_level and len(frozen_g_right_generators) == index_level \
+                                and len(frozen_g_left_generators.intersection(frozen_g_right_generators)) == index_level-1:
 
-                            G = frozen_g_left_trans.union(frozen_g_right_trans)
-                            G0 = frozen_g_left_trans.intersection(frozen_g_right_trans)
+                            G = frozen_g_left_generators.union(frozen_g_right_generators)
+                            G0 = frozen_g_left_generators.intersection(frozen_g_right_generators)
                             G_is_generator = True
 
                             #for gen in G0: #combination_set(G0, with_empty_set=False, max_len=len(G0))
                             for gen in combination_set(G0, with_empty_set=False, max_len=len(G0)):
-                                Gg = G.difference(frozenset([gen]))
+                                Gg = G.difference(frozenset(gen))
                                 node_g = self.search_node_with_generator(Gg, tree)
                                 if node_g is None or new_support == node_g.support:
                                     G_is_generator = False

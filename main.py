@@ -189,7 +189,7 @@ def use_reference(file):
         S = frequent_items[pair[0]]
 
         rules = []
-        RAR = rule_miner.mine_RAR(L, S, 0.2, 0.5, 0.8, 1.0)
+        RAR = rule_miner.mine_RAR(L, S, 0.9, 1.0, 0.8, 1.0)
         rules.extend(RAR)
         rules.extend(rule_miner.mine_CAR2(L, S, RAR, analyzer))
         nb_rules += len(rules)
