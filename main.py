@@ -9,6 +9,7 @@ from genclose_analyzer import RuleAssociationMinMin as RAMM
 from genclose_analyzer import RuleAssociationMinMax as RAMMax
 from itertools import combinations
 from tqdm import tqdm
+from collections import deque
 
 import os
 
@@ -173,7 +174,7 @@ def use_reference(file):
             transaction = row.split(' ')
             db.append(transaction)
 
-    min_support = 0.9
+    min_support = 0.95
     analyzer = GCA(db, min_support)
     analyzer.mine()
     frequent_items = analyzer.lcg_into_list()
@@ -188,13 +189,13 @@ def use_reference(file):
         L = frequent_items[pair[1]]
         S = frequent_items[pair[0]]
 
-        rules = []
-        RAR = rule_miner.mine_RAR(L, S, 0.9, 1.0, 0.8, 1.0)
-        rules.extend(RAR)
-        rules.extend(rule_miner.mine_CAR2(L, S, RAR, analyzer))
-        nb_rules += len(rules)
+        if L.closure.issubset(S.closure):
+            RAR = rule_miner.mine_RAR(L, S, 0.95, 1.0, 0.95, 1.0)
+            nb_consequent = len(rule_miner.mine_CAR2(L, S, RAR, analyzer))
+            nb_rules += nb_consequent
 
-        print('L:' + str(L.closure)+ ', ''S:' + str(S.closure) + ', nb BR min/max: ' + str(len(RAR)) + ', nb CR: ' + str(nb_rules))
+            print('L[' + str(pair[1]) + ']:' + str(L.closure)+ ', S[' + str(pair[0]) + ']:' + str(S.closure) + ', nb BR min/max: ' + str(len(RAR)) + ', nb CR: ' + str(nb_consequent))
+            print('Total rule:' + str(nb_rules))
 
     print('nb rules: ' + str(nb_rules))
 
