@@ -7,6 +7,7 @@ from genclose_analyzer import GenCloseAnalyzer as GCA
 from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
 from genclose_analyzer import RuleAssociationMinMin as RAMM
 from genclose_analyzer import RuleAssociationMinMax as RAMMax
+from genclose_analyzer import RuleAssociationMinimals as RAMin
 from itertools import combinations
 from tqdm import tqdm
 from collections import deque
@@ -111,7 +112,7 @@ def find_closed_items():
     deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
 
-    analyzer = GCA(deck_loader.decks, 0.05)
+    analyzer = GCA(deck_loader.decks, 0.1)
 
     print('Start mining ' + str(len(deck_loader.decks)) + ' decks')
     analyzer.mine()
@@ -119,7 +120,7 @@ def find_closed_items():
     #deck_loader.write_frequent_items_into_csv('genclose_results', analyzer.get_closed_items_closures(), card_loader)
 
     frequent_items = analyzer.lcg_into_list()
-    nb_frequent_items = len(frequent_items)
+    lattice = analyzer.lcg_into_lattice()
 
     generated_rules = []
     '''
@@ -131,37 +132,40 @@ def find_closed_items():
         generated_rules.extend(rule_miner.ars)
     '''
 
-    rule_miner2 = RAMM(analyzer.lcg_into_list())
     rule_miner = RAMMax(analyzer.lcg_into_list())
-    index = 0
+
+
     nb_rules = 0
-    for pair in combinations(list(range(nb_frequent_items)), 2):
-        L = frequent_items[pair[1]]
-        S = frequent_items[pair[0]]
+    nb_basic_rules = 0
+    print('Extract rules from frequent items: ')
 
-        if frozenset(S.closure).issuperset(frozenset(L.closure)):
-            #rules = rule_miner.mine(L,S,0.01,0.5,0.8,1.0)
-            #rules = rule_miner.mine_cars_L_L(L,0.01,0.5,0.8,1.0)
-            rules = []
-            RAR = rule_miner.mine_RAR(L, S,0.2,0.5,0.8,1.0)
-            rules.extend(RAR)
-            rule_miner.mine_CAR2(L, S, RAR, analyzer)
+    for node in lattice.values():
+        S = node.fci
+        print('S: ' + str(S.closure))
 
-            nb_rules += len(rules)
+        to_extract = deque()
+        to_extract.append(node)
+        to_extract.extend(node.children)
+        visited = deque()
+        while len(to_extract) > 0:
+            current = to_extract.popleft()
+            visited.append(current)
+            L = current.fci
 
-            for rule in rules:
-                left = []
-                for item in rule.left:
-                    left.append(card_loader.hash_id_name[item])
+            RAR = rule_miner.mine_RAR(L, S, 0.1, 1.0, 0.9, 1.0)
+            nb_consequent = len(rule_miner.mine_CAR2(L, S, RAR, analyzer))
 
-                right = []
-                for item in rule.right:
-                    right.append(card_loader.hash_id_name[item])
+            nb_basic_rules += len(RAR)
+            nb_rules += nb_consequent
 
-                print(str(index + 1) + ': ' + ' + '.join([str(item) for item in left]) + ' --> ' + ' + '.join(
-                    [str(item) for item in right]) + ', s: ' + str(round(rule.support, 2)) + ', c: ' + str(round(rule.confidence,2)) + ', l: ' + str(round(rule.lift,2)) + ', co: ' + str(round(rule.conviction,2)) + ', rpf: ' + str(round(rule.rpf,2)))
+            print('  - L:' + str(L.closure) + ',gen: ' + str(L.generators) + ', nb BR min/max: ' + str(
+                len(RAR)) + ', nb CR: ' + str(nb_consequent) + ', TBR: ' + str(nb_basic_rules) + ', TBC: ' + str(
+                nb_rules))
 
-                index += 1
+            for child in current.children:
+                for grandchild in child.children:
+                    if grandchild not in to_extract and grandchild not in visited:
+                        to_extract.append(grandchild)
 
     print('nb rules: ' + str(nb_rules))
 
@@ -178,26 +182,60 @@ def use_reference(file):
     analyzer = GCA(db, min_support)
     analyzer.mine()
     frequent_items = analyzer.lcg_into_list()
+
+    lattice = analyzer.lcg_into_lattice()
+
     nb_frequent_items = len(frequent_items)
     print('Nb frequent items with min_support = ' + str(min_support) +': ' + str(nb_frequent_items))
 
     rule_miner = RAMMax(analyzer.lcg_into_list())
+    #rule_miner = RAMin(analyzer.lcg_into_list())
+
     nb_rules = 0
-
+    nb_basic_rules = 0
     print('Extract rules from frequent items: ')
-    for pair in tqdm(combinations(list(range(nb_frequent_items)), 2)):
-        L = frequent_items[pair[1]]
-        S = frequent_items[pair[0]]
 
-        if L.closure.issubset(S.closure):
+    rules = deque()
+    for node in lattice.values():
+        S = node.fci
+        print('S: ' + str(S.closure))
+
+        to_extract = deque()
+        to_extract.append(node)
+        visited = deque()
+        while len(to_extract) > 0:
+            current = to_extract.popleft()
+            visited.append(current)
+            L = current.fci
+
+            #RAR = rule_miner.mine_basic(L, S)
             RAR = rule_miner.mine_RAR(L, S, 0.95, 1.0, 0.95, 1.0)
-            nb_consequent = len(rule_miner.mine_CAR2(L, S, RAR, analyzer))
-            nb_rules += nb_consequent
+            ne_rules = rule_miner.mine_CAR2(L, S, RAR, analyzer)
 
-            print('L[' + str(pair[1]) + ']:' + str(L.closure)+ ', S[' + str(pair[0]) + ']:' + str(S.closure) + ', nb BR min/max: ' + str(len(RAR)) + ', nb CR: ' + str(nb_consequent))
-            print('Total rule:' + str(nb_rules))
+            is_new_rule = True
+            for new_rule in ne_rules :
+                for saved_rules in rules:
+                    if new_rule.left == saved_rules.left and new_rule.right == saved_rules.right:
+                        is_new_rule = False
+                        break
+                if is_new_rule:
+                    rules.append(new_rule)
+                    nb_rules += 1
 
-    print('nb rules: ' + str(nb_rules))
+
+            #nb_basic_rules += len(RAR)
+
+            print('  - L:' + str(L.closure) + ',gen: ' + str(L.generators) + ', nb BR min/max: ' + str(len(RAR)) + ', TBR: ' + str(nb_basic_rules) +', TBC: ' + str(nb_rules))
+            #print(' - L:' + str(L.closure) + ',gen: ' + str(L.generators) + ', nb BR min/max: ' + str(len(RAR)) + ', TBR: ' + str(nb_basic_rules))
+            for rule in RAR:
+                print('  - ' + rule.to_str())
+
+            for child in current.children:
+                for grandchild in child.children:
+                    if grandchild not in to_extract and grandchild not in visited:
+                        to_extract.append(grandchild)
+
+    print('nb rules: ' + str(nb_basic_rules))
 
 if __name__ == "__main__":
     # execute only if run as a script

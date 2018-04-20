@@ -3,6 +3,7 @@ from genclose_analyzer import GenCloseAnalyzer as GCA
 from genclose_analyzer import RuleAssociationMinMin as RAMM
 from genclose_analyzer import RuleAssociationMinMax as RAMMax
 from genclose_analyzer import Rule
+from collections import deque
 
 class TestGenCloseAnalyzer(unittest.TestCase):
     def setUp(self):
@@ -117,7 +118,7 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         self.assertTrue(True)
 
     def test_mine_CAR(self):
-        analyzer = GCA(self.db_RAR, 0.0)
+        analyzer = GCA(self.db_RAR, 0.25)
         analyzer.clean_database()
         analyzer.mine()
 
@@ -127,7 +128,7 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         S_node = analyzer.search_node_with_closure(S)
 
         rule_miner = RAMMax(analyzer.lcg_into_list())
-        RAR = rule_miner.mine_RAR(L_node, S_node)
+        RAR = rule_miner.mine_RAR(L_node, S_node,0.25,1.0, 0.0,1.0)
         CAR2 = rule_miner.mine_CAR2(L_node, S_node, RAR, analyzer)
 
         self.assertTrue(len(CAR2), 13)
@@ -148,3 +149,45 @@ class TestGenCloseAnalyzer(unittest.TestCase):
         for i in range(len(CAR2)):
             self.assertEqual(frozenset(CAR2[i].left), frozenset(rules[i].left))
             self.assertEqual(frozenset(CAR2[i].right), frozenset(rules[i].right))
+
+    def test_all_rules(self):
+        analyzer = GCA(self.db_RAR, 0.25)
+        analyzer.clean_database()
+        analyzer.mine()
+
+        lattice = analyzer.lcg_into_lattice()
+        rule_miner = RAMMax(analyzer.lcg_into_list())
+
+        nb_rules = 0
+        nb_basic_rules = 0
+        for node in lattice.values():
+            S = node.fci
+            print('S: ' + str(S.closure))
+
+            to_extract = deque()
+            to_extract.append(node)
+            to_extract.extend(node.children)
+            visited = deque()
+            while len(to_extract) > 0:
+                current = to_extract.popleft()
+                visited.append(current)
+                L = current.fci
+
+                RAR = rule_miner.mine_RAR(L, S, 0.95, 1.0, 0.95, 1.0)
+                nb_consequent = len(rule_miner.mine_CAR2(L, S, RAR, analyzer))
+                nb_basic_rules += len(RAR)
+                nb_rules += nb_consequent
+
+                print('  - L:' + str(L.closure) + ',gen: ' + str(L.generators) + ', nb BR min/max: ' + str(
+                    len(RAR)) + ', nb CR: ' + str(nb_consequent) + ', TBR: ' + str(nb_basic_rules) + ', TBC: ' + str(
+                    nb_rules))
+
+                for child in current.children:
+                    for grandchild in child.children:
+                        if grandchild not in to_extract and grandchild not in visited:
+                            to_extract.append(grandchild)
+                        else:
+                            print('Child: ' + str(grandchild.fci.closure) + ', gen: ' +  str(grandchild.fci.generators) + ' already waiting for extraction or visited')
+
+        print('nb rules: ' + str(nb_rules))
+        self.assertTrue(False)

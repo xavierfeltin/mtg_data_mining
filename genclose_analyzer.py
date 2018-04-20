@@ -142,6 +142,12 @@ class GenCloseAnalyzer:
                 #return left_parent.transactions.difference(associated_transactions)
                 return frozenset(all_diff).difference(associated_transactions)
 
+    class LatticeNode:
+        def __init__(self, fci):
+            self.parents = []
+            self.children = []
+            self.fci = fci
+
     cumulative_time = 0
 
     def __init__(self, database, min_support = 1.0):
@@ -171,6 +177,45 @@ class GenCloseAnalyzer:
         for item in list_closed:
             item.support = item.support/self.db_length
         return list_closed
+
+
+    def lcg_into_lattice(self):
+        lattice = {}
+        root = GenCloseAnalyzer.LatticeNode(None)
+        lcg_list = self.lcg_into_list()
+        for i in range(len(lcg_list)):
+            self._build_lattice(lattice, lcg_list, i, root)
+        return lattice
+
+    def _build_lattice(self, lattice, lcg_list, child_index, parent):
+        if child_index not in lattice.keys() and child_index < len(lcg_list):
+            fci = lcg_list[child_index]
+            if parent.fci is None or fci.closure.issubset(parent.fci.closure):
+                node = GenCloseAnalyzer.LatticeNode(fci)
+                node.parents.append(parent)
+                parent.children.append(node)
+                lattice[child_index] = node
+                for i in range(child_index+1, len(lcg_list)):
+                    self._build_lattice(lattice, lcg_list, i, node)
+        elif child_index in lattice.keys():
+            child = lattice[child_index]
+            if (parent.fci is None or child.fci.closure.issubset(parent.fci.closure)) and not self._is_grandson(lattice, child, parent):
+                child.parents.append(parent)
+                parent.children.append(child)
+
+    def _is_grandson(self, lattice, child, parent):
+        is_grandson = False
+        to_search = deque()
+        to_search.extend(parent.children)
+        while len(to_search) > 0:
+            current = to_search.popleft()
+            if current == child:
+                is_grandson = True
+                break
+            else:
+                for child in current.children:
+                    to_search.append(child)
+        return is_grandson
 
     def get_closed_items_closures(self):
         list_closures = []
@@ -1306,4 +1351,28 @@ class RuleAssociationMinMax(RulesAssociation):
                                     for k in range(i):
                                         if not frozenset(L.generators[k]).issubset(frozenset(Li).union(frozenset(Rprime))):
                                             rules.append(Rule(frozenset(Li).union(frozenset(Rprime)),R.difference(frozenset(Rprime))))
+        return rules
+
+class RuleAssociationMinimals(RulesAssociation):
+    def __init__(self, lcg):
+        RulesAssociation.__init__(self, lcg)
+
+    def mine_basic(self, L, S):
+        rules = deque()
+        if L == S:
+            rules.extend(self._mine_BLL(L))
+        else:
+            rules.extend(self._mine_BLS(L,S))
+
+        return rules
+
+    def _mine_BLL(self, L):
+        rules = deque()
+        for gen in L.generators:
+            rules.append(Rule(L.closure, L.closure.difference(frozenset(gen)), L.support, 1.0))
+        return rules
+
+    def _mine_BLS(self, L, S):
+        rules = deque()
+        rules.append(Rule(L.closure, S.closure.difference(L.closure), S.support, L.support / S.support))
         return rules
