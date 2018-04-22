@@ -1,6 +1,6 @@
 # coding=utf8
 import unittest
-from apriori_analyzer import APrioriAnalyzer
+from association_rules.apriori_analyzer import APrioriAnalyzer
 
 class TestAPrioriAnalyzer(unittest.TestCase):
     def setUp(self):

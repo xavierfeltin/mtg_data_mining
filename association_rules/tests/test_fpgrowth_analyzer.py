@@ -1,6 +1,6 @@
 # coding=utf8
 import unittest
-from fpgrowth_analyzer import FPGrowthAnalyzer, TreeNode
+from association_rules.fpgrowth_analyzer import FPGrowthAnalyzer, TreeNode
 
 class TestAPrioriAnalyzer(unittest.TestCase):
     def setUp(self):

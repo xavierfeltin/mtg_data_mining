@@ -1,8 +1,8 @@
 import unittest
-from genclose_analyzer import GenCloseAnalyzer as GCA
-from genclose_analyzer import RuleAssociationMinMin as RAMM
-from genclose_analyzer import RuleAssociationMinMax as RAMMax
-from genclose_analyzer import Rule
+from association_rules.genclose_analyzer import GenCloseAnalyzer as GCA
+from association_rules.genclose_analyzer import RuleAssociationMinMin as RAMM
+from association_rules.genclose_analyzer import RuleAssociationMinMax as RAMMax
+from association_rules.genclose_analyzer import Rule
 from collections import deque
 
 class TestGenCloseAnalyzer(unittest.TestCase):

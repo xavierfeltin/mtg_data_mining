@@ -1,8 +1,8 @@
 import unittest
-from genclose_analyzer import GenCloseAnalyzer as GCA
-from genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
-from genclose_analyzer import is_in_generators
-from genclose_analyzer import Rule
+from association_rules.genclose_analyzer import GenCloseAnalyzer as GCA
+from association_rules.genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
+from association_rules.genclose_analyzer import is_in_generators
+from association_rules.genclose_analyzer import Rule
 
 class TestGenCloseAnalyzer(unittest.TestCase):
     def setUp(self):
