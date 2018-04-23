@@ -256,7 +256,7 @@ class DeckManager:
 
         for file in list_path:
             print('file: ' + file)
-            with open('./data/decks_mtgdeck_net/' + file) as csvfile:
+            with open(file) as csvfile:
                 reader = csvfile.read()
                 rows = reader.split('\n')
                 nb_line = 0
