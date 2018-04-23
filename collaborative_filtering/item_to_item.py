@@ -55,18 +55,29 @@ class ItemToItem:
 
         self.items_similarities = df
 
-    def get_recommendation(self, card_id, nb_recommendations):
+    def get_recommendation(self, card_id, nb_recommendations, lsa):
         '''
         Return the list of the first nb_recommendations
         :param card_id: id card of which we want the recommendations
         :param nb_recommendations: number of recommendations to return
         :return: dictionary {card_id: recommendation}
         '''
+
+        df = pd.DataFrame(index='card_id', columns=['card_id','item_similarity','lsa_similarity'])
+        item_similarities = self.items_similarities.loc[card_id]
+        lsa_similarities = lsa.get_similarity(card_id, item_similarities.index.to_list)
+
+        for new_card_id in item_similarities.index:
+            new_card = pd.DataFrame(index='card_id', columns=['card_id','item_similarity','lsa_similarity'])
+            new_card['card_id'] = new_card_id
+            new_card['item_similarity'] = item_similarities.loc[new_card_id]
+            new_card['lsa_similarity'] = lsa_similarities.loc[new_card_id]
+
         similarities = self.items_similarities.loc[card_id].sort_values(ascending=False)
         recommendations = {}
         for i in range(nb_recommendations):
-            if similarities.at[i] > 0:
-                recommendations[similarities.columns[i]] = similarities.at[i]
+            if similarities.iloc[i] > 0:
+                recommendations[similarities.index[i]] = similarities.iloc[i]
         return recommendations
 
     def compute_cosine_angle(self, dataset_1, dataset_2):

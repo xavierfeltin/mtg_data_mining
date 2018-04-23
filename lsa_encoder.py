@@ -84,9 +84,9 @@ class LSAEncoder:
     - https://machinelearningmastery.com/clean-text-machine-learning-python/
     """
 
-    def __init___(self, documents, n_dimensions):
+    def __init__(self, documents, n_dimensions=50):
         self.documents = documents
-        self.n_dimensions = n_dimensions
+        self.n_clusters = n_dimensions
         self.vocabulary = []
         self.descriptors = []
         self.tfi = None #TFI transformation of the data with len(self.vocabulary) dimensions
@@ -98,7 +98,8 @@ class LSAEncoder:
         Function of transformation to change the text into a vector of words based on a regular expression
         """
         tokenizer = RegexpTokenizer(r'{\w+}|\+\w+\/\+\w+|\w+\-\w+|\w+')
-        tokens = tokenizer.tokenize(self.documents)
+        #tokens = tokenizer.tokenize(self.documents)
+        tokens = [tokenizer.tokenize(content) for content in self.documents]
         tokens = [w.lower() for w in tokens]
 
         punctuations = ['!', '"', '#', '$', '%', '&', "'", '*', ',', '-', '.', ':', ';', '<', '=', '>', '?', '@',
@@ -136,6 +137,9 @@ class LSAEncoder:
         self.tokenize()
         self.tfi_transform()
         self.lsa_transform()
+
+    def get_similarity(self,reference_card,compared_cards):
+        pass
 
     def print_lsa_results(self):
         """

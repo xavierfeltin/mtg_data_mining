@@ -28,7 +28,7 @@ class MagicLoader:
 
     def __init__(self, file_type = 'card'):
         self.texts = []
-        #self.names = []
+        self.names = []
         self.type = file_type
         self.lands = []
         self.hash_name_id = {}
@@ -48,7 +48,7 @@ class MagicLoader:
             self.texts.append(description)
 
             name = self.get_field(read_json[card], 'name')
-            #self.names.append(name)
+            self.names.append(name)
             self.hash_name_id[name] = internal_id
             self.hash_id_name[internal_id] = name
 
@@ -122,6 +122,7 @@ class MagicLoader:
         self.hash_name_id['Catch / Release'] = MagicLoader.SPECIAL_INDEX + 59
         self.hash_name_id['Pure / Simple'] = MagicLoader.SPECIAL_INDEX + 60
         self.hash_name_id['Down / Dirty'] = MagicLoader.SPECIAL_INDEX + 61
+        self.hash_name_id['Unknown Card'] = MagicLoader.SPECIAL_INDEX + 62
 
         self.hash_id_name[MagicLoader.SPECIAL_INDEX] = 'Cut / Ribbons'
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 1] = 'Fire / Ice'
@@ -185,6 +186,7 @@ class MagicLoader:
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 59] = 'Catch / Release'
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 60] = 'Pure / Simple'
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 61] = 'Down / Dirty'
+        self.hash_id_name[MagicLoader.SPECIAL_INDEX + 62] = 'Unknown Card'
 
     def get_field(self, card_json, field):
         if field in card_json:
@@ -211,7 +213,7 @@ class DeckManager:
             list_cards = cards_loader.hash_name_id.keys()
 
         for file in list_path:
-            with open('./db_decks/' + file, newline='\n') as csvfile:
+            with open('./../db_decks/' + file, newline='\n') as csvfile:
                 reader = csv.reader(csvfile, delimiter=';')
                 nb_line = 0
                 file_cards = []
