@@ -27,9 +27,7 @@ class DataCleaner:
     def __init__(self, data, names):
         self.dirty_data = data
         self.names = names
-
         self.clean_data = []
-
         self.test_data = []
         self.training_data = []
         self.validation_data = []
@@ -85,21 +83,21 @@ class LSAEncoder:
     """
 
     def __init__(self, documents, n_dimensions=50):
-        self.documents = documents
+        self.text = documents
         self.n_clusters = n_dimensions
         self.vocabulary = []
         self.descriptors = []
         self.tfi = None #TFI transformation of the data with len(self.vocabulary) dimensions
         self.lsa = None #TFI transformation with reduced dimensions (self.n_dimensions) using LSA algorithm
 
-    def tokenize(self):
+    def tokenize(self,text):
         """
         Custom tokenizer
         Function of transformation to change the text into a vector of words based on a regular expression
         """
         tokenizer = RegexpTokenizer(r'{\w+}|\+\w+\/\+\w+|\w+\-\w+|\w+')
-        #tokens = tokenizer.tokenize(self.documents)
-        tokens = [tokenizer.tokenize(content) for content in self.documents]
+        tokens = tokenizer.tokenize(text)
+        #tokens = [tokenizer.tokenize(content) for content in self.documents]
         tokens = [w.lower() for w in tokens]
 
         punctuations = ['!', '"', '#', '$', '%', '&', "'", '*', ',', '-', '.', ':', ';', '<', '=', '>', '?', '@',
@@ -134,7 +132,7 @@ class LSAEncoder:
         """
         Transform the original documents into vectorized data with n_cluster dimensions
         """
-        self.tokenize()
+        #self.tokenize()
         self.tfi_transform()
         self.lsa_transform()
 
@@ -161,7 +159,7 @@ class LSAEncoder:
         """
 
         similarity = np.asarray(np.asmatrix(self.lsa) * np.asmatrix(self.lsa).T)
-        data_frame = pd.DataFrame(similarity, index=self.documents, columns=self.documents)
+        data_frame = pd.DataFrame(similarity, index=self.text, columns=self.text)
         data_frame.head(10).to_csv('./test_lsa_similarity.csv')
 
         for i in range(10):

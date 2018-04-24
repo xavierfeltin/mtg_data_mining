@@ -5,11 +5,12 @@ from lsa_encoder import DataCleaner, LSAEncoder
 
 def encoding_magic_card():
     loader = MagicLoader()
-    loader.load('./../data/AllCards-x.json')
+    loader.load('./../data/magic_cards/AllCards-x.json')
     cleaner = DataCleaner(loader.texts, loader.names)
     cleaner.clean()
     lsa_transformer = LSAEncoder(cleaner.clean_data)
     lsa_transformer.fit()
+    lsa_transformer.print_similarity()
     return lsa_transformer
 
 def load_magic_environment():
