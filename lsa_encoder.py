@@ -11,6 +11,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import Normalizer
+from collections import deque
 
 import sys
 import numpy as np
@@ -24,14 +25,12 @@ class DataCleaner:
     Clean and prepare the data that will be used by the autoencoder
     """
 
-    def __init__(self, data, names):
+    def __init__(self, data):
         self.dirty_data = data
-        self.names = names
         self.clean_data = []
         self.test_data = []
         self.training_data = []
         self.validation_data = []
-
 
     def clean(self):
         """
@@ -167,7 +166,34 @@ class LSAEncoder:
             sorted = data_frame.iloc[i * 500].sort_values(ascending=False)
             sorted.to_csv('./similarity_card' + str(i * 500) + '.csv')
 
+class LSAManager:
+    def __init__(self, cards_content):
+        self.cards_content = cards_content
+        self.cards_encoded = {}
+
+    def encode(self):
+        sorted_ids = sorted(self.cards_content.keys())
+        descriptions = deque()
+        for id in sorted_ids:
+            descriptions.append(self.cards_content[id])
 
 
+        cleaner = DataCleaner(descriptions)
+        cleaner.clean()
+        lsa_transformer = LSAEncoder(cleaner.clean_data)
+        lsa_transformer.fit()
 
+        encoded_content = lsa_transformer.lsa
+        for index, vector in enumerate(encoded_content):
+            self.cards_encoded[sorted_ids[index]] = vector
 
+    def get_similarity(self, card_1, list_cards):
+        '''
+        cards_vector = deque()
+        for id in list_cards:
+            cards_vector.append(self.cards_encoded[id])
+        similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(cards_vector).T)
+        return list(similarity[0,:])
+        '''
+        similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(self.cards_encoded[list_cards]).T)
+        return similarity[0,0]

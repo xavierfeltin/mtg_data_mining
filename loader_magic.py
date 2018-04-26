@@ -24,20 +24,21 @@ class MagicLoader:
                  'Destined/Lead','Rags/Riches','Prepare/Fight','Rags/Riches','Toil/Trouble','Order/Chaos','Armed/Dangerous',
                  'Refuse/Cooperate','Reason/Believe','Leave/Chance','Mouth/Feed','Wax/Wane','Assault/Battery','Stand/Deliver',
                  'Spite/Malice','Trial/Error','Odds/Ends','Research/Development','Supply/Demand','Pain/Suffering','Catch/Release',
-                 'Pure/Simple','Down/Dirty']
+                 'Pure/Simple','Down/Dirty','Unknown Card']
 
     def __init__(self, file_type = 'card'):
-        self.texts = []
+        #self.texts = []
+        self.hash_id_texts= {}
         self.names = []
         self.type = file_type
         self.lands = []
         self.hash_name_id = {}
         self.hash_id_name = {}
+        self.special_indexes = []
 
     def load(self, path):
         read_json = simplejson.load(open(path, "r", encoding='UTF-8'))
 
-        self.generate_dual_cards()
         for internal_id, card in enumerate(read_json):
             description = self.get_field(read_json[card], 'colors')
             description += ', ' + self.get_field(read_json[card], 'types')
@@ -45,7 +46,8 @@ class MagicLoader:
             description += ', ' + self.get_field(read_json[card], 'power')
             description += ', ' + self.get_field(read_json[card], 'toughness')
             description += ', ' + self.get_field(read_json[card], 'text')
-            self.texts.append(description)
+            #self.texts.append(description)
+            self.hash_id_texts[internal_id] = description
 
             name = self.get_field(read_json[card], 'name')
             self.names.append(name)
@@ -54,12 +56,41 @@ class MagicLoader:
 
             if self.get_field(read_json[card],'types') == 'Land':
                 self.lands.append(self.get_field(read_json[card],'name'))
+        self.generate_dual_cards()
 
     def generate_dual_cards(self):
         """
         Magic has cards with two faces. We can not know which face will be played in the deck.
         Special card are added to the original magic's card database to manage that
         """
+
+        for i in range(len(MagicLoader.DUAL_CARDS)):
+            special_id = MagicLoader.SPECIAL_INDEX + i
+            self.special_indexes.append(MagicLoader.SPECIAL_INDEX + i)
+            self.hash_id_name[special_id] =  MagicLoader.DUAL_CARDS[i]
+
+            special_name = MagicLoader.DUAL_CARDS[i]
+            if special_name != 'Unknown Card':
+                items = special_name.split('/')
+                special_name = items[0] + ' / ' + items[1]
+
+            self.hash_name_id[special_name] = special_id
+
+            if special_name != 'Unknown Card':
+                names = special_name.split('/')
+                description = ''
+                for name in names:
+                    name = name.strip()
+                    id = self.hash_name_id[name]
+                    add_coma = False
+                    if len(description) == 0: add_coma = True
+                    description += self.hash_id_texts[id]
+                    if add_coma: description += ', '
+                self.hash_id_texts[special_id] = description
+            else:
+                self.hash_id_texts[special_id] = 'unknown'
+
+        '''
         self.hash_name_id['Cut / Ribbons'] = MagicLoader.SPECIAL_INDEX
         self.hash_name_id['Fire / Ice'] = MagicLoader.SPECIAL_INDEX + 1
         self.hash_name_id['Start / Finish'] = MagicLoader.SPECIAL_INDEX + 2
@@ -187,6 +218,7 @@ class MagicLoader:
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 60] = 'Pure / Simple'
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 61] = 'Down / Dirty'
         self.hash_id_name[MagicLoader.SPECIAL_INDEX + 62] = 'Unknown Card'
+        '''
 
     def get_field(self, card_json, field):
         if field in card_json:

@@ -52,7 +52,6 @@ class ItemToItem:
                                     df.at[card, item] = similarity
                             else:
                                 df.at[item, item] = -1.0
-
         self.items_similarities = df
 
     def get_recommendation(self, card_id, nb_recommendations, lsa):
@@ -63,21 +62,23 @@ class ItemToItem:
         :return: dictionary {card_id: recommendation}
         '''
 
-        df = pd.DataFrame(index='card_id', columns=['card_id','item_similarity','lsa_similarity'])
         item_similarities = self.items_similarities.loc[card_id]
-        lsa_similarities = lsa.get_similarity(card_id, item_similarities.index.to_list)
 
-        for new_card_id in item_similarities.index:
-            new_card = pd.DataFrame(index='card_id', columns=['card_id','item_similarity','lsa_similarity'])
-            new_card['card_id'] = new_card_id
+        #Remove null or negative similarities
+        item_similarities = item_similarities[item_similarities > 0].dropna()
+
+        similarities = pd.DataFrame(columns=['card_id','item_similarity','content_similarity'])
+        for i, new_card_id in enumerate(item_similarities.index):
+            new_card = pd.DataFrame(index=[new_card_id], columns=['card_id','item_similarity','content_similarity'])
             new_card['item_similarity'] = item_similarities.loc[new_card_id]
-            new_card['lsa_similarity'] = lsa_similarities.loc[new_card_id]
+            new_card['content_similarity'] = lsa.get_similarity(card_id, new_card_id)
+            similarities = similarities.append(new_card)
 
-        similarities = self.items_similarities.loc[card_id].sort_values(ascending=False)
+        similarities = similarities.sort_values(['item_similarity', 'content_similarity'], ascending=[False, False])
         recommendations = {}
-        for i in range(nb_recommendations):
-            if similarities.iloc[i] > 0:
-                recommendations[similarities.index[i]] = similarities.iloc[i]
+        nb = min(nb_recommendations, len(similarities))
+        for i in range(nb):
+            recommendations[similarities.index[i]] = [similarities.iloc[i]['item_similarity'],similarities.iloc[i]['content_similarity']]
         return recommendations
 
     def compute_cosine_angle(self, dataset_1, dataset_2):
