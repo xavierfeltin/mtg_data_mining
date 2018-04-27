@@ -325,9 +325,9 @@ class DeckManager:
         "Adapt card name to the reference database"
         if card == 'Stone golem':
             return 'Stone Golem'
-        if card in MagicLoader.DUAL_CARDS:
+        if card in MagicLoader.DUAL_CARDS and card != 'Unknown Card':
             items = card.split('/')
-            return items[0] + ' / ' + items[1]
+            return items[0].strip() + ' / ' + items[1].strip()
         else:
             return card
 
