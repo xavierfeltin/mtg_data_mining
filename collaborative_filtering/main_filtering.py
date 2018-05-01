@@ -22,7 +22,7 @@ def load_decks_database(card_loader):
     print('Clean deck')
     deck_loader = DeckManager()
 
-
+    '''
     files = os.listdir("./../data/decks_mtgdeck_net")  # returns list
     paths = []
     for file in files:
@@ -35,7 +35,7 @@ def load_decks_database(card_loader):
     list_files = os.listdir("./../db_decks")  # returns list
     deck_loader.load_from_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
-    '''
+
 
     return deck_loader
 

@@ -180,6 +180,8 @@ class MagicLoader:
                 self.hash_id_mode[special_id] = self.hash_id_mode[internal_id]
             else:
                 self.hash_id_texts[special_id] = 'unknown'
+                self.hash_id_color[special_id] = 100000
+                self.hash_id_mode[special_id] = 11111
 
     def get_field(self, card_json, field):
         if field in card_json:
@@ -233,6 +235,9 @@ class DeckManager:
                                 file_cards.append(card)
                     else:
                         deck = []
+                        color_identity = 0
+                        game_mode = {}
+
                         process_deck = True
                         for index in error_index:
                             process_deck = process_deck and (int(row[index]) > 0)
@@ -240,8 +245,49 @@ class DeckManager:
                         if process_deck:
                             for i, nb_cards in enumerate(row):
                                 if int(nb_cards) > 0 and i not in error_index:
-                                    deck.append(file_cards[i])
+                                    color_identity = color_identity | cards_loader.hash_id_color[file_cards[i]]
+
+                                    if file_cards[i] not in deck:
+                                        has_official_mode = False
+                                        for mode in MagicLoader.GAME_MODES:
+                                            if (mode & cards_loader.hash_id_mode[file_cards[i]] != 0) or cards_loader.hash_id_mode[file_cards[i]] == 0:
+                                                has_official_mode = True
+                                                if mode not in game_mode:
+                                                    game_mode[mode] = 0
+                                                game_mode[mode] += 1
+
+                                        deck.append(file_cards[i])
+
+                                        if not has_official_mode:
+                                            print(card + ' is not in any official game mode!', file=sys.stderr)
                             self.decks.append(deck)
+
+                            if color_identity & ~MagicLoader.CODE_NO_COLOR != 0:
+                                # No color stay true if all cards are no color
+                                color_identity = color_identity ^ MagicLoader.CODE_NO_COLOR
+
+                            has_official_mode = False
+                            for mode, nb_cards in game_mode.items():
+                                if nb_cards == len(deck):
+                                    has_official_mode = True
+                                    if mode not in self.grouped_decks:
+                                        self.grouped_decks[mode] = {}
+                                        self.grouped_cards[mode] = {}
+
+                                    if color_identity not in self.grouped_decks[mode]:
+                                        self.grouped_decks[mode][color_identity] = []
+                                        self.grouped_cards[mode][color_identity] = set([])
+
+                                    self.grouped_decks[mode][color_identity].append(deck)
+                                    self.grouped_cards[mode][color_identity] = self.grouped_cards[mode][
+                                        color_identity].union(
+                                        set(deck))
+
+                            if not has_official_mode:
+                                for card in deck:
+                                    print(cards_loader.hash_id_name[card] + ', modes: ' + str(
+                                        cards_loader.hash_id_mode[card]))
+                                print('Deck not with official format', file=sys.stderr)
                     nb_line+=1
                 self.cards = set.union(self.cards, set(file_cards))
 
@@ -267,7 +313,6 @@ class DeckManager:
                     if row != '""':
                         color_identity = 0
                         game_mode = {}
-                        grouped_file_cards = []
 
                         # Remove number of cards, unused in frequent items rule associations approach
                         csv_row = re.subn("( )?\d+ ",';', row)
