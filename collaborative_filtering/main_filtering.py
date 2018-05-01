@@ -4,6 +4,8 @@ from tqdm import tqdm
 from loader_magic import MagicLoader, DeckManager
 from collaborative_filtering.item_to_item import ItemToItem, Rating
 from lsa_encoder import DataCleaner, LSAEncoder, LSAManager
+from time import time
+import numpy as np
 
 def encoding_magic_card(card_loader):
     lsa_manager = LSAManager(card_loader.hash_id_texts)
@@ -27,6 +29,7 @@ def load_decks_database(card_loader):
         paths.append('./../data/decks_mtgdeck_net/' + file)
     deck_loader.load_from_mtgdeck_csv(paths, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
+    deck_loader.sort_decks()
 
     '''
     list_files = os.listdir("./../db_decks")  # returns list
@@ -38,13 +41,15 @@ def load_decks_database(card_loader):
 
 def test_build_tree(deck_loader):
     ratings = []
-    max_len = 0
+    #max_len = 0
     for card in tqdm(deck_loader.cards):
         current_value = int(card in deck_loader.decks[0])
+
         rating = Rating(current_value)
         nb_values = 0
         for deck in deck_loader.decks:
             new_val = int(card in deck)
+
             if new_val == current_value:
                 nb_values += 1
             else:
@@ -52,9 +57,9 @@ def test_build_tree(deck_loader):
                 nb_values = 1
                 current_value = new_val
         ratings.append(rating)
-        if len(rating.compression) > max_len:
-            max_len = len(rating.compression)
-            print(max_len)
+        #if len(rating.compression) > max_len:
+        #    max_len = len(rating.compression)
+        #    print(max_len)
 
     for rating in ratings:
         rating.uncompress()
@@ -64,10 +69,13 @@ if __name__ == "__main__":
     card_loader = load_magic_environment()
     deck_loader = load_decks_database(card_loader)
 
-    print('build tree:')
-    test_build_tree(deck_loader)
-
     '''
+    print('build tree:')
+    start = time()
+    test_build_tree(deck_loader)
+    print(str((time()-start)*1000) + ' ms')
+    '''
+
     print('Convert card text into vector')
     lsa_manager = encoding_magic_card(card_loader)
 
@@ -100,4 +108,3 @@ if __name__ == "__main__":
 
     with open('./../similarities.json', 'w') as f:
         json.dump(similiraties, f)
-    '''

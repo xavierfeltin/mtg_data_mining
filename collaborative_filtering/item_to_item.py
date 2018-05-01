@@ -4,19 +4,29 @@ from collections import deque
 from scipy import spatial
 from tqdm import tqdm
 from time import time
+import math
 
 class Rating:
-    def __init__(self, first_value):
+    def __init__(self, first_value, db_size = 0):
         self.first_value = first_value
-        self.compression = []
+        self.compression = deque()
         self.norm_square = 0
+        self.db_size = db_size
 
     def uncompress(self):
         full_data = deque()
-        current_value = self.first_value
+        index = 0
         for data in self.compression:
-            full_data.extend([current_value] * data)
-            current_value = 1.0 - current_value
+            start_index = data[0]
+            end_index = data[1]
+
+            full_data.extend([0] * (start_index - index))
+            full_data.extend([1] * ((end_index + 1) - start_index))
+            index = end_index + 1
+
+        if index < self.db_size:
+            full_data.extend([0] * (self.db_size - index))
+
         return full_data
 
 class ItemToItem:
@@ -32,35 +42,30 @@ class ItemToItem:
         :param db: database containing all decks
         '''
 
-        '''
-        ratings = deque()
-        labels = range(len(db))
-        for item in self.catalog:
-            rating = deque()
-            for j, deck in enumerate(db):
-                rating.append(int(item in deck))
-            ratings.append(rating)
-        self.items_ratings = pd.DataFrame.from_records(ratings, index=self.catalog)
-        '''
-
         self.ratings.clear()
+        db_size = len(db)
         for card in tqdm(self.catalog):
-            current_value = int(card in db[0])
-            rating = Rating(current_value)
-            nb_values = 0
-            for deck in db:
-                new_val = int(card in deck)
+            current_value = card in db[0]
+            rating = Rating(current_value, db_size)
+
+            start_index = 0
+            for i, deck in enumerate(db):
+                new_val = card in deck
                 if new_val == current_value:
-                    nb_values += 1
+                    if new_val:
+                        rating.norm_square += 1.0
                 else:
-                    rating.compression.append(nb_values)
-                    nb_values = 1
                     current_value = new_val
+                    if new_val:
+                        start_index = i
+                        rating.norm_square += 1.0
+                    else:
+                        rating.compression.append((start_index, i-1))
 
-                if new_val:
-                    self.norm_square += 1
+            if new_val:
+                rating.compression.append((start_index, len(db)-1))
 
-            rating.compression.append(nb_values)
+            rating.norm_square = math.sqrt(rating.norm_square)
             self.ratings[card] = rating
 
     def compute_similarities(self, db):
@@ -68,23 +73,20 @@ class ItemToItem:
         Compute similarities between items
         '''
 
-        database = db[:]
         df = pd.DataFrame(np.nan, index=self.catalog, columns=self.catalog)
-
         for item in tqdm(self.catalog):
-            #list_item = self.items_ratings.loc[item].tolist()
-            list_item = self.ratings[item].uncompress()
-            if sum(list_item) == 0:
+            if self.ratings[item].norm_square == 0.0:
                 df.at[:, item] = -1.0
                 df.at[item, :] = -1.0
             else:
-                for j, is_present in enumerate(list_item):
-                    if is_present:
-                        deck = database[j]
-                        for card in deck:
+                list_item = self.ratings[item].uncompress()
+                for start_end in self.ratings[item].compression:
+                    for j in range(start_end[0], start_end[1]+1):
+                        for card in db[j]:
                             if np.isnan(df.at[card, item]):
                                 if card != item:
-                                    similarity = self.compute_cosine_angle(list_item, self.ratings[card].uncompress())
+                                    #similarity = self.compute_cosine_angle(list_item, self.ratings[card].uncompress())
+                                    similarity = ItemToItem.test(self.ratings[item], self.ratings[card])
                                     if np.isnan(similarity):
                                         df.at[item, card] = -1.0
                                         df.at[card, item] = -1.0
@@ -93,7 +95,6 @@ class ItemToItem:
                                         df.at[card, item] = similarity
                                 else:
                                     df.at[item, item] = -1.0
-                        #deck.remove(item)
         self.items_similarities = df
 
     def get_recommendation(self, card_id, nb_recommendations, lsa):
@@ -124,7 +125,40 @@ class ItemToItem:
         return recommendations
 
     def compute_cosine_angle(self, dataset_1, dataset_2):
+        '''
+        dot = 0.0
+        for i in range(len(dataset_1)):
+            if dataset_1[i] and dataset_2[i]:
+                dot += 1.0
+
+        if dot == 0.0:
+            return 0.0
+        else:
+            return dot / (dataset_1_norm * dataset_2_norm)
+        '''
         return 1.0 - spatial.distance.cosine(dataset_1, dataset_2)
-        #TODO: ||v|| = sum(vector) because only 0 and 1 => precompute if need be
-        #TODO: v1.v2 = AND logic between v1 and v2 then SUM of result because only 0 and 1
-        #Try to work with ndarray and logical_and function from numpy
+
+    @staticmethod
+    def test(r1, r2):
+        if r1.norm_square == 0 or r2.norm_square == 0: return np.nan
+
+        dot = 0
+        len_r2 = len(r2.compression)
+        i = 0
+        for r1_start, r1_end in r1.compression:
+            while i < len_r2 and r2.compression[i][1] <= r1_end:
+                r2_start, r2_end = r2.compression[i]
+
+                if r2_start < r1_start:
+                    if r2_end >= r1_start and r2_end < r1_end:
+                        dot += (r2_end + 1) - r1_start
+                    elif r2_end > r1_end:
+                        dot += (r1_end + 1) - r1_start
+                elif r2_start >= r1_start:
+                    if r2_end < r1_end:
+                        dot += (r2_end + 1) - r2_start
+                    elif r2_end >= r1_end:
+                        dot += (r1_end + 1) - r2_start
+                i+=1
+
+        return dot / (r1.norm_square * r2.norm_square)
