@@ -26,6 +26,39 @@ class MagicLoader:
                  'Spite/Malice','Trial/Error','Odds/Ends','Research/Development','Supply/Demand','Pain/Suffering','Catch/Release',
                  'Pure/Simple','Down/Dirty','Unknown Card']
 
+    #DECK GAME OFFICIAL MODES
+    CODE_STANDARD = 1
+    CODE_MODERN = 2
+    CODE_LEGACY = 4
+    CODE_VINTAGE = 8
+    CODE_COMMANDER = 16
+
+    JSON_STANDARD = 'Standard'
+    JSON_MODERN = 'Modern'
+    JSON_LEGACY = 'Legacy'
+    JSON_VINTAGE = 'Vintage'
+    JSON_COMMANDER = 'Commander'
+    JSON_LEGAL = 'Legal'
+    JSON_BANNED = 'Banned'
+
+    GAME_MODES = [CODE_STANDARD, CODE_MODERN, CODE_LEGACY, CODE_VINTAGE, CODE_COMMANDER]
+
+    #DECK COLORS
+    CODE_WHITE = 1
+    CODE_BLUE = 2
+    CODE_BLACK = 4
+    CODE_RED = 8
+    CODE_GREEN = 16
+    CODE_NO_COLOR = 32
+
+    JSON_WHITE = 'W'
+    JSON_BLUE = 'U'
+    JSON_BLACK = 'B'
+    JSON_RED = 'R'
+    JSON_GREEN = 'G'
+
+    COLORS = [CODE_WHITE, CODE_BLUE, CODE_BLACK, CODE_RED, CODE_GREEN, CODE_NO_COLOR]
+
     def __init__(self, file_type = 'card'):
         #self.texts = []
         self.hash_id_texts= {}
@@ -35,8 +68,8 @@ class MagicLoader:
         self.hash_name_id = {}
         self.hash_id_name = {}
         self.special_indexes = []
-        self.hash_id_mode = {}
-        self.hash_id_color = {}
+        self.hash_id_mode = {} #can have several modes
+        self.hash_id_color = {} #can have several colors
 
     def load(self, path):
         read_json = simplejson.load(open(path, "r", encoding='UTF-8'))
@@ -58,7 +91,58 @@ class MagicLoader:
 
             if self.get_field(read_json[card],'types') == 'Land':
                 self.lands.append(self.get_field(read_json[card],'name'))
+
+            self.set_color_identities(read_json, internal_id, card)
+            self.set_legalities(read_json, internal_id, card)
+
         self.generate_dual_cards()
+
+    def set_color_identities(self, read_json, internal_id, card):
+        color_identity = self.get_field(read_json[card], 'colorIdentity')
+        value = 0
+
+        if color_identity == '':
+            value = value | MagicLoader.CODE_NO_COLOR
+        else:
+            color_identity = color_identity.split(',')
+            for color in color_identity:
+                if color == MagicLoader.JSON_BLACK:
+                    value = value | MagicLoader.CODE_BLACK
+                elif color == MagicLoader.JSON_BLUE:
+                    value = value | MagicLoader.CODE_BLUE
+                elif color == MagicLoader.JSON_WHITE:
+                    value = value | MagicLoader.CODE_WHITE
+                elif color == MagicLoader.JSON_RED:
+                    value = value | MagicLoader.CODE_RED
+                elif color == MagicLoader.JSON_GREEN:
+                    value = value | MagicLoader.CODE_GREEN
+                else:
+                    print('Error: ' + color + ' is not a valid color in Magic', file=sys.stderr)
+
+        self.hash_id_color[internal_id] = value
+
+    def set_legalities(self, read_json, internal_id, card):
+        list_legalities = self.get_field(read_json[card], 'legalities')
+        value = 0
+
+        if list_legalities != '':
+            for json_legality in list_legalities:
+                game_format = self.get_field(json_legality, 'format')
+                legality = self.get_field(json_legality, 'legality')
+
+                if game_format == MagicLoader.JSON_STANDARD: #and legality == MagicLoader.JSON_LEGAL:
+                    value = value | MagicLoader.CODE_STANDARD
+                elif game_format == MagicLoader.JSON_LEGACY: # and legality == MagicLoader.JSON_LEGAL:
+                    value = value | MagicLoader.CODE_LEGACY
+                elif game_format == MagicLoader.JSON_MODERN: # and legality == MagicLoader.JSON_LEGAL:
+                    value = value | MagicLoader.CODE_MODERN
+                elif game_format == MagicLoader.JSON_VINTAGE: # and legality == MagicLoader.JSON_LEGAL:
+                    value = value | MagicLoader.CODE_VINTAGE
+                elif game_format == MagicLoader.JSON_COMMANDER: # and legality == MagicLoader.JSON_LEGAL:
+                    value = value | MagicLoader.CODE_COMMANDER
+                else:
+                    pass #only official formats
+        self.hash_id_mode[internal_id] = value
 
     def generate_dual_cards(self):
         """
@@ -89,13 +173,21 @@ class MagicLoader:
                     description += self.hash_id_texts[id]
                     if add_coma: description += ', '
                 self.hash_id_texts[special_id] = description
+
+                #set color identity and legality using information of one of the two cards of the dual card
+                internal_id = self.hash_name_id[names[0].strip()]
+                self.hash_id_color[special_id] = self.hash_id_color[internal_id]
+                self.hash_id_mode[special_id] = self.hash_id_mode[internal_id]
             else:
                 self.hash_id_texts[special_id] = 'unknown'
 
     def get_field(self, card_json, field):
         if field in card_json:
             if isinstance(card_json[field], list):
-                return ",".join(card_json[field])
+                if isinstance(card_json[field][0], str):
+                    return ",".join(card_json[field])
+                else:
+                    return card_json[field]
             else:
                 return card_json[field]
         else:
@@ -103,29 +195,11 @@ class MagicLoader:
 
 class DeckManager:
 
-    #DECK GAME MODE
-    STANDARD = 1
-    MODERN = 10
-    LEGACY = 100
-    VINTAGE = 1000
-    FRONTIER = 10000
-    PAUPER = 100000
-    COMMANDER = 1000000
-    HIGHLANDER = 10000000
-    MODES = [STANDARD, MODERN, LEGACY, VINTAGE, FRONTIER, PAUPER, COMMANDER, HIGHLANDER]
-
-    #DECK COLORS
-    WHITE = 1
-    BLUE = 10
-    BLACK = 100
-    RED = 1000
-    GREEN = 10000
-    NO_COLOR = 100000
-    COLORS = [WHITE, BLUE, BLACK, RED, GREEN, NO_COLOR]
-
     def __init__(self):
         self.decks = []
         self.cards = set()
+        self.grouped_decks = {}
+        self.grouped_cards = {}
 
     def load_from_csv(self, list_path, cards_loader = None):
         """
@@ -190,27 +264,76 @@ class DeckManager:
                 file_cards = []
                 error_index = []
                 for row in rows:
-                    # Remove number of cards, unused in frequent items rule associations approach
-                    csv_row = re.subn("( )?\d+ ",';', row)
-                    csv_row = re.subn("\"", '', csv_row[0])
-                    deck_cards = list(filter(None, csv_row[0].split(';')))
+                    if row != '""':
+                        color_identity = 0
+                        game_mode = {}
+                        grouped_file_cards = []
 
-                    deck = []
-                    for index, card in enumerate(deck_cards):
-                        card = DeckManager.rename_card(card)
-                        if card in list_cards:
-                            if cards_loader:
-                                file_cards.append(cards_loader.hash_name_id[card])
+                        # Remove number of cards, unused in frequent items rule associations approach
+                        csv_row = re.subn("( )?\d+ ",';', row)
+                        csv_row = re.subn("\"", '', csv_row[0])
+                        deck_cards = list(filter(None, csv_row[0].split(';')))
+
+                        deck = []
+                        for index, card in enumerate(deck_cards):
+                            card = DeckManager.rename_card(card)
+                            if card in list_cards:
+                                if cards_loader:
+                                    card_id = cards_loader.hash_name_id[card]
+                                    color_identity = color_identity | cards_loader.hash_id_color[card_id]
+
+                                    if card_id not in deck:
+                                        has_official_mode = False
+                                        for mode in MagicLoader.GAME_MODES:
+                                            if (mode & cards_loader.hash_id_mode[card_id] != 0) or cards_loader.hash_id_mode[card_id] == 0:
+                                                has_official_mode = True
+                                                if mode not in game_mode:
+                                                    game_mode[mode] = 0
+                                                game_mode[mode] += 1
+
+                                        file_cards.append(card_id)
+                                        deck.append(card_id)
+
+                                        if not has_official_mode:
+                                            print(card + ' is not in any official game mode!', file=sys.stderr)
+                                else:
+                                    file_cards.append(card)
+                                    deck.append(card)
                             else:
+                                if card != 'Unknown Card':
+                                    print('Error: ' + card + ' is not present in the Magic card database', file=sys.stderr)
+                                else:
+                                    print('Warning: ' + card + ' present', file=sys.stderr)
+                                error_index.append(index)
                                 file_cards.append(card)
-                        else:
-                            if card != 'Unknown Card':
-                                print('Error: ' + card + ' is not present in the Magic card database', file=sys.stderr)
-                            error_index.append(index)
-                            file_cards.append(card)
+                                deck.append(card)
 
-                        if file_cards[index] not in deck: deck.append(file_cards[index])
-                    self.decks.append(deck)
+                        self.decks.append(deck) #remove duplicates
+
+                        if color_identity & ~MagicLoader.CODE_NO_COLOR != 0:
+                            # No color stay true if all cards are no color
+                            color_identity = color_identity ^ MagicLoader.CODE_NO_COLOR
+
+                        has_official_mode = False
+                        for mode, nb_cards in game_mode.items():
+                            if nb_cards == len(deck):
+                                has_official_mode = True
+                                if mode not in self.grouped_decks:
+                                    self.grouped_decks[mode] = {}
+                                    self.grouped_cards[mode] = {}
+
+                                if color_identity not in self.grouped_decks[mode]:
+                                    self.grouped_decks[mode][color_identity] = []
+                                    self.grouped_cards[mode][color_identity] = set([])
+
+                                self.grouped_decks[mode][color_identity].append(deck)
+                                self.grouped_cards[mode][color_identity] = self.grouped_cards[mode][color_identity].union(set(deck))
+
+                        if not has_official_mode:
+                            for card in deck:
+                                print(cards_loader.hash_id_name[card] + ', modes: ' + str(cards_loader.hash_id_mode[card]))
+                            print('Deck not with official format', file=sys.stderr)
+
                 self.cards = set.union(self.cards, set(file_cards))
 
     @staticmethod

@@ -22,7 +22,7 @@ def load_decks_database(card_loader):
     print('Clean deck')
     deck_loader = DeckManager()
 
-    '''
+
     files = os.listdir("./../data/decks_mtgdeck_net")  # returns list
     paths = []
     for file in files:
@@ -35,7 +35,7 @@ def load_decks_database(card_loader):
     list_files = os.listdir("./../db_decks")  # returns list
     deck_loader.load_from_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
-
+    '''
 
     return deck_loader
 
@@ -64,17 +64,10 @@ def test_build_tree(deck_loader):
     for rating in ratings:
         rating.uncompress()
 
-if __name__ == "__main__":
+def global_recommandation():
     print('Load magic environment')
     card_loader = load_magic_environment()
     deck_loader = load_decks_database(card_loader)
-
-    '''
-    print('build tree:')
-    start = time()
-    test_build_tree(deck_loader)
-    print(str((time()-start)*1000) + ' ms')
-    '''
 
     print('Convert card text into vector')
     lsa_manager = encoding_magic_card(card_loader)
@@ -88,13 +81,13 @@ if __name__ == "__main__":
 
     print('Get recommendations for 16622')
     recommendations = item_recommender.get_recommendation(16622, 10, lsa_manager)
-    print('Recommendation for ' + str(card_loader.hash_id_name[16622]) + ':')#16622, 620
+    print('Recommendation for ' + str(card_loader.hash_id_name[16622]) + ':')  # 16622, 620
     for id_card, score in recommendations.items():
         print('   - ' + str(card_loader.hash_id_name[id_card]) + ': ' + str(score))
 
     print('Get recommendations for 620')
     recommendations = item_recommender.get_recommendation(620, 10, lsa_manager)
-    print('Recommendation for ' + str(card_loader.hash_id_name[620]) + ':')#16622, 620
+    print('Recommendation for ' + str(card_loader.hash_id_name[620]) + ':')  # 16622, 620
     for id_card, score in recommendations.items():
         print('   - ' + str(card_loader.hash_id_name[id_card]) + ': ' + str(score))
 
@@ -103,8 +96,56 @@ if __name__ == "__main__":
         recommendations = item_recommender.get_recommendation(id_card, 5, lsa_manager)
         suggestions = {}
         for id_rec, score in recommendations.items():
-            suggestions[card_loader.hash_id_name[id_rec]] = {'item_similarity': score[0], 'content_similarity': score[1]}
+            suggestions[card_loader.hash_id_name[id_rec]] = {'item_similarity': score[0],
+                                                             'content_similarity': score[1]}
         similiraties[card_loader.hash_id_name[id_card]] = suggestions
 
     with open('./../similarities.json', 'w') as f:
         json.dump(similiraties, f)
+
+
+def grouped_recommandations():
+    print('Load magic environment')
+    card_loader = load_magic_environment()
+    deck_loader = load_decks_database(card_loader)
+
+    print('Convert card text into vector')
+    lsa_manager = encoding_magic_card(card_loader)
+
+    similiraties = {}
+    for game_mode in deck_loader.grouped_decks.keys():
+        for color in deck_loader.grouped_decks[game_mode].keys():
+            print('Process mode: ' + str(game_mode) + ', color: ' + str(color))
+            deck_database = deck_loader.grouped_decks[game_mode][color]
+            card_catalog = deck_loader.grouped_cards[game_mode][color]
+
+            item_recommender = ItemToItem(list(card_catalog))
+            print('Get ratings')
+            item_recommender.load_ratings(deck_database)
+            print('Compute similarities')
+            item_recommender.compute_similarities(deck_database)
+
+            print('Get recommandations')
+            for id_card in tqdm(card_catalog):
+                if card_loader.hash_id_name[id_card] not in similiraties:
+                    similiraties[card_loader.hash_id_name[id_card]] = {}
+
+                recommendations = item_recommender.get_recommendation(id_card, 5, lsa_manager)
+                suggestions = {}
+                for id_rec, score in recommendations.items():
+                    suggestions[card_loader.hash_id_name[id_rec]] = {'item_similarity': score[0],
+                                                                     'content_similarity': score[1]}
+
+                if game_mode not in similiraties[card_loader.hash_id_name[id_card]]:
+                    similiraties[card_loader.hash_id_name[id_card]][game_mode] = {}
+
+                if game_mode not in similiraties[card_loader.hash_id_name[id_card]][game_mode]:
+                    similiraties[card_loader.hash_id_name[id_card]][game_mode][color] = None
+
+                similiraties[card_loader.hash_id_name[id_card]][game_mode][color] = suggestions
+
+    with open('./../similarities.json', 'w') as f:
+        json.dump(similiraties, f)
+
+if __name__ == "__main__":
+    grouped_recommandations()
