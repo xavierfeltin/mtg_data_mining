@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 from collections import deque
 from scipy import spatial
-from tqdm import tqdm
-from time import time
 import math
 
 class Rating:
@@ -44,7 +42,7 @@ class ItemToItem:
 
         self.ratings.clear()
         db_size = len(db)
-        for card in tqdm(self.catalog):
+        for card in self.catalog:
             current_value = card in db[0]
             rating = Rating(current_value, db_size)
 
@@ -74,7 +72,7 @@ class ItemToItem:
         '''
 
         df = pd.DataFrame(np.nan, index=self.catalog, columns=self.catalog)
-        for item in tqdm(self.catalog):
+        for item in self.catalog:
             if self.ratings[item].norm_square == 0.0:
                 df.at[:, item] = -1.0
                 df.at[item, :] = -1.0
