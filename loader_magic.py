@@ -42,6 +42,8 @@ class MagicLoader:
     JSON_BANNED = 'Banned'
 
     GAME_MODES = [CODE_STANDARD, CODE_MODERN, CODE_LEGACY, CODE_VINTAGE, CODE_COMMANDER]
+    HASH_GAME_CODE_STRING = {CODE_STANDARD: JSON_STANDARD, CODE_MODERN: JSON_MODERN, CODE_LEGACY: JSON_LEGACY, CODE_VINTAGE: JSON_VINTAGE, CODE_COMMANDER: JSON_COMMANDER}
+    HASH_GAME_STRING_CODE = {JSON_STANDARD: CODE_STANDARD, JSON_MODERN: CODE_MODERN, JSON_LEGACY: CODE_LEGACY, JSON_VINTAGE: CODE_VINTAGE, JSON_COMMANDER: CODE_COMMANDER}
 
     #DECK COLORS
     CODE_WHITE = 1
@@ -57,7 +59,15 @@ class MagicLoader:
     JSON_RED = 'R'
     JSON_GREEN = 'G'
 
+    STRING_WHITE = 'white'
+    STRING_BLUE = 'blue'
+    STRING_BLACK = 'black'
+    STRING_RED = 'red'
+    STRING_GREEN = 'green'
+    STRING_NO_COLOR = 'no_color'
+
     COLORS = [CODE_WHITE, CODE_BLUE, CODE_BLACK, CODE_RED, CODE_GREEN, CODE_NO_COLOR]
+    HASH_COLOR_CODE_STRING = {CODE_WHITE: STRING_WHITE, CODE_BLUE: STRING_BLUE, CODE_BLACK: STRING_BLACK, CODE_RED: STRING_RED, CODE_GREEN: STRING_GREEN, CODE_NO_COLOR: STRING_NO_COLOR}
 
     def __init__(self, file_type = 'card'):
         #self.texts = []
@@ -195,6 +205,15 @@ class MagicLoader:
         else:
             return ''
 
+    @staticmethod
+    def get_json_color(color_to_convert):
+        color = ''
+        for i, code in enumerate(MagicLoader.COLORS):
+            if color_to_convert & code != 0:
+                color += MagicLoader.HASH_COLOR_CODE_STRING[code]
+                color += '_'
+        return color[0:len(color)-1]
+
 class DeckManager:
 
     def __init__(self):
@@ -306,13 +325,11 @@ class DeckManager:
             with open(file) as csvfile:
                 reader = csvfile.read()
                 rows = reader.split('\n')
-                nb_line = 0
                 file_cards = []
                 error_index = []
                 for row in rows:
                     if row != '""':
                         color_identity = 0
-                        game_mode = {}
 
                         # Remove number of cards, unused in frequent items rule associations approach
                         csv_row = re.subn("( )?\d+ ",';', row)
@@ -328,19 +345,8 @@ class DeckManager:
                                     color_identity = color_identity | cards_loader.hash_id_color[card_id]
 
                                     if card_id not in deck:
-                                        has_official_mode = False
-                                        for mode in MagicLoader.GAME_MODES:
-                                            if (mode & cards_loader.hash_id_mode[card_id] != 0) or cards_loader.hash_id_mode[card_id] == 0:
-                                                has_official_mode = True
-                                                if mode not in game_mode:
-                                                    game_mode[mode] = 0
-                                                game_mode[mode] += 1
-
                                         file_cards.append(card_id)
                                         deck.append(card_id)
-
-                                        if not has_official_mode:
-                                            print(card + ' is not in any official game mode!', file=sys.stderr)
                                 else:
                                     file_cards.append(card)
                                     deck.append(card)
@@ -355,29 +361,16 @@ class DeckManager:
 
                         self.decks.append(deck) #remove duplicates
 
-                        if color_identity & ~MagicLoader.CODE_NO_COLOR != 0:
+                        if color_identity & ~MagicLoader.CODE_NO_COLOR != 0 and color_identity & MagicLoader.CODE_NO_COLOR != 0:
                             # No color stay true if all cards are no color
                             color_identity = color_identity ^ MagicLoader.CODE_NO_COLOR
 
-                        has_official_mode = False
-                        for mode, nb_cards in game_mode.items():
-                            if nb_cards == len(deck):
-                                has_official_mode = True
-                                if mode not in self.grouped_decks:
-                                    self.grouped_decks[mode] = {}
-                                    self.grouped_cards[mode] = {}
+                        if color_identity not in self.grouped_decks:
+                            self.grouped_decks[color_identity] = []
+                            self.grouped_cards[color_identity] = set([])
 
-                                if color_identity not in self.grouped_decks[mode]:
-                                    self.grouped_decks[mode][color_identity] = []
-                                    self.grouped_cards[mode][color_identity] = set([])
-
-                                self.grouped_decks[mode][color_identity].append(deck)
-                                self.grouped_cards[mode][color_identity] = self.grouped_cards[mode][color_identity].union(set(deck))
-
-                        if not has_official_mode:
-                            for card in deck:
-                                print(cards_loader.hash_id_name[card] + ', modes: ' + str(cards_loader.hash_id_mode[card]))
-                            print('Deck not with official format', file=sys.stderr)
+                        self.grouped_decks[color_identity].append(deck)
+                        self.grouped_cards[color_identity] = self.grouped_cards[color_identity].union(set(deck))
 
                 self.cards = set.union(self.cards, set(file_cards))
 

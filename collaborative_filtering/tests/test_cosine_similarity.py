@@ -17,7 +17,7 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(1)
         self.r2.norm_square = math.sqrt(1)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertEqual(0/(self.r1.norm_square*self.r2.norm_square), cosine)
 
     def test_simple_common_decks(self):
@@ -26,7 +26,7 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(2)
         self.r2.norm_square = math.sqrt(1)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertEqual(1/(self.r1.norm_square*self.r2.norm_square), cosine)
 
     def test_no_common_decks_inverse(self):
@@ -35,7 +35,7 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(1)
         self.r2.norm_square = math.sqrt(0)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertTrue(np.isnan(cosine))
 
     def test_common_decks(self):
@@ -44,7 +44,7 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(3)
         self.r2.norm_square = math.sqrt(2)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertEqual(1/(self.r1.norm_square*self.r2.norm_square), cosine)
 
     def test_common_decks_2(self):
@@ -53,7 +53,7 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(3)
         self.r2.norm_square = math.sqrt(2)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertEqual(0/(self.r1.norm_square*self.r2.norm_square), cosine)
 
     def test_common_decks_3(self):
@@ -62,7 +62,7 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(3)
         self.r2.norm_square = math.sqrt(3)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertEqual(1/(self.r1.norm_square*self.r2.norm_square), cosine)
 
     def test_common_decks_4(self):
@@ -72,5 +72,5 @@ class TestCosineSimilarity(unittest.TestCase):
         self.r1.norm_square = math.sqrt(3)
         self.r2.norm_square = math.sqrt(4)
 
-        cosine = ItemToItem.test(self.r1,self.r2)
+        cosine = ItemToItem.compute_cosine_angle_binary(self.r1,self.r2)
         self.assertEqual(3/(self.r1.norm_square*self.r2.norm_square), cosine)

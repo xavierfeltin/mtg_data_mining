@@ -72,27 +72,37 @@ class ItemToItem:
         '''
 
         df = pd.DataFrame(np.nan, index=self.catalog, columns=self.catalog)
+        one_deck_db = len(db) == 1
+
         for item in self.catalog:
             if self.ratings[item].norm_square == 0.0:
                 df.at[:, item] = -1.0
                 df.at[item, :] = -1.0
             else:
-                list_item = self.ratings[item].uncompress()
-                for start_end in self.ratings[item].compression:
-                    for j in range(start_end[0], start_end[1]+1):
-                        for card in db[j]:
-                            if np.isnan(df.at[card, item]):
-                                if card != item:
-                                    #similarity = self.compute_cosine_angle(list_item, self.ratings[card].uncompress())
-                                    similarity = ItemToItem.test(self.ratings[item], self.ratings[card])
-                                    if np.isnan(similarity):
-                                        df.at[item, card] = -1.0
-                                        df.at[card, item] = -1.0
+                if one_deck_db:
+                    for card in db[0]:
+                        if card != item:
+                            df.at[item, card] = 1.0
+                            df.at[card, item] = 1.0
+                else:
+                    #list_item = self.ratings[item].uncompress()
+
+                    for start_end in self.ratings[item].compression:
+                        for j in range(start_end[0], start_end[1]+1):
+                            for card in db[j]:
+                                if np.isnan(df.at[card, item]):
+                                    if card != item:
+                                        similarity = ItemToItem.compute_cosine_angle_binary(self.ratings[item], self.ratings[card])
+                                        #similarity = self.compute_cosine_angle(list_item, self.ratings[card].uncompress())
+
+                                        if np.isnan(similarity):
+                                            df.at[item, card] = -1.0
+                                            df.at[card, item] = -1.0
+                                        else:
+                                            df.at[item, card] = similarity
+                                            df.at[card, item] = similarity
                                     else:
-                                        df.at[item, card] = similarity
-                                        df.at[card, item] = similarity
-                                else:
-                                    df.at[item, item] = -1.0
+                                        df.at[item, item] = -1.0
         self.items_similarities = df
 
     def get_recommendation(self, card_id, nb_recommendations, lsa):
@@ -137,7 +147,7 @@ class ItemToItem:
         return 1.0 - spatial.distance.cosine(dataset_1, dataset_2)
 
     @staticmethod
-    def test(r1, r2):
+    def compute_cosine_angle_binary(r1, r2):
         if r1.norm_square == 0 or r2.norm_square == 0: return np.nan
 
         dot = 0
