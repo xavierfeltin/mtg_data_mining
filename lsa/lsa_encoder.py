@@ -162,6 +162,7 @@ class LSAManager:
     def __init__(self, cards_content):
         self.cards_content = cards_content
         self.cards_encoded = {}
+        self.encoder = None
 
     def encode(self):
         sorted_ids = sorted(self.cards_content.keys())
@@ -172,10 +173,10 @@ class LSAManager:
 
         cleaner = DataCleaner(descriptions)
         cleaner.clean()
-        lsa_transformer = LSAEncoder(cleaner.clean_data)
-        lsa_transformer.fit()
+        self.encoder = LSAEncoder(cleaner.clean_data)
+        self.encoder.fit()
 
-        encoded_content = lsa_transformer.lsa
+        encoded_content = self.encoder.lsa
         for index, vector in enumerate(encoded_content):
             self.cards_encoded[sorted_ids[index]] = vector
 
