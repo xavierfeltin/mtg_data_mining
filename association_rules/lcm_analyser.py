@@ -2,7 +2,7 @@
 import numpy as np
 from collections import OrderedDict
 from operator import itemgetter
-from utils import TreeNode
+from association_rules.utils import TreeNode
 
 class LCMAnalyzer:
     """

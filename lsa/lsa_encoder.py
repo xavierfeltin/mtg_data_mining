@@ -12,13 +12,11 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import Normalizer
 from collections import deque
-
-import sys
 import numpy as np
 
-
 #Bibliography
-
+# - http: // www.datascienceassn.org / sites / default / files / users / user1 / lsa_presentation_final.pdf
+# - https: // machinelearningmastery.com / clean - text - machine - learning - python /
 
 class DataCleaner:
     """
@@ -76,9 +74,6 @@ class DataCleaner:
 class LSAEncoder:
     """
     Transform textual data into a vector of descriptors based on LSA algorithm
-    Bibliography :
-    - http://www.datascienceassn.org/sites/default/files/users/user1/lsa_presentation_final.pdf
-    - https://machinelearningmastery.com/clean-text-machine-learning-python/
     """
 
     def __init__(self, documents, n_dimensions=50):
@@ -135,9 +130,6 @@ class LSAEncoder:
         self.tfi_transform()
         self.lsa_transform()
 
-    def get_similarity(self,reference_card,compared_cards):
-        pass
-
     def print_lsa_results(self):
         """
         Print into CSV files, the LSA reduced data
@@ -187,13 +179,14 @@ class LSAManager:
         for index, vector in enumerate(encoded_content):
             self.cards_encoded[sorted_ids[index]] = vector
 
+    def load_cards_encoding(self, encoding):
+        '''
+        Load the encoding of the cards from an external soource
+        :param encoding: dictionary {card: encoding_array}
+        '''
+        for card, encoding in encoding.items():
+            self.cards_encoded[card] = encoding[:]
+
     def get_similarity(self, card_1, list_cards):
-        '''
-        cards_vector = deque()
-        for id in list_cards:
-            cards_vector.append(self.cards_encoded[id])
-        similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(cards_vector).T)
-        return list(similarity[0,:])
-        '''
         similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(self.cards_encoded[list_cards]).T)
         return similarity[0,0]

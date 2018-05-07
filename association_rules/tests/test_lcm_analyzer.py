@@ -1,8 +1,8 @@
 # coding=utf8
 import unittest
 import numpy as np
-from lcm_analyzer import LCMAnalyzer
-from utils import TreeNode
+from association_rules.lcm_analyser import LCMAnalyzer
+from association_rules.utils import TreeNode
 
 class TestAPrioriAnalyzer(unittest.TestCase):
     def setUp(self):

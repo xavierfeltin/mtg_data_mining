@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 from loader_magic import MagicLoader, DeckManager
-from lsa_encoder import DataCleaner, LSAEncoder
+from lsa.lsa_encoder import DataCleaner, LSAEncoder
 from association_rules.apriori_analyzer import APrioriAnalyzer
 from association_rules.fpgrowth_analyzer import FPGrowthAnalyzer
 from association_rules.genclose_analyzer import GenCloseAnalyzer as GCA
-from association_rules.genclose_analyzer import RulesAssociationMaximalConstraintMiner as RAMCM
-from association_rules.genclose_analyzer import RuleAssociationMinMin as RAMM
 from association_rules.genclose_analyzer import RuleAssociationMinMax as RAMMax
-from association_rules.genclose_analyzer import RuleAssociationMinimals as RAMin
-from itertools import combinations
-from tqdm import tqdm
 from collections import deque
 
 import os

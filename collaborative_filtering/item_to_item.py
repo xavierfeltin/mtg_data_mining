@@ -4,6 +4,10 @@ from collections import deque
 from scipy import spatial
 import math
 
+#Bibliography
+# - https://www.cs.umd.edu/~samir/498/Amazon-Recommendations.pdf
+# - https://en.wikipedia.org/wiki/Item-item_collaborative_filtering
+
 class Rating:
     def __init__(self, first_value, db_size = 0):
         self.first_value = first_value
@@ -93,7 +97,7 @@ class ItemToItem:
                                 if np.isnan(df.at[card, item]):
                                     if card != item:
                                         similarity = ItemToItem.compute_cosine_angle_binary(self.ratings[item], self.ratings[card])
-                                        #similarity = self.compute_cosine_angle(list_item, self.ratings[card].uncompress())
+                                        #similarity = ItemToItem.compute_cosine_angle(list_item, self.ratings[card].uncompress())
 
                                         if np.isnan(similarity):
                                             df.at[item, card] = -1.0
@@ -110,6 +114,7 @@ class ItemToItem:
         Return the list of the first nb_recommendations
         :param card_id: id card of which we want the recommendations
         :param nb_recommendations: number of recommendations to return
+        :param lsa: language semantic analysis object from lsa package
         :return: dictionary {card_id: recommendation}
         '''
 
@@ -132,18 +137,8 @@ class ItemToItem:
             recommendations[similarities.index[i]] = [similarities.iloc[i]['item_similarity'],similarities.iloc[i]['content_similarity']]
         return recommendations
 
-    def compute_cosine_angle(self, dataset_1, dataset_2):
-        '''
-        dot = 0.0
-        for i in range(len(dataset_1)):
-            if dataset_1[i] and dataset_2[i]:
-                dot += 1.0
-
-        if dot == 0.0:
-            return 0.0
-        else:
-            return dot / (dataset_1_norm * dataset_2_norm)
-        '''
+    @staticmethod
+    def compute_cosine_angle(dataset_1, dataset_2):
         return 1.0 - spatial.distance.cosine(dataset_1, dataset_2)
 
     @staticmethod
