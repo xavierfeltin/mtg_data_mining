@@ -103,11 +103,14 @@ def find_closed_items():
     deck_loader.extract_lands(card_loader.lands, card_loader)
     '''
 
-    list_files = os.listdir("./../data/decks_mtgdeck_net")  # returns list
+    list_files = os.listdir("./../data/decks_mtgdeck_net")
+    for i in range(len(list_files)): # returns list
+        list_files[i] = './../data/decks_mtgdeck_net/' + list_files[i]
+
     deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
     deck_loader.extract_lands(card_loader.lands, card_loader)
 
-    analyzer = GCA(deck_loader.decks, 0.1)
+    analyzer = GCA(deck_loader.decks, 0.05)
 
     print('Start mining ' + str(len(deck_loader.decks)) + ' decks')
     analyzer.mine()
@@ -136,7 +139,7 @@ def find_closed_items():
 
     for node in lattice.values():
         S = node.fci
-        print('S: ' + str(S.closure))
+        #print('S: ' + str(S.closure))
 
         to_extract = deque()
         to_extract.append(node)
@@ -147,7 +150,8 @@ def find_closed_items():
             visited.append(current)
             L = current.fci
 
-            RAR = rule_miner.mine_RAR(L, S, 0.1, 1.0, 0.9, 1.0)
+            RAR = rule_miner.mine_RAR(L, S, 0.05, 0.08, 0.7, 0.9)
+            '''
             nb_consequent = len(rule_miner.mine_CAR2(L, S, RAR, analyzer))
 
             nb_basic_rules += len(RAR)
@@ -161,6 +165,16 @@ def find_closed_items():
                 for grandchild in child.children:
                     if grandchild not in to_extract and grandchild not in visited:
                         to_extract.append(grandchild)
+            '''
+
+            for rule in RAR:
+                text = str(round(rule.support,2)) + ' - ' + str(round(rule.confidence, 2)) + ': '
+                for l in rule.left:
+                    text += card_loader.hash_id_name[l] + ' + '
+                text += ' ----> '
+                for r in rule.right:
+                    text += card_loader.hash_id_name[r] +  ' + '
+                print(text)
 
     print('nb rules: ' + str(nb_rules))
 
@@ -234,5 +248,5 @@ def use_reference(file):
 
 if __name__ == "__main__":
     # execute only if run as a script
-    use_reference('connect')
-    #find_closed_items()
+    #use_reference('connect')
+    find_closed_items()

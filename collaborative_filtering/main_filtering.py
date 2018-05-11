@@ -3,7 +3,7 @@ import json
 from tqdm import tqdm
 from loader_magic import MagicLoader, DeckManager
 from collaborative_filtering.item_to_item import ItemToItem, Rating
-from lsa_encoder import DataCleaner, LSAEncoder, LSAManager
+from lsa.lsa_encoder import LSAManager
 from queue import Queue
 from threading import Thread
 
