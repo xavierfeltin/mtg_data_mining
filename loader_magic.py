@@ -221,6 +221,7 @@ class DeckManager:
         self.cards = set()
         self.grouped_decks = {}
         self.grouped_cards = {}
+        self.cards_frequency = {}
 
     def load_from_csv(self, list_path, cards_loader = None):
         """
@@ -347,6 +348,11 @@ class DeckManager:
                                     if card_id not in deck:
                                         file_cards.append(card_id)
                                         deck.append(card_id)
+
+                                    if card_id in self.cards_frequency:
+                                        self.cards_frequency[card_id] += 1
+                                    else:
+                                        self.cards_frequency[card_id] = 1
                                 else:
                                     file_cards.append(card)
                                     deck.append(card)
