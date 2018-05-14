@@ -1,7 +1,7 @@
 import os
 import json
 from tqdm import tqdm
-from loader_magic import MagicLoader, DeckManager
+from loader.loader_magic import MagicLoader, DeckManager
 from collaborative_filtering.item_to_item import ItemToItem, Rating
 from lsa.lsa_encoder import LSAManager
 from queue import Queue
@@ -35,38 +35,7 @@ def load_decks_database(card_loader):
     deck_loader.extract_lands(card_loader.lands, card_loader)
     deck_loader.sort_decks()
 
-    '''
-    list_files = os.listdir("./../db_decks")  # returns list
-    deck_loader.load_from_csv(list_files, card_loader)
-    deck_loader.extract_lands(card_loader.lands, card_loader)
-    '''
-
     return deck_loader
-
-def test_build_tree(deck_loader):
-    ratings = []
-    #max_len = 0
-    for card in tqdm(deck_loader.cards):
-        current_value = int(card in deck_loader.decks[0])
-
-        rating = Rating(current_value)
-        nb_values = 0
-        for deck in deck_loader.decks:
-            new_val = int(card in deck)
-
-            if new_val == current_value:
-                nb_values += 1
-            else:
-                rating.compression.append(nb_values)
-                nb_values = 1
-                current_value = new_val
-        ratings.append(rating)
-        #if len(rating.compression) > max_len:
-        #    max_len = len(rating.compression)
-        #    print(max_len)
-
-    for rating in ratings:
-        rating.uncompress()
 
 def global_recommandation():
     print('Load magic environment')
@@ -103,50 +72,6 @@ def global_recommandation():
             suggestions[card_loader.hash_id_name[id_rec]] = {'item_similarity': score[0],
                                                              'content_similarity': score[1]}
         similiraties[card_loader.hash_id_name[id_card]] = suggestions
-
-    with open('./../similarities.json', 'w') as f:
-        json.dump(similiraties, f)
-
-
-def grouped_recommandations():
-    print('Load magic environment')
-    card_loader = load_magic_environment()
-    deck_loader = load_decks_database(card_loader)
-
-    print('Convert card text into vector')
-    lsa_manager = encoding_magic_card(card_loader)
-
-    similiraties = {}
-    for game_mode in deck_loader.grouped_decks.keys():
-        for color in deck_loader.grouped_decks[game_mode].keys():
-            print('Process mode: ' + str(game_mode) + ', color: ' + str(color))
-            deck_database = deck_loader.grouped_decks[game_mode][color]
-            card_catalog = deck_loader.grouped_cards[game_mode][color]
-
-            item_recommender = ItemToItem(list(card_catalog))
-            print('Get ratings')
-            item_recommender.load_ratings(deck_database)
-            print('Compute similarities')
-            item_recommender.compute_similarities(deck_database)
-
-            print('Get recommandations')
-            for id_card in tqdm(card_catalog):
-                if card_loader.hash_id_name[id_card] not in similiraties:
-                    similiraties[card_loader.hash_id_name[id_card]] = {}
-
-                recommendations = item_recommender.get_recommendation(id_card, 5, lsa_manager)
-                suggestions = {}
-                for id_rec, score in recommendations.items():
-                    suggestions[card_loader.hash_id_name[id_rec]] = {'item_similarity': score[0],
-                                                                     'content_similarity': score[1]}
-
-                if game_mode not in similiraties[card_loader.hash_id_name[id_card]]:
-                    similiraties[card_loader.hash_id_name[id_card]][game_mode] = {}
-
-                if game_mode not in similiraties[card_loader.hash_id_name[id_card]][game_mode]:
-                    similiraties[card_loader.hash_id_name[id_card]][game_mode][color] = None
-
-                similiraties[card_loader.hash_id_name[id_card]][game_mode][color] = suggestions
 
     with open('./../similarities.json', 'w') as f:
         json.dump(similiraties, f)
@@ -251,5 +176,4 @@ def test_multi_thread():
         json.dump(similiraties, f)
 
 if __name__ == "__main__":
-    #grouped_recommandations()
     test_multi_thread()

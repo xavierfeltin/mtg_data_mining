@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from loader_magic import MagicLoader, DeckManager
+from loader.loader_magic import MagicLoader, DeckManager
 from lsa.lsa_encoder import DataCleaner, LSAEncoder
 from association_rules.apriori_analyzer import APrioriAnalyzer
 from association_rules.fpgrowth_analyzer import FPGrowthAnalyzer
