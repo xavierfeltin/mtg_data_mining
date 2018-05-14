@@ -1,6 +1,6 @@
 # Magic the gathering: Data Mining
 
-I am learning data mining approaches. To practice, I decided to apply them to the card based game called Magic the gathering.
+This is a first project on data mining.
 The objective is to realize a recommendation system for assisting players to build cards deck.
 
 At the moment, the approaches integrated into this project are :
