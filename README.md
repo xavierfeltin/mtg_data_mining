@@ -11,3 +11,6 @@ At the moment, the approaches integrated into this project are :
 The code is developped in Python 3.
 
 The wiki can be find here: https://github.com/xavierfeltin/mtg_data_mining/wiki
+
+This project is under MIT License
+Copyright (c) 2018 Xavier FOLCH

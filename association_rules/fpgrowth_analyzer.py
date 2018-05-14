@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
 import csv
-from utils import TreeNode
+from association_rules.utils import TreeNode
 
 class FPGrowthAnalyzer:
     """

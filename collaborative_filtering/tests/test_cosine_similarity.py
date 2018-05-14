@@ -1,4 +1,4 @@
-# coding=utf8
+# -*- coding: utf-8 -*-
 import unittest
 from association_rules.apriori_analyzer import APrioriAnalyzer
 from collaborative_filtering.item_to_item import Rating, ItemToItem

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
 
 import simplejson
-import codecs
 import csv
 import operator
 import sys

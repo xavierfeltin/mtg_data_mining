@@ -1,12 +1,21 @@
+# -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+#
+# Bibliography
+# - https://www.cs.umd.edu/~samir/498/Amazon-Recommendations.pdf
+# - https://en.wikipedia.org/wiki/Item-item_collaborative_filtering
+#
+
 import pandas as pd
 import numpy as np
 from collections import deque
 from scipy import spatial
 import math
 
-#Bibliography
-# - https://www.cs.umd.edu/~samir/498/Amazon-Recommendations.pdf
-# - https://en.wikipedia.org/wiki/Item-item_collaborative_filtering
+
 
 class Rating:
     def __init__(self, first_value, db_size = 0):

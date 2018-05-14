@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from loader_magic import MagicLoader, DeckManager
+from loader.loader_magic import MagicLoader, DeckManager
 
 def load_magic_environment():
     print('Load deck')

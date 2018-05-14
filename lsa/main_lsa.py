@@ -1,7 +1,5 @@
-import os
-import json
-from tqdm import tqdm
-from loader_magic import MagicLoader, DeckManager
+# -*- coding: utf-8 -*-
+from loader.loader_magic import MagicLoader, DeckManager
 from lsa.lsa_encoder import DataCleaner, LSAEncoder, LSAManager
 
 def encoding_magic_card(card_loader):

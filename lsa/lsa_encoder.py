@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+# Bibliography
+# - http: // www.datascienceassn.org / sites / default / files / users / user1 / lsa_presentation_final.pdf
+# - https: // machinelearningmastery.com / clean - text - machine - learning - python /
+
 from random import randint
 from math import ceil
 from nltk.tokenize import word_tokenize
@@ -14,9 +22,6 @@ from sklearn.preprocessing import Normalizer
 from collections import deque
 import numpy as np
 
-#Bibliography
-# - http: // www.datascienceassn.org / sites / default / files / users / user1 / lsa_presentation_final.pdf
-# - https: // machinelearningmastery.com / clean - text - machine - learning - python /
 
 class DataCleaner:
     """

@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
 import hashlib
-from copy import deepcopy
 from tqdm import tqdm
 from collections import OrderedDict
 from itertools import combinations, chain

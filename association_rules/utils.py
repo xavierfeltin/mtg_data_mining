@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
 
 class TreeNode:
     "Class to manage FPGrowth tree nodes"

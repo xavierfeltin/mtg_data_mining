@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
 import numpy as np
 from collections import OrderedDict
 from operator import itemgetter
