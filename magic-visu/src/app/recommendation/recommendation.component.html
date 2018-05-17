@@ -1,2 +1,6 @@
 <app-cardview [card]="card"></app-cardview>
+<h2>Content Recommendations:</h2>
+<div>
+<app-recommendationview [recommendation]="recommendation" (click)=onSelect(card) *ngFor="let recommendation of card.contentRecommendations"></app-recommendationview>
+</div>
 <button (click)="goBack()">go back</button>

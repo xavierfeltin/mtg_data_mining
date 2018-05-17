@@ -1,0 +1,1 @@
+export type GameMode = 'commander' | 'legacy' | 'modern' | 'pauper' | 'standard' |  'vintage';

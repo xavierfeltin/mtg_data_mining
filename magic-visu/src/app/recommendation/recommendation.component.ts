@@ -12,6 +12,7 @@ import { Card } from '../models/card'
 })
 export class RecommendationComponent implements OnInit {
   card: Card;
+  selectedCard : Card;
 
   constructor(
     private route: ActivatedRoute,
@@ -26,6 +27,10 @@ export class RecommendationComponent implements OnInit {
     const id = +this.route.snapshot.paramMap.get('multiverseid');
     this.cardService.getCard(id)
       .subscribe(card => this.card = card);
+  }
+
+  onSelect(card: Card): void{
+    this.selectedCard  = card;    
   }
 
   goBack(): void {
