@@ -1,14 +1,14 @@
 import { CardRecommendation } from "./card-recommendation";
+import { GameMode } from "./game-mode";
+import { ColorCombination } from "./color-combination";
 
 export class Card {
     name: string;
     multiverseid: number;
-    contentRecommendations: CardRecommendation[];    
-    /*
-    item_recommendations:{
-        [key: GameMode]: {
-            [key: ColorCombination]: CardRecommendation[]
+    contentRecommendations: CardRecommendation[];        
+    itemRecommendations:{
+        [key: string]: {
+            [key: string]: CardRecommendation[]
         }
-    },
-    */
+    }    
 }

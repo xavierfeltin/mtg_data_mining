@@ -1,6 +1,16 @@
 <app-cardview [card]="card"></app-cardview>
+
 <h2>Content Recommendations:</h2>
 <div>
 <app-recommendationview [recommendation]="recommendation" (click)=onSelect(card) *ngFor="let recommendation of card.contentRecommendations"></app-recommendationview>
 </div>
+
+<h2>Items Recommendations:</h2>
+<div *ngFor="let gameMode of Object.keys(card.itemRecommendations)">
+    <div *ngFor="let deckColor of Object.keys(card.itemRecommendations[gameMode])">
+        <h3>{{gameMode}} - {{deckColor}}</h3>
+        <app-recommendationview [recommendation]="recommendation" (click)=onSelect(card) *ngFor="let recommendation of card.itemRecommendations[gameMode][deckColor]"></app-recommendationview>
+    <div>
+</div>
+
 <button (click)="goBack()">go back</button>
