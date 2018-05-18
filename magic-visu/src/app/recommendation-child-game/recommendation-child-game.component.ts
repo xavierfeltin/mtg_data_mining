@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Card } from '../models/Card';
+import { Card } from '../models/card';
 
 @Component({
   selector: 'app-recommendation-child-game',

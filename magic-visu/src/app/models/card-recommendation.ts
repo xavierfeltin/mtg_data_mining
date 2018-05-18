@@ -1,7 +1,5 @@
-import { Card } from "./card";
-
 export class CardRecommendation {
-    card: Card;
+    multiverseid: number;
     item_similarity: number;
     content_similarity: number;
 }

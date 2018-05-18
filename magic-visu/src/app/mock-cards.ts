@@ -19,33 +19,33 @@ export const CARDS: Card[] = [
 ];
 
 let contentRecommendations: CardRecommendation[] = [
-    {card: CARDS[7], item_similarity: null, content_similarity: 0.791},
-    {card: CARDS[8], item_similarity: null, content_similarity: 0.785},
-    {card: CARDS[9], item_similarity: null, content_similarity: 0.782},
-    {card: CARDS[10], item_similarity: null, content_similarity: 0.779},
-    {card: CARDS[11], item_similarity: null, content_similarity: 0.774}
+    {multiverseid: CARDS[7].multiverseid, item_similarity: null, content_similarity: 0.791},
+    {multiverseid: CARDS[8].multiverseid, item_similarity: null, content_similarity: 0.785},
+    {multiverseid: CARDS[9].multiverseid, item_similarity: null, content_similarity: 0.782},
+    {multiverseid: CARDS[10].multiverseid, item_similarity: null, content_similarity: 0.779},
+    {multiverseid: CARDS[11].multiverseid, item_similarity: null, content_similarity: 0.774}
 ];
 CARDS[0].contentRecommendations = contentRecommendations;
 
 let itemRecommendationsStandardRed: CardRecommendation[] = [
-    {card: CARDS[6], item_similarity: 0.798, content_similarity: 0.469},
-    {card: CARDS[5], item_similarity: 0.785, content_similarity: 0.265}    
+    {multiverseid: CARDS[6].multiverseid, item_similarity: 0.798, content_similarity: 0.469},
+    {multiverseid: CARDS[5].multiverseid, item_similarity: 0.785, content_similarity: 0.265}    
 ];
 CARDS[0].itemRecommendations['standard'] = {};
 CARDS[0].itemRecommendations['standard']['red'] = itemRecommendationsStandardRed;
 
 let itemRecommendationsStandardBlackRed: CardRecommendation[] = [
-    {card: CARDS[1], item_similarity: 0.898, content_similarity: 0.339},
-    {card: CARDS[2], item_similarity: 0.67, content_similarity: 0.331},
-    {card: CARDS[3], item_similarity: 0.639, content_similarity: 0.655},
-    {card: CARDS[4], item_similarity: 0.595, content_similarity: 0.326}    
+    {multiverseid: CARDS[1].multiverseid, item_similarity: 0.898, content_similarity: 0.339},
+    {multiverseid: CARDS[2].multiverseid, item_similarity: 0.67, content_similarity: 0.331},
+    {multiverseid: CARDS[3].multiverseid, item_similarity: 0.639, content_similarity: 0.655},
+    {multiverseid: CARDS[4].multiverseid, item_similarity: 0.595, content_similarity: 0.326}    
 ];
 CARDS[0].itemRecommendations['standard']['black_red'] = itemRecommendationsStandardBlackRed;
 
 let itemRecommendationsCommanderBlackRed: CardRecommendation[] = [
-    {card: CARDS[1], item_similarity: 0.824, content_similarity: 0.339},
-    {card: CARDS[6], item_similarity: 0.811, content_similarity: 0.469},
-    {card: CARDS[2], item_similarity: 0.768, content_similarity: 0.331}        
+    {multiverseid: CARDS[1].multiverseid, item_similarity: 0.824, content_similarity: 0.339},
+    {multiverseid: CARDS[6].multiverseid, item_similarity: 0.811, content_similarity: 0.469},
+    {multiverseid: CARDS[2].multiverseid, item_similarity: 0.768, content_similarity: 0.331}        
 ];
 CARDS[0].itemRecommendations['commander'] = {};
 CARDS[0].itemRecommendations['commander']['black_red'] = itemRecommendationsCommanderBlackRed;

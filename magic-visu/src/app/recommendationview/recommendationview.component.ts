@@ -24,6 +24,6 @@ export class RecommendationviewComponent implements OnInit {
   }
 
   get cardUrl() {
-    return `${CARD_IMG_URL}${this.recommendation.card.multiverseid}`;
+    return `${CARD_IMG_URL}${this.recommendation.multiverseid}`;
   } 
 }
