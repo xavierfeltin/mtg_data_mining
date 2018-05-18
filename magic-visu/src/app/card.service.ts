@@ -16,5 +16,5 @@ export class CardService {
 
   getCard(id: number): Observable<Card> {
     return of(CARDS.find(card => card.multiverseid === id));
-  }
+  }  
 }
