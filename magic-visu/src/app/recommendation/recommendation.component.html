@@ -1,17 +1,16 @@
-<app-cardview [card]="card"></app-cardview>
-
-<h2>Content Recommendations:</h2>
-<div>
-    <ng-container *ngIf="card$ | async as card">
+<ng-container *ngIf="card$ | async as card">
+    <app-cardview [card]="card"></app-cardview>
+    <h2>Content Recommendations:</h2>
+    <div>    
         <app-recommendationview       
             *ngFor="let recommendation of card.contentRecommendations"
             [recommendation]="recommendation"       
             (click)=onSelect(card)>
-        </app-recommendationview>          
-    </ng-container>    
-</div>
+        </app-recommendationview>                      
+    </div>
 
-<h2>Items Recommendations:</h2>
-<app-recommendation-child-game [card]="this.card"></app-recommendation-child-game>
+    <h2>Items Recommendations:</h2>
+    <app-recommendation-child-game [card]="card"></app-recommendation-child-game>
+</ng-container>
 
 <button (click)="goBack()">go back</button>
