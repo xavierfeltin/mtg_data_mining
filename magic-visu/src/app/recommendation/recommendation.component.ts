@@ -1,7 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-
+import { Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/Operators';
 import { CardService }  from '../card.service';
 import { Card } from '../models/card';
 
@@ -11,14 +12,22 @@ import { Card } from '../models/card';
   styleUrls: ['./recommendation.component.css']
 })
 export class RecommendationComponent implements OnInit {
-  card: Card;
+  card$: Observable<Card>;
   selectedCard : Card;
 
   constructor(
     private route: ActivatedRoute,
     private cardService: CardService,
-    private location: Location) { }
+    private location: Location) {
+      this.card$ = route.params.pipe(
+        map(params => +params.multiverseid),  
+        switchMap(id => this.cardService.getCard(id)),
+      );
+    }
+  
+  ngOnInit() {}
 
+  /*
   ngOnInit() {
     this.getCard();
   }
@@ -28,6 +37,7 @@ export class RecommendationComponent implements OnInit {
     this.cardService.getCard(id)
       .subscribe(card => this.card = card);
   }
+  */
 
   onSelect(card: Card): void{
     this.selectedCard  = card;    

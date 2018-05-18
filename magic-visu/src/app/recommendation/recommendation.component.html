@@ -2,7 +2,13 @@
 
 <h2>Content Recommendations:</h2>
 <div>
-<app-recommendationview [recommendation]="recommendation" (click)=onSelect(card) *ngFor="let recommendation of card.contentRecommendations"></app-recommendationview>
+    <ng-container *ngIf="card$ | async as card">
+        <app-recommendationview       
+            *ngFor="let recommendation of card.contentRecommendations"
+            [recommendation]="recommendation"       
+            (click)=onSelect(card)>
+        </app-recommendationview>          
+    </ng-container>    
 </div>
 
 <h2>Items Recommendations:</h2>
