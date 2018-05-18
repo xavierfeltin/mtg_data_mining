@@ -7,6 +7,8 @@ import { CardsviewComponent } from './cardsview/cardsview.component';
 import { AppRoutingModule } from './/app-routing.module';
 import { RecommendationComponent } from './recommendation/recommendation.component';
 import { RecommendationviewComponent } from './recommendationview/recommendationview.component';
+import { RecommendationChildGameComponent } from './recommendation-child-game/recommendation-child-game.component';
+import { RecommendationChildColorComponent } from './recommendation-child-color/recommendation-child-color.component';
 
 @NgModule({
   declarations: [
@@ -14,7 +16,9 @@ import { RecommendationviewComponent } from './recommendationview/recommendation
     CardviewComponent,
     CardsviewComponent,
     RecommendationComponent,
-    RecommendationviewComponent
+    RecommendationviewComponent,
+    RecommendationChildGameComponent,
+    RecommendationChildColorComponent
   ],
   imports: [
     BrowserModule,

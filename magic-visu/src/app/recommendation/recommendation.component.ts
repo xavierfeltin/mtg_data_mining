@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 
 import { CardService }  from '../card.service';
-import { Card } from '../models/card'
+import { Card } from '../models/card';
 
 @Component({
   selector: 'app-recommendation',

@@ -6,11 +6,6 @@
 </div>
 
 <h2>Items Recommendations:</h2>
-<div *ngFor="let gameMode of Object.keys(card.itemRecommendations)">
-    <div *ngFor="let deckColor of Object.keys(card.itemRecommendations[gameMode])">
-        <h3>{{gameMode}} - {{deckColor}}</h3>
-        <app-recommendationview [recommendation]="recommendation" (click)=onSelect(card) *ngFor="let recommendation of card.itemRecommendations[gameMode][deckColor]"></app-recommendationview>
-    <div>
-</div>
+<app-recommendation-child-game [card]="this.card"></app-recommendation-child-game>
 
 <button (click)="goBack()">go back</button>
