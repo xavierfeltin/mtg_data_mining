@@ -1,4 +1,4 @@
 <div *ngFor="let color of this.getColors()">
   <h3>{{this.gameMode}} - {{color}}</h3>
-  <app-recommendationview [recommendation]="recommendation" (click)=onSelect(this.card) *ngFor="let recommendation of this.card.itemRecommendations[this.gameMode][color]"></app-recommendationview>
+  <app-recommendationview [recommendation]="recommendation" (click)=this.card *ngFor="let recommendation of this.card.itemRecommendations[this.gameMode][color]"></app-recommendationview>
 </div>
