@@ -4,8 +4,7 @@
     <div>    
         <app-recommendationview       
             *ngFor="let recommendation of card.contentRecommendations"
-            [recommendation]="recommendation"       
-            (click)=onSelect(card)>
+            [recommendation]="recommendation">
         </app-recommendationview>                      
     </div>
 
