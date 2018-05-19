@@ -10,5 +10,5 @@ export class Card {
         [key: string]: {
             [key: string]: CardRecommendation[]
         }
-    }    
+    }
 }
