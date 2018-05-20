@@ -3,26 +3,29 @@ import { CardService } from '../card.service'
 import { Card } from '../models/card';
 import { CardRecommendation } from '../models/card-recommendation';
 
+import { Observable } from 'rxjs';
+
 const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&multiverseid=';
 
 @Component({
   selector: 'app-recommendationview',  
   template: `
     <a routerLink="/recommendation/{{recommendation.multiverseid}}">
-    <img [src]="cardUrl" [alt]="card.name" [title]="title"/>
-    </a>`,
-  changeDetection: ChangeDetectionStrategy.OnPush
+    <img [src]="cardUrl" [alt]="name" [title]="title"/>
+    </a>`
+  //changeDetection: ChangeDetectionStrategy.OnPush
 })
 
 export class RecommendationviewComponent implements OnInit {
-  @Input() recommendation: CardRecommendation;
+  card$: Observable<Card>;
   card: Card;
-  
+  @Input() recommendation: CardRecommendation;
+ 
   constructor(private cardService: CardService) { }
 
   ngOnInit() {
-    this.cardService.getCard(this.recommendation.multiverseid)
-    .subscribe(card => this.card = card);
+    //this.card$ = this.cardService.getCard(this.recommendation.multiverseid);
+    this.cardService.getCard(this.recommendation.multiverseid).subscribe(card => this.card = card);
   }
 
   get cardUrl() {
@@ -30,8 +33,17 @@ export class RecommendationviewComponent implements OnInit {
   } 
 
   get title() {
-    return this.recommendation.item_similarity === null ? 
-      `Content score: ${this.recommendation.content_similarity}`
-      :`Item score: ${this.recommendation.item_similarity}\nContent score: ${this.recommendation.content_similarity}`;
+    return this.recommendation.itemSimilarity === null ? 
+      `Content score: ${this.recommendation.contentSimilarity}`
+      :`Item score: ${this.recommendation.itemSimilarity}\nContent score: ${this.recommendation.contentSimilarity}`;
+  }
+
+  get name() {
+    
+    /*let card = new Card();
+    this.card$.subscribe(card => card = card);
+    return card.name;
+    */
+   return this.card.name;
   }
 }

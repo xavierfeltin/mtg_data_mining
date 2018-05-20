@@ -1,5 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http'; 
 
 import { AppComponent } from './app.component';
 import { CardviewComponent } from './cardview/cardview.component';
@@ -22,7 +23,8 @@ import { RecommendationChildColorComponent } from './recommendation-child-color/
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
