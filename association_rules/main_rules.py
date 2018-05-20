@@ -21,10 +21,11 @@ def find_frequent_items_apriori():
     card_loader = MagicLoader()
     card_loader.load('./../data/AllCards-x.json')
 
+    list_files = os.listdir("./../data/decks_mtgdeck_net")
+    for i in range(len(list_files)): # returns list
+        list_files[i] = './../data/decks_mtgdeck_net/' + list_files[i]
     deck_loader = DeckManager()
-    list_files = os.listdir("./../db_decks")  # returns list
-    deck_loader.load_from_csv(list_files)
-    deck_loader.extract_lands(card_loader.lands)
+    deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
 
     print('Data loaded, creating cache')
     analyzer = APrioriAnalyzer(deck_loader.decks[0:10])
@@ -48,10 +49,11 @@ def find_frequent_items_fpgrowth():
     card_loader.load('./../data/AllCards-x.json')
 
     print('Clean deck')
+    list_files = os.listdir("./../data/decks_mtgdeck_net")
+    for i in range(len(list_files)):  # returns list
+        list_files[i] = './../data/decks_mtgdeck_net/' + list_files[i]
     deck_loader = DeckManager()
-    list_files = os.listdir("./../db_decks")  # returns list
-    deck_loader.load_from_csv(list_files, card_loader)
-    deck_loader.extract_lands(card_loader.lands)
+    deck_loader.load_from_mtgdeck_csv(list_files, card_loader)
 
     cards_usage = APrioriAnalyzer.load_cache_count()
     deck_loader.extract_high_used_cards(cards_usage, len(deck_loader.decks)*0.01)
@@ -96,12 +98,6 @@ def find_closed_items():
 
     print('Clean deck')
     deck_loader = DeckManager()
-
-    '''
-    list_files = os.listdir("./../db_decks")  # returns list
-    deck_loader.load_from_csv(list_files, card_loader)
-    deck_loader.extract_lands(card_loader.lands, card_loader)
-    '''
 
     list_files = os.listdir("./../data/decks_mtgdeck_net")
     for i in range(len(list_files)): # returns list

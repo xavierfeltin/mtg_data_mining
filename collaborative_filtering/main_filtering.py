@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import json
+import pandas as pd
 from tqdm import tqdm
 from loader.loader_magic import MagicLoader, DeckManager
 from collaborative_filtering.item_to_item import ItemToItem, Rating
@@ -13,20 +14,33 @@ from time import time
 import numpy as np
 
 def encoding_magic_card(card_loader):
-    lsa_manager = LSAManager(card_loader.hash_id_texts)
+    hash_id_texts = {}
+    for multiverseid, card in card_loader.cards_multiverseid.items():
+        hash_id_texts[multiverseid] = card.full_text
+
+    lsa_manager = LSAManager(hash_id_texts)
+    lsa_manager.encode()
+    return lsa_manager
+
+def encoding_magic_card_subsets(cards):
+    hash_id_texts = {}
+    for card in cards:
+        hash_id_texts[card.multiverseid] = card.full_text
+
+    lsa_manager = LSAManager(hash_id_texts)
     lsa_manager.encode()
     return lsa_manager
 
 def load_magic_environment():
     print('Load deck')
     card_loader = MagicLoader()
-    card_loader.load('./../data/magic_cards/AllCards-x.json')
+    #card_loader.load('./../data/magic_cards/AllCards-x.json')
+    card_loader.load_from_set('./../data/magic_cards/AllSets-x.json')
     return card_loader
 
 def load_decks_database(card_loader):
     print('Clean deck')
     deck_loader = DeckManager()
-
 
     files = os.listdir("./../data/decks_mtgdeck_net")  # returns list
     paths = []
@@ -92,62 +106,95 @@ def job(game_mode, game_colors, game_card_catalog, game_deck_database, hash_id_n
         item_recommender.compute_similarities(deck_database)
 
         for id_card in card_catalog:
-            if hash_id_name[id_card] not in similiraties:
-                similiraties[hash_id_name[id_card]] = {}
+            if id_card not in similiraties:
+                similiraties[id_card] = {}
 
             recommendations = item_recommender.get_recommendation(id_card, 5, lsa_manager)
-            suggestions = {}
+            suggestions = []
             for id_rec, score in recommendations.items():
-                suggestions[hash_id_name[id_rec]] = {'item_similarity': round(score[0], 3),
-                                                     'content_similarity': round(score[1], 3)}
+                #suggestions[str(id_rec)] = {'item_similarity': round(score[0], 3), 'content_similarity': round(score[1], 3)}
+                suggestions.append({'multiverseid': int(id_rec), 'itemSimilarity': float(round(score[0], 3)), 'contentSimilarity': float(round(score[1], 3))})
 
-            if game_mode not in similiraties[hash_id_name[id_card]]:
-                similiraties[hash_id_name[id_card]][game_mode] = {}
+            if game_mode not in similiraties[id_card]:
+                similiraties[id_card][game_mode] = {}
 
-            if game_mode not in similiraties[hash_id_name[id_card]][game_mode]:
-                similiraties[hash_id_name[id_card]][game_mode][color] = None
+            if game_mode not in similiraties[id_card][game_mode]:
+                similiraties[id_card][game_mode][color] = None
 
-            similiraties[hash_id_name[id_card]][game_mode][color] = suggestions
+            similiraties[id_card][game_mode][color] = suggestions
 
     queue.put(similiraties)
 
+def get_content_recommendation(multiverseid, multiverseid_in_decks, lsa_manager, nb_recommendations):
+    similarities = pd.DataFrame(columns=['card_id', 'content_similarity'])
+    #for i, new_card_id in enumerate(card_loader.hash_id_name.keys()):
+
+    sim_values = lsa_manager.get_similarities(multiverseid, multiverseid_in_decks)
+    for i, new_card_id in enumerate(multiverseid_in_decks):
+        new_card = pd.DataFrame(index=[new_card_id], columns=['card_id', 'content_similarity'])
+        new_card['card_id'] = new_card_id
+        new_card['content_similarity'] = sim_values[i]
+        similarities = similarities.append(new_card)
+
+    similarities = similarities.sort_values(['content_similarity'], ascending=[False])
+    recommendations = []
+    nb_recommendations = min(nb_recommendations, len(similarities)) +1
+    for i in range(1,nb_recommendations): #to avoid itself in the recommendations
+        recommendations.append({'multiverseid': int(similarities.iloc[i]['card_id']), 'contentSimilarity': round(similarities.iloc[i]['content_similarity'],3), 'itemSimilarity': None})
+
+    return recommendations
+
 def test_multi_thread():
+    start= time()
+
     print('Load magic environment')
     card_loader = load_magic_environment()
 
-    print('Convert card text into vector')
-    lsa_manager = encoding_magic_card(card_loader)
+    #print('Convert all magic cards text into vector')
+    #lsa_manager = encoding_magic_card(card_loader)
 
     files = os.listdir("./../data/decks_mtgdeck_net")  # returns list
     paths = []
     for file in files:
         paths.append('./../data/decks_mtgdeck_net/' + file)
 
-    queue = Queue()
-    thread_pull = []
+    decks = {}
+    multiverseid_in_decks = set()
     for mode in MagicLoader.HASH_GAME_STRING_CODE.keys():
-    #for mode in ['commander']:
         for path in paths:
             if mode.lower() in path:
                 deck_loader = DeckManager()
-                deck_loader.load_from_mtgdeck_csv([path], card_loader)
-                deck_loader.extract_lands(card_loader.lands, card_loader)
+                deck_loader.load_from_mtgdeck_csv([path], cards_loader=card_loader, ignore_land=False)
                 deck_loader.sort_decks()
+                multiverseid_in_decks = multiverseid_in_decks.union(deck_loader.cards)
+                decks[mode] = deck_loader
 
-                print('mode: ' + mode)
-                for color in deck_loader.grouped_decks.keys():
-                    print('  - ' + str(MagicLoader.get_json_color(color)) + ': ' + str(len(deck_loader.grouped_decks[color])))
+    # In the context of this study only:
+    # To be sure that all the cards in the final recommendation json will have similarities score
+    # On real website, procede with all Magic Cards to be more exhaustive
+    print('Convert only the text of magic cards in decks into vector: ' + str(len(multiverseid_in_decks)) + ' cards')
+    cards_in_decks = card_loader.extract_cards(list(multiverseid_in_decks))
+    lsa_manager = encoding_magic_card_subsets(cards_in_decks)
 
-                game_colors = deck_loader.grouped_decks.keys()
-                deck_database = deck_loader.grouped_decks
-                card_catalog = deck_loader.grouped_cards
+    queue = Queue()
+    thread_pull = []
+    for mode in decks.keys():
+        deck_loader = decks[mode]
 
-                thread_ = Thread(
-                    target=job,
-                    name="Thread1",
-                    args=[mode, game_colors, card_catalog, deck_database, card_loader.hash_id_name, lsa_manager, queue],
-                )
-                thread_pull.append(thread_)
+        print('mode: ' + mode)
+        for color in deck_loader.grouped_decks.keys():
+            print('  - ' + str(MagicLoader.get_json_color(color)) + ': ' + str(len(deck_loader.grouped_decks[color])))
+
+        game_colors = deck_loader.grouped_decks.keys()
+        deck_database = deck_loader.grouped_decks
+        card_catalog = deck_loader.grouped_cards
+
+        thread_ = Thread(
+            target=job,
+            name="Thread1",
+            args=[mode, game_colors, card_catalog, deck_database, card_loader.hash_id_name, lsa_manager, queue],
+        )
+        thread_pull.append(thread_)
 
     for thread_ in thread_pull:
         thread_.start()
@@ -157,24 +204,44 @@ def test_multi_thread():
 
     print('End processing ratings and similarities')
     print('Consolidate results')
+
     similiraties = {}
     #for game_similarity in tqdm(iter(queue.get, None)):
     while not queue.empty():
         game_similarity = queue.get()
         for card in game_similarity.keys():
-            if card not in similiraties:
-                similiraties[card] = {}
+            key_card = str(card)
+            if key_card not in similiraties:
+                similiraties[key_card] = {}
 
             for game_mode in game_similarity[card].keys():
-                if game_mode not in similiraties[card]:
-                    similiraties[card][game_mode] = {}
+                if game_mode not in similiraties[key_card]:
+                    similiraties[key_card][game_mode] = {}
 
                 for color in game_similarity[card][game_mode].keys():
-                    similiraties[card][game_mode][MagicLoader.get_json_color(color)] = game_similarity[card][game_mode][color]
+                    similiraties[key_card][game_mode][MagicLoader.get_json_color(color)] = game_similarity[card][game_mode][color]
 
     print('Save data into json')
+    export = []
+    for multiverseid, recommendations in tqdm(similiraties.items()):
+        json_card = {}
+        card = card_loader.cards_multiverseid[int(multiverseid)]
+        json_card['multiverseid'] = card.multiverseid
+        json_card['name'] = card.name
+        json_card['manaCost'] = card.mana_cost
+        json_card['types'] = card.types
+        json_card['colors'] = card.get_colors_names()
+        json_card['contentRecommendations'] = get_content_recommendation(int(multiverseid), multiverseid_in_decks, lsa_manager, 5)
+        json_card['itemRecommendations'] = similiraties[multiverseid]
+        #export[str(card.multiverseid)] = json_card
+        export.append(json_card)
+
     with open('./../similarities_multi.json', 'w') as f:
-        json.dump(similiraties, f)
+        #json.dump(similiraties, f)
+        print(str(export))
+        json.dump(export, f)
+
+    print('required time = ' + str((time() - start)) + ' seconds')
 
 if __name__ == "__main__":
     test_multi_thread()

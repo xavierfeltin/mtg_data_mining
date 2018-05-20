@@ -4,8 +4,8 @@
 # Copyright (c) 2018 Xavier FOLCH
 #
 # Bibliography
-# - http: // www.datascienceassn.org / sites / default / files / users / user1 / lsa_presentation_final.pdf
-# - https: // machinelearningmastery.com / clean - text - machine - learning - python /
+# - http://www.datascienceassn.org/sites/default/files/users/user1/lsa_presentation_final.pdf
+# - https://machinelearningmastery.com/clean-text-machine-learning-python/
 
 from random import randint
 from math import ceil
@@ -193,6 +193,15 @@ class LSAManager:
         for card, encoding in encoding.items():
             self.cards_encoded[card] = encoding[:]
 
-    def get_similarity(self, card_1, list_cards):
-        similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(self.cards_encoded[list_cards]).T)
+    def get_similarity(self, card_1, card_2):
+        similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(self.cards_encoded[card_2]).T)
         return similarity[0,0]
+
+    def get_similarities(self, card_1, list_cards):
+        encoded_list = deque()
+        for card in list_cards:
+            encoded_list.append(self.cards_encoded[card])
+
+        #similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(self.cards_encoded[list_cards]).T)
+        similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(encoded_list).T)
+        return similarity[0]
