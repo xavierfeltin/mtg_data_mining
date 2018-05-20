@@ -12,8 +12,8 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
   template: `
     <a routerLink="/recommendation/{{recommendation.multiverseid}}">
     <img [src]="cardUrl" [alt]="name" [title]="title"/>
-    </a>`
-  //changeDetection: ChangeDetectionStrategy.OnPush
+    </a>`,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 
 export class RecommendationviewComponent implements OnInit {
@@ -38,12 +38,7 @@ export class RecommendationviewComponent implements OnInit {
       :`Item score: ${this.recommendation.itemSimilarity}\nContent score: ${this.recommendation.contentSimilarity}`;
   }
 
-  get name() {
-    
-    /*let card = new Card();
-    this.card$.subscribe(card => card = card);
-    return card.name;
-    */
+  get name() { 
    return this.card.name;
   }
 }
