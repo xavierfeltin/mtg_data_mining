@@ -7,18 +7,22 @@ import { CardService } from '../card.service';
   selector: 'app-cardsview',
   template: `
     <h2>Available Cards</h2>
-      <app-cardview *ngFor="let card of cards$ | async" 
+      <app-cardview *ngFor="let card of cards$ | async | paginate: { itemsPerPage: 10, currentPage: p }; let i = index" 
         [card]="card">
       </app-cardview>
+      <pagination-controls (pageChange)="p = $event"></pagination-controls>
   `,
   styleUrls: ['./cardsview.component.css']
 })
 export class CardsviewComponent implements OnInit {
   cards$: Observable<Card[]>;
-
+  p: number = 1; //initializing p to one
+  
   constructor(private cardService: CardService) { 
     this.cards$ = this.cardService.getCards();
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    
+  }
 }

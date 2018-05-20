@@ -2,6 +2,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http'; 
 
+import {NgxPaginationModule} from 'ngx-pagination'; //https://github.com/michaelbromley/ngx-pagination
+
 import { AppComponent } from './app.component';
 import { CardviewComponent } from './cardview/cardview.component';
 import { CardsviewComponent } from './cardsview/cardsview.component';
@@ -10,6 +12,7 @@ import { RecommendationComponent } from './recommendation/recommendation.compone
 import { RecommendationviewComponent } from './recommendationview/recommendationview.component';
 import { RecommendationChildGameComponent } from './recommendation-child-game/recommendation-child-game.component';
 import { RecommendationChildColorComponent } from './recommendation-child-color/recommendation-child-color.component';
+
 
 @NgModule({
   declarations: [
@@ -24,7 +27,8 @@ import { RecommendationChildColorComponent } from './recommendation-child-color/
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    NgxPaginationModule
   ],
   providers: [],
   bootstrap: [AppComponent]
