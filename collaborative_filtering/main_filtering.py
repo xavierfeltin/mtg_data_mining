@@ -164,7 +164,7 @@ def test_multi_thread():
         for path in paths:
             if mode.lower() in path:
                 deck_loader = DeckManager()
-                deck_loader.load_from_mtgdeck_csv([path], cards_loader=card_loader, ignore_land=False)
+                deck_loader.load_from_mtgdeck_csv([path], cards_loader=card_loader, ignore_land=True)
                 deck_loader.sort_decks()
                 multiverseid_in_decks = multiverseid_in_decks.union(deck_loader.cards)
                 decks[mode] = deck_loader
