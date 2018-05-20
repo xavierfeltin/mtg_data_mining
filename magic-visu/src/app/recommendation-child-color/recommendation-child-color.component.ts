@@ -7,7 +7,7 @@ import { Card } from '../models/card';
   template: `
     <div *ngFor="let color of this.getColors()">
       <h3>{{this.gameMode}} - {{formatColor(color)}}</h3>
-      <app-recommendationview [recommendation]="recommendation" *ngFor="let recommendation of this.card.itemRecommendations[this.gameMode][color]"></app-recommendationview>
+      <app-recommendationview [recommendation]="recommendation" *ngFor="let recommendation of this.card.itemRecommendations[this.gameMode][color]" class="cards"></app-recommendationview>
     </div>`,
   styleUrls: ['./recommendation-child-color.component.css']
 })

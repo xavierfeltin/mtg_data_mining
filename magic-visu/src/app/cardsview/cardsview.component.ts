@@ -8,7 +8,7 @@ import { CardService } from '../card.service';
   template: `
     <h2>Available Cards</h2>
       <app-cardview *ngFor="let card of cards$ | async | paginate: { itemsPerPage: 10, currentPage: p }; let i = index" 
-        [card]="card">
+        [card]="card" class="cards">
       </app-cardview>
       <pagination-controls (pageChange)="p = $event"></pagination-controls>
   `,

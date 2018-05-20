@@ -1,4 +1,0 @@
-<div *ngFor="let color of this.getColors()">
-  <h3>{{this.gameMode}} - {{color}}</h3>
-  <app-recommendationview [recommendation]="recommendation" *ngFor="let recommendation of this.card.itemRecommendations[this.gameMode][color]"></app-recommendationview>
-</div>
