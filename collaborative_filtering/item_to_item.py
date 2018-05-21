@@ -14,6 +14,7 @@ import numpy as np
 from collections import deque
 from scipy import spatial
 import math
+from tqdm import tqdm
 
 
 
@@ -117,34 +118,6 @@ class ItemToItem:
                                     else:
                                         df.at[item, item] = -1.0
         self.items_similarities = df
-
-    def get_recommendation(self, card_id, nb_recommendations, lsa):
-        '''
-        Return the list of the first nb_recommendations
-        :param card_id: id card of which we want the recommendations
-        :param nb_recommendations: number of recommendations to return
-        :param lsa: language semantic analysis object from lsa package
-        :return: dictionary {card_id: recommendation}
-        '''
-
-        item_similarities = self.items_similarities.loc[card_id]
-
-        #Remove null or negative similarities
-        item_similarities = item_similarities[item_similarities > 0].dropna()
-
-        similarities = pd.DataFrame(columns=['card_id','item_similarity','content_similarity'])
-        for i, new_card_id in enumerate(item_similarities.index):
-            new_card = pd.DataFrame(index=[new_card_id], columns=['card_id','item_similarity','content_similarity'])
-            new_card['item_similarity'] = item_similarities.loc[new_card_id]
-            new_card['content_similarity'] = lsa.get_similarity(card_id, new_card_id)
-            similarities = similarities.append(new_card)
-
-        similarities = similarities.sort_values(['item_similarity', 'content_similarity'], ascending=[False, False])
-        recommendations = {}
-        nb = min(nb_recommendations, len(similarities))
-        for i in range(nb):
-            recommendations[similarities.index[i]] = [similarities.iloc[i]['item_similarity'],similarities.iloc[i]['content_similarity']]
-        return recommendations
 
     @staticmethod
     def compute_cosine_angle(dataset_1, dataset_2):
