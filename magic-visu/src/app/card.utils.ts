@@ -8,10 +8,10 @@ export function compareCardsFn(a: Card, b: Card): number {
     //order by nb colors, color, manaCost and name
     let comparison = compareColors(a,b);
     if (comparison == 0) {
-        comparison = compareManaCost(a,b);        
+        comparison = compareBy('manaCost')(a,b);        
     }
     if (comparison == 0) {
-        comparison = compareName(a,b);
+        comparison = compareBy('name')(a,b);
     }
     return comparison;             
 };
@@ -36,14 +36,36 @@ function compareColors(a: Card, b: Card): number {
     }       
 };
 
-function compareManaCost(a: Card, b: Card): number {
-    if (a.manaCost < b.manaCost) {return -1;}
-    else if (a.manaCost > b.manaCost) {return 1;}
-    else return 0;
-};
+function compareBy(prop: keyof Card): (a: Card, b: Card) => number {
+    return (a: Card, b: Card) => { 
+        if (a[prop] < b[prop]) {return -1;} 
+        if (a[prop] > b[prop]) {return 1;} 
+        return 0;
+    }
+ }
 
-function compareName(a: Card, b: Card): number {
-    if (a.name < b.name) {return -1;}
-    else if (a.name > b.name) {return 1;}
-    else return 0;
-};
+ export function filterColorsTypesFn(card: Card, filterColors, filterTypes): boolean
+{          
+    let keepOnColor = true;
+    if (filterColors.length > 0) {
+        keepOnColor = false;
+        for(const color of filterColors) {
+        if (card.colors.includes(color)) {
+            keepOnColor = true;
+            break;
+        }
+        }
+    }          
+
+    let keepOnType = true;
+    if (filterTypes.length > 0) {
+        keepOnType = false;
+        for(const type of filterTypes) {
+        if (card.types.includes(type)) {
+            keepOnType = true;
+            break;
+        }
+        }           
+    }          
+    return keepOnColor && keepOnType;    
+ }

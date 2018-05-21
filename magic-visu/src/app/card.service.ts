@@ -4,7 +4,7 @@ import { Observable, of, ConnectableObservable} from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
 import { Card } from './models/card'
 import { CARDS } from './mock-cards'
-import { compareCardsFn } from './card.utils'
+import { compareCardsFn, filterColorsTypesFn } from './card.utils'
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class CardService {
 
   constructor(private http: HttpClient) { }
 
-  getCards(): Observable<Card[]> {
+  getCards(filterColors: string[] = [], filterTypes: string[] = []): Observable<Card[]> {
     //return of(CARDS);
     //return this.http.get<Card[]>('/assets/db_similarities_small.json');
     if (!this._cards) {       
@@ -23,7 +23,8 @@ export class CardService {
       .pipe(
         map(cards => cards.sort(compareCardsFn)),
         publishReplay(),
-        refCount()
+        refCount(),
+        map(cards => cards.filter(card => filterColorsTypesFn(card, filterColors, filterTypes))),
       );
     } 
     return this._cards;

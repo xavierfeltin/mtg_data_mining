@@ -19,7 +19,7 @@ export class CardsviewComponent implements OnInit {
   p: number = 1; //initializing p to one
   
   constructor(private cardService: CardService) { 
-    this.cards$ = this.cardService.getCards();
+    this.cards$ = this.cardService.getCards(['green']);
   }
 
   ngOnInit() {
