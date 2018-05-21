@@ -12,6 +12,8 @@ import { RecommendationComponent } from './recommendation/recommendation.compone
 import { RecommendationviewComponent } from './recommendationview/recommendationview.component';
 import { RecommendationChildGameComponent } from './recommendation-child-game/recommendation-child-game.component';
 import { RecommendationChildColorComponent } from './recommendation-child-color/recommendation-child-color.component';
+import { SelectColorsComponent } from './select-colors/select-colors.component';
+import { CardsindexComponent } from './cardsindex/cardsindex.component';
 
 
 @NgModule({
@@ -22,7 +24,9 @@ import { RecommendationChildColorComponent } from './recommendation-child-color/
     RecommendationComponent,
     RecommendationviewComponent,
     RecommendationChildGameComponent,
-    RecommendationChildColorComponent
+    RecommendationChildColorComponent,
+    SelectColorsComponent,
+    CardsindexComponent
   ],
   imports: [
     BrowserModule,

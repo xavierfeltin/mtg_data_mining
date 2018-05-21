@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, ConnectableObservable} from 'rxjs';
+import { Observable, of} from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
 import { Card } from './models/card'
 import { CARDS } from './mock-cards'
@@ -24,7 +24,7 @@ export class CardService {
         map(cards => cards.sort(compareCardsFn)),
         publishReplay(),
         refCount(),
-        map(cards => cards.filter(card => filterColorsTypesFn(card, filterColors, filterTypes))),
+        map(cards => cards.filter(card => filterColorsTypesFn(card, filterColors, filterTypes)))
       );
     } 
     return this._cards;

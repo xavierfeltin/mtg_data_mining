@@ -21,23 +21,11 @@ export class RecommendationComponent implements OnInit {
     private location: Location) {
       this.card$ = route.params.pipe(
         map(params => +params.multiverseid),  
-        switchMap(id => this.cardService.getCard(id)),
+        switchMap(id => this.cardService.getCard(id))
       );
     }
   
   ngOnInit() {}
-
-  /*
-  ngOnInit() {
-    this.getCard();
-  }
-
-  getCard(): void {
-    const id = +this.route.snapshot.paramMap.get('multiverseid');
-    this.cardService.getCard(id)
-      .subscribe(card => this.card = card);
-  }
-  */
 
   onSelect(card: Card): void{
     this.selectedCard  = card;    
