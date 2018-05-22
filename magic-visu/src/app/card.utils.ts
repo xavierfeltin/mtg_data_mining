@@ -6,7 +6,7 @@ import { Card } from './models/card';
 
 export function compareCardsFn(a: Card, b: Card): number {
   //order by nb colors, color, manaCost and name
-  let comparison = compareColors(a, b);
+  let comparison = compareColors(a.colors, b.colors);
   if (comparison == 0) {
     comparison = compareBy('manaCost')(a, b);
   }
@@ -16,18 +16,24 @@ export function compareCardsFn(a: Card, b: Card): number {
   return comparison;
 };
 
-function compareColors(a: Card, b: Card): number {
-  if (a.colors.length < b.colors.length) {return -1;}
-  else if (a.colors.length > b.colors.length) {return 1;}
+export function compareColorsAsKey(a: string, b:string): number {
+  const aAsArray = a.split('_').sort();
+  const bAsArray = b.split('_').sort();
+  return compareColors(aAsArray, bAsArray);
+}
+
+function compareColors(a: string[], b: string[]): number {
+  if (a.length < b.length) {return -1;}
+  else if (a.length > b.length) {return 1;}
   else {
     let comparison = 0;
-    const nbColors = a.colors.length;
+    const nbColors = a.length;
     let i = 0;
     while (i < nbColors && comparison == 0) {
-      if (a.colors[i] < b.colors[i]) {
+      if (a[i] < b[i]) {
         comparison = -1;
       }
-      else if (a.colors[i] > b.colors[i]) {
+      else if (a[i] > b[i]) {
         comparison = 1;
       }
       i++;

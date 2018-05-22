@@ -15,6 +15,7 @@ import { Card } from '../models/card';
 })
 export class CardsviewComponent implements OnChanges {
   @Input() filterColor: string;
+  @Input() filterType: string;
   cards$: Observable<Card[]>;
   p: number = 1; //initializing p to one
 
@@ -22,6 +23,8 @@ export class CardsviewComponent implements OnChanges {
   }
   ngOnChanges() {
     console.log(this.filterColor);
-    this.cards$ = this.cardService.getCards([this.filterColor],['Creature']);
+    console.log(this.filterType);
+    
+    this.cards$ = this.cardService.getCards([this.filterColor],[this.filterType]);
   }
 }

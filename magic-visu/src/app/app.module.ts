@@ -14,6 +14,8 @@ import { RecommendationChildGameComponent } from './recommendation-child-game/re
 import { RecommendationChildColorComponent } from './recommendation-child-color/recommendation-child-color.component';
 import { SelectColorsComponent } from './select-colors/select-colors.component';
 import { CardsindexComponent } from './cardsindex/cardsindex.component';
+import { SelectTypesComponent } from './select-types/select-types.component';
+import { SelectModeComponent } from './select-mode/select-mode.component';
 
 
 @NgModule({
@@ -26,7 +28,9 @@ import { CardsindexComponent } from './cardsindex/cardsindex.component';
     RecommendationChildGameComponent,
     RecommendationChildColorComponent,
     SelectColorsComponent,
-    CardsindexComponent
+    CardsindexComponent,
+    SelectTypesComponent,
+    SelectModeComponent
   ],
   imports: [
     BrowserModule,
