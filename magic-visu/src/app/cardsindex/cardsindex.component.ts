@@ -1,11 +1,12 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-cardsindex',
   template: `
     <h2>Available Cards</h2>
-    <div> <app-select-colors (change)="onSelect($event.target.value)"></app-select-colors> </div>
+    <div>
+      <app-select-colors (select)="onSelect($event)"></app-select-colors>
+    </div>
     <app-cardsview [filterColor]="filterColor"> </app-cardsview>
   `,
   styleUrls: ['./cardsindex.component.css']
