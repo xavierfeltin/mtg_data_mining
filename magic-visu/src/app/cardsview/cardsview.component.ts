@@ -1,7 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Card } from '../models/card';
 import { CardService } from '../card.service';
+import { Card } from '../models/card';
 
 @Component({
   selector: 'app-cardsview',
@@ -13,18 +13,13 @@ import { CardService } from '../card.service';
   `,
   styleUrls: ['./cardsview.component.css']
 })
-export class CardsviewComponent implements OnInit {
+export class CardsviewComponent implements OnChanges {
   @Input() filterColor: string;
   cards$: Observable<Card[]>;
   p: number = 1; //initializing p to one
 
-  constructor(private cardService: CardService) { 
+  constructor(private cardService: CardService) {
   }
-
-  ngOnInit() {
-    this.cards$ = this.cardService.getCards([this.filterColor],['Creature']);
-  }
-
   ngOnChanges() {
     console.log(this.filterColor);
     this.cards$ = this.cardService.getCards([this.filterColor],['Creature']);
