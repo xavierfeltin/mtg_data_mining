@@ -9,9 +9,19 @@ from lsa.lsa_encoder import LSAManager
 from queue import Queue
 from threading import Thread
 
-
 from time import time
 import numpy as np
+
+class JobData:
+    '''
+    Encapsulate data for jobs processing similarities
+    '''
+    def __init__(self,  game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities):
+        self.game_mode = game_mode
+        self.game_colors = game_colors
+        self.game_cards_catalog = game_card_catalog
+        self.game_deck_database = game_deck_database
+        self.cards_content_similarities = cards_content_similarities
 
 def encoding_magic_card(card_loader):
     hash_id_texts = {}
