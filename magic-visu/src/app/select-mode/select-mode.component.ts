@@ -14,13 +14,13 @@ import { Mode } from '../models/mode';
 })
 export class SelectModeComponent implements OnInit {
   mode$: Observable<Mode[]>;
-  @Input() selectedMode: string;
+  @Input() selectedMode: string;  
   @Output() select: EventEmitter<string> = new EventEmitter();
 
   constructor(private modeService: ModeService) { }
 
   ngOnInit() {    
-    this.mode$ = this.getModes();
+    this.mode$ = this.getModes();    
   }
 
   /** Get the list of available models */

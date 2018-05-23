@@ -13,13 +13,18 @@ export class RecommendationService {
     card: Card,
     mode: string
   ): Observable<{ [key: string]: CardRecommendation[]; }> {
-    const byMode = card.itemRecommendations[mode];
-    const byColor: { [key: string]: CardRecommendation[] } = Object.keys(byMode).sort(compareColorsAsKey).reduce(
-      (acc, color) => ({ ...acc, [color]: card.itemRecommendations[mode][color] }),
-      {},
-    );
+    if (mode in card.itemRecommendations){
+      const byMode = card.itemRecommendations[mode];
+      const byColor: { [key: string]: CardRecommendation[] } = Object.keys(byMode).sort(compareColorsAsKey).reduce(
+        (acc, color) => ({ ...acc, [color]: card.itemRecommendations[mode][color] }),
+        {},
+      );
 
-    return of(byColor);
+      return of(byColor);
+    }
+    else {
+      return of({})
+    }
   }
 
   getRecommendationsForModeAndColor(

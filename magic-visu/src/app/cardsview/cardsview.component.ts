@@ -21,10 +21,8 @@ export class CardsviewComponent implements OnChanges {
 
   constructor(private cardService: CardService) {
   }
+
   ngOnChanges() {
-    console.log(this.filterColor);
-    console.log(this.filterType);
-    
     this.cards$ = this.cardService.getCards([this.filterColor],[this.filterType]);
   }
 }

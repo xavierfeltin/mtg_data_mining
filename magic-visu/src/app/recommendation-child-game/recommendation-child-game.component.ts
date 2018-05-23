@@ -3,12 +3,26 @@ import { Card } from '../models/card';
 
 @Component({
   selector: 'app-recommendation-child-game',
-  templateUrl: './recommendation-child-game.component.html',
+  template: `
+    <div>
+      <app-select-mode (select)="onSelect($event)" [selectedMode]="filterMode"></app-select-mode>
+    </div>
+    <app-recommendation-child-color [card]="card" [gameMode]="filterMode"></app-recommendation-child-color>
+    `,
+  /*
+  template: `
+    <div>
+      <app-select-mode (select)="onSelect($event)" [selectedMode]="filterMode"></app-select-mode>
+    </div>
+    <app-recommendation-child-color [card]="card" [gameMode]="filterModegame" *ngFor="let game of this.getGameModes()"></app-recommendation-child-color>
+    `,
+  */
   styleUrls: ['./recommendation-child-game.component.css']
 })
 export class RecommendationChildGameComponent implements OnInit {
   @Input() card: Card;
-
+  filterMode: string = 'Commander';
+  
   constructor() { }
 
   ngOnInit() {
@@ -16,5 +30,9 @@ export class RecommendationChildGameComponent implements OnInit {
 
   getGameModes(): string[] {
     return Object.keys(this.card.itemRecommendations);
+  }
+
+  onSelect(selected: string): void{
+    this.filterMode = selected;
   }
 }

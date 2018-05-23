@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Observable } from 'rxjs/index';
 import { CardService } from '../card.service';
 import { RecommendationService } from '../recommendation.service';
@@ -28,9 +28,7 @@ export class RecommendationChildColorComponent {
   constructor(private cardService: CardService,
               private recommendationService: RecommendationService) { }
 
-  ngOnInit() {
-    this.recommendationWithColors$ = this.getColorsAndRecommendations(this.card, this.gameMode);        
-  }
+  ngOnInit() {}
 
   getColors(mapColorRecommendation: { [key: string]: CardRecommendation[]; }): string[] {
     return Array.from(Object.keys(mapColorRecommendation));
@@ -57,5 +55,9 @@ export class RecommendationChildColorComponent {
     });
 
     return formattedColor;
+  }
+
+  ngOnChanges() {
+    this.recommendationWithColors$ = this.getColorsAndRecommendations(this.card, this.gameMode);
   }
 }
