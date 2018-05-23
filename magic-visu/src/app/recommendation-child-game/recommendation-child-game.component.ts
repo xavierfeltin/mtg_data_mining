@@ -9,14 +9,6 @@ import { Card } from '../models/card';
     </div>
     <app-recommendation-child-color [card]="card" [gameMode]="filterMode"></app-recommendation-child-color>
     `,
-  /*
-  template: `
-    <div>
-      <app-select-mode (select)="onSelect($event)" [selectedMode]="filterMode"></app-select-mode>
-    </div>
-    <app-recommendation-child-color [card]="card" [gameMode]="filterModegame" *ngFor="let game of this.getGameModes()"></app-recommendation-child-color>
-    `,
-  */
   styleUrls: ['./recommendation-child-game.component.css']
 })
 export class RecommendationChildGameComponent implements OnInit {
