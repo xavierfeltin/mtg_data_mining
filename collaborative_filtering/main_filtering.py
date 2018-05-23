@@ -6,11 +6,15 @@ from tqdm import tqdm
 from loader.loader_magic import MagicLoader, DeckManager
 from collaborative_filtering.item_to_item import ItemToItem, Rating
 from lsa.lsa_encoder import LSAManager
-from queue import Queue
+#from queue import Queue
 from threading import Thread
+from multiprocessing import Process, Queue, Pool, Manager
 
-from time import time
+from time import time, sleep
 import numpy as np
+
+#Global variable to manage jobs among threads
+jobs_queue = Queue()
 
 class JobData:
     '''
@@ -19,9 +23,10 @@ class JobData:
     def __init__(self,  game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities):
         self.game_mode = game_mode
         self.game_colors = game_colors
-        self.game_cards_catalog = game_card_catalog
+        self.game_card_catalog = game_card_catalog
         self.game_deck_database = game_deck_database
         self.cards_content_similarities = cards_content_similarities
+        #self.results_queue = results_queue
 
 def encoding_magic_card(card_loader):
     hash_id_texts = {}
@@ -121,7 +126,7 @@ def process_content_similarities(lsa_manager, multiverseid_in_decks):
 
     return df
 
-def job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities, queue):
+def do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities, queue):
     similiraties = {}
     for color in game_colors:
         print('Start processing ' + game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ':')
@@ -136,18 +141,19 @@ def job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_con
         print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Compute similarities...')
         item_recommender.compute_similarities(deck_database)
 
-        print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Get recommendations...')
-        for id_card in tqdm(card_catalog):
+        print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Get recommendations for '+ str(len(card_catalog)) + ' cards ...')
+        for id_card in card_catalog:
             if id_card not in similiraties:
                 similiraties[id_card] = {}
 
-            #recommendations = item_recommender.get_recommendation(id_card, 5, cards_content_similarities)
+            # recommendations = item_recommender.get_recommendation(id_card, 5, cards_content_similarities)
             recommendations = get_item_recommendation(id_card, item_recommender, cards_content_similarities, 5)
 
             suggestions = []
             for id_rec, score in recommendations.items():
-                #suggestions[str(id_rec)] = {'item_similarity': round(score[0], 3), 'content_similarity': round(score[1], 3)}
-                suggestions.append({'multiverseid': int(id_rec), 'itemSimilarity': round(score[0], 3), 'contentSimilarity': round(score[1], 3)})
+                # suggestions[str(id_rec)] = {'item_similarity': round(score[0], 3), 'content_similarity': round(score[1], 3)}
+                suggestions.append({'multiverseid': int(id_rec), 'itemSimilarity': round(score[0], 3),
+                                    'contentSimilarity': round(score[1], 3)})
 
             if game_mode not in similiraties[id_card]:
                 similiraties[id_card][game_mode] = {}
@@ -159,6 +165,24 @@ def job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_con
 
         print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Done!')
     queue.put(similiraties)
+
+#def worker():
+def worker(id, jobs_queue, results_queue):
+    while True:
+        data = jobs_queue.get()
+        if data is None:
+            return 0
+
+        game_colors = data.game_colors
+        game_deck_database = data.game_deck_database
+        game_card_catalog = data.game_card_catalog
+        game_mode = data.game_mode
+        cards_content_similarities = data.cards_content_similarities
+        #queue = data.results_queue
+        queue = results_queue
+
+        do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities, queue)
+        #jobs_queue.task_done()
 
 def get_content_recommendation(multiverseid, cards_content_similarities, nb_recommendations):
     similarities = cards_content_similarities[multiverseid]
@@ -183,7 +207,7 @@ def get_item_recommendation(multiverseid, item_manager, cards_content_similariti
         item_similarities = item_manager.items_similarities.loc[multiverseid]
 
         #Remove null or negative similarities
-        item_similarities = item_similarities[item_similarities > 0].dropna()
+        item_similarities = item_similarities[item_similarities > 0.0].dropna()
         content_similarities = cards_content_similarities[multiverseid]
 
         similarities = pd.DataFrame(columns=['card_id','item_similarity','content_similarity'])
@@ -200,6 +224,68 @@ def get_item_recommendation(multiverseid, item_manager, cards_content_similariti
             sim = similarities.iloc[i]
             recommendations[similarities.index[i]] = [sim['item_similarity'],sim['content_similarity']]
         return recommendations
+
+def process_recommendations(decks_by_mode, cards_content_similarities):
+    '''
+    Producer / Consumer model for multithreading
+    :param: hash of decks grouped by game mode
+    :return: queue with the results
+    '''
+
+    #results_queue = Queue()
+    deck_series = []
+    for mode in decks_by_mode.keys():
+        deck_loader = decks_by_mode[mode]
+        deck_database = deck_loader.grouped_decks
+        card_catalog = deck_loader.grouped_cards
+
+        print('mode: ' + mode)
+        for color in deck_loader.grouped_decks.keys():
+            print('  - ' + str(MagicLoader.get_json_color(color)) + ': ' + str(len(deck_loader.grouped_decks[color])))
+            deck_series.append(JobData(mode, [color], card_catalog, deck_database, cards_content_similarities))
+
+    threads = []
+    number_wokers = 4
+    manager = Manager()
+    pool = Pool(processes=number_wokers)
+    jobs_queue = manager.Queue()
+    results_queue = manager.Queue()
+
+    for item in deck_series:
+        jobs_queue.put(item)
+
+    # stop workers
+    for i in range(number_wokers):
+        jobs_queue.put(None)
+
+    for i in range(number_wokers):
+        results = pool.apply_async(worker, (i, jobs_queue, results_queue))
+
+    pool.close()
+    pool.join()
+
+    '''
+    for i in range(number_wokers):
+        #t = Thread(target=worker) #share jobs_queue by common memory space
+        t = Process(target=worker, args=(jobs_queue,))
+        t.start()
+        threads.append(t)
+
+    for item in deck_series:
+        jobs_queue.put(item)
+
+    # block until all tasks are done
+    #jobs_queue.join()
+
+    # stop workers
+    for i in range(number_wokers):
+        jobs_queue.put(None)
+
+    for t in threads:
+        t.join()
+    '''
+
+    return results_queue
 
 def test_multi_thread():
     start= time()
@@ -235,8 +321,10 @@ def test_multi_thread():
     lsa_manager = encoding_magic_card_subsets(cards_in_decks)
 
     cards_content_similarities = process_content_similarities(lsa_manager, list_multiverseid_in_decks)
+    results_queue = process_recommendations(decks, cards_content_similarities)
 
-    queue = Queue()
+    '''
+    queue_results = Queue()
     thread_pull = []
     for mode in decks.keys():
         deck_loader = decks[mode]
@@ -252,7 +340,7 @@ def test_multi_thread():
         thread_ = Thread(
             target=job,
             name="Thread1",
-            args=[mode, game_colors, card_catalog, deck_database, cards_content_similarities, queue],
+            args=[mode, game_colors, card_catalog, deck_database, cards_content_similarities, queue_results],
         )
         thread_pull.append(thread_)
 
@@ -261,14 +349,15 @@ def test_multi_thread():
 
     for thread_ in thread_pull:
         thread_.join()
+    '''
 
     print('End processing ratings and similarities')
     print('Consolidate results')
 
     similiraties = {}
     #for game_similarity in tqdm(iter(queue.get, None)):
-    while not queue.empty():
-        game_similarity = queue.get()
+    while not results_queue.empty():
+        game_similarity = results_queue.get()
         for card in game_similarity.keys():
             key_card = str(card)
             if key_card not in similiraties:

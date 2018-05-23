@@ -14,12 +14,12 @@ class Card:
     JSON_RED = 'R'
     JSON_GREEN = 'G'
 
-    STRING_WHITE = 'white'
-    STRING_BLUE = 'blue'
-    STRING_BLACK = 'black'
-    STRING_RED = 'red'
-    STRING_GREEN = 'green'
-    STRING_NO_COLOR = 'no_color'
+    STRING_WHITE = 'White'
+    STRING_BLUE = 'Blue'
+    STRING_BLACK = 'Black'
+    STRING_RED = 'Red'
+    STRING_GREEN = 'Green'
+    STRING_NO_COLOR = 'No_Color'
 
     CODE_WHITE = 1
     CODE_BLUE = 2
