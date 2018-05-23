@@ -5,8 +5,9 @@ import { TypeService } from '../type.service';
 
 @Component({
   selector: 'app-select-types',
-  template: `Type:
-  <select name="color_selection" size="1" (change)="onSelect($event.target.value)">
+  template: `
+  <label for="type_selection"> Type: <label>
+  <select id="type_selection" name="type_selection" size="1" (change)="onSelect($event.target.value)">
     <option *ngFor="let type of types$ | async" value={{type.name}} [selected]="type.name === selectedType">{{type.name}}</option>
   </select>
   `,

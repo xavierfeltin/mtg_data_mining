@@ -5,8 +5,9 @@ import { Mode } from '../models/mode';
 
 @Component({
   selector: 'app-select-mode',
-  template: ` Mode:
-    <select name="mode_selection" size="1" (change)="onSelect($event.target.value)">
+  template: `
+    <label for="mode_selection"> Mode: <label>
+    <select id="mode_selection" name="mode_selection" size="1" (change)="onSelect($event.target.value)">
       <option *ngFor="let mode of mode$ | async" value={{mode.name}} [selected]="mode.name === selectedMode">{{mode.name}}</option>
     </select>
   `,

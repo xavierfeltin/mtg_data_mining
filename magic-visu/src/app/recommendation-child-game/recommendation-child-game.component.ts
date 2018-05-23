@@ -5,6 +5,7 @@ import { Card } from '../models/card';
   selector: 'app-recommendation-child-game',
   template: `
     <div>
+      <h2>Items Recommendations:</h2>
       <app-select-mode (select)="onSelect($event)" [selectedMode]="filterMode"></app-select-mode>
     </div>
     <app-recommendation-child-color [card]="card" [gameMode]="filterMode"></app-recommendation-child-color>
