@@ -8,11 +8,6 @@
     color: black;   
 }
 
-.information {
-    color: black;
-    font-style: italic;    
-}
-
 .cards-grid {
     display: flex;
     flex-wrap: wrap;

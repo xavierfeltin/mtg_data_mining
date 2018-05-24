@@ -50,27 +50,33 @@ function compareBy(prop: keyof Card): (a: Card, b: Card) => number {
   };
 }
 
-export function filterColorsTypesFn(card: Card, filterColors, filterTypes): boolean {
-  let keepOnColor = true;
-  if (filterColors.length > 0) {
-    keepOnColor = false;
-    for (const color of filterColors) {
-      if (card.colors.includes(color)) {
-        keepOnColor = true;
-        break;
+export function filterColorsTypesNameFn(card: Card, filterColors: string[], filterTypes: string[], filterName: string): boolean {
+  if (filterName === '') {
+    let keepOnColor = true;  
+    if (filterColors.length > 0) {
+      keepOnColor = false;
+      for (const color of filterColors) {
+        if (card.colors.includes(color)) {
+          keepOnColor = true;
+          break;
+        }
       }
     }
-  }
 
-  let keepOnType = true;
-  if (filterTypes.length > 0) {
-    keepOnType = false;
-    for (const type of filterTypes) {
-      if (card.types.includes(type)) {
-        keepOnType = true;
-        break;
+    let keepOnType = true;
+    if (filterTypes.length > 0) {
+      keepOnType = false;
+      for (const type of filterTypes) {
+        if (card.types.includes(type)) {
+          keepOnType = true;
+          break;
+        }
       }
     }
+    return keepOnColor && keepOnType;
   }
-  return keepOnColor && keepOnType;
+  else {
+    const regExp = new RegExp(filterName, 'gi');
+    return card.name.search(regExp) != -1;
+  }
 }

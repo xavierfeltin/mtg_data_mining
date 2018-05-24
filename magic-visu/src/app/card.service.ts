@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
-import { compareCardsFn, filterColorsTypesFn } from './card.utils';
+import { compareCardsFn, filterColorsTypesNameFn } from './card.utils';
 import { Card } from './models/card';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class CardService {
 
   constructor(private http: HttpClient) { }
 
-  getCards(filterColors: string[] = [], filterTypes: string[] = []): Observable<Card[]> {
+  getCards(filterColors: string[] = [], filterTypes: string[] = [], filterName: string = ''): Observable<Card[]> {
     //return of(CARDS);
     //return this.http.get<Card[]>('/assets/db_similarities_small.json');
     if (!this._cards) {
@@ -26,7 +26,7 @@ export class CardService {
       );
     }
     return this._cards.pipe(
-      map(cards => cards.filter(card => filterColorsTypesFn(card, filterColors, filterTypes))),
+      map(cards => cards.filter(card => filterColorsTypesNameFn(card, filterColors, filterTypes, filterName))),
     );
   }
 

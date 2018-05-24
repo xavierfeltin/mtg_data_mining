@@ -21,13 +21,24 @@ import { Card } from '../models/card';
 export class CardsviewComponent implements OnChanges {
   @Input() filterColor: string;
   @Input() filterType: string;
+  @Input() filterName: string;
   cards$: Observable<Card[]>;
   p: number = 1; //initializing p to one
 
   constructor(private cardService: CardService) {
   }
 
-  ngOnChanges() {
-    this.cards$ = this.cardService.getCards([this.filterColor],[this.filterType]);
+  ngOnChanges() {    
+    let colors = [this.filterColor];   
+    if (this.filterColor === 'All Colors') {
+      colors = []
+    }
+
+    let types = [this.filterType];   
+    if (this.filterType === 'All Types') {
+      types = []
+    }
+
+    this.cards$ = this.cardService.getCards(colors, types, this.filterName);
   }
 }

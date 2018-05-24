@@ -11,6 +11,6 @@ export class TypeService {
   constructor() { }
 
   getTypes(): Observable<Type[]>{
-    return of(TYPES);
+    return of([{name: 'All Types'}, ...TYPES]);
   }
 }

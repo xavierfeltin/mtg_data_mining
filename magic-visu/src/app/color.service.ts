@@ -11,6 +11,6 @@ export class ColorService {
   constructor() { }
 
   getColors(): Observable<Color[]>{
-    return of(COLORS);
+    return of([{name: 'All Colors'}, ...COLORS]);
   }
 }

@@ -28,7 +28,6 @@ export class RecommendationChildGameComponent implements OnInit {
   }
 
   onSelect(selected: string): void{
-    console.log(selected);
     this.filterMode = selected;
   }
 
