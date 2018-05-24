@@ -10,11 +10,13 @@ import { CardRecommendation } from '../models/card-recommendation';
   template: `
     <div *ngFor="let color of getColors(this.recommendationWithColors$ | async) ">
       <h3>{{formatColor(color)}}</h3>
+      <div class="cards-color">
       <app-recommendationview *ngFor="let recommendation of getRecommendations(card, gameMode, color) | async"
         [recommendation]="recommendation"
         [card]="getCardOf(recommendation) | async"
         class="cards"
       ></app-recommendationview>
+      </div>
     </div>`,
     styleUrls: ['./recommendation-child-color.component.css'],
 })

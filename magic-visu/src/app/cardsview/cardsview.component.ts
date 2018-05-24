@@ -6,10 +6,15 @@ import { Card } from '../models/card';
 @Component({
   selector: 'app-cardsview',
   template: `
-    <app-cardview *ngFor="let card of cards$ | async | paginate: { itemsPerPage: 10, currentPage: p }; let i = index" 
+    <ng-container *ngIf="cards$ | async as cards; else loading">
+    <app-cardview *ngFor="let card of cards$ | async | paginate: { itemsPerPage: 12, currentPage: p }; let i = index" 
       [card]="card" class="cards">
     </app-cardview>
-    <pagination-controls (pageChange)="p = $event"></pagination-controls>
+    <pagination-controls (pageChange)="p = $event"></pagination-controls>    
+    </ng-container>
+    <ng-template #loading>      
+      <app-spinner></app-spinner>
+    </ng-template>
   `,
   styleUrls: ['./cardsview.component.css']
 })

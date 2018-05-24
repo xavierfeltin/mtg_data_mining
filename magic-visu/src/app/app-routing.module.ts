@@ -4,9 +4,9 @@ import { RecommendationComponent }  from './recommendation/recommendation.compon
 import { CardsindexComponent } from './cardsindex/cardsindex.component';
 
 const routes: Routes = [
-  { path: 'cards', component: CardsindexComponent },
+  { path: '', component: CardsindexComponent },
   { path: 'recommendation/:multiverseid', component: RecommendationComponent },
-  { path: '', redirectTo: '/cards', pathMatch: 'full' }
+  //{ path: '', redirectTo: '/cards', pathMatch: 'full' }
 ];
 
 @NgModule({

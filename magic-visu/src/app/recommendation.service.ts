@@ -18,8 +18,7 @@ export class RecommendationService {
       const byColor: { [key: string]: CardRecommendation[] } = Object.keys(byMode).sort(compareColorsAsKey).reduce(
         (acc, color) => ({ ...acc, [color]: card.itemRecommendations[mode][color] }),
         {},
-      );
-
+      );      
       return of(byColor);
     }
     else {

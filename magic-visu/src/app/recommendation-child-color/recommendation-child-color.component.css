@@ -1,3 +1,13 @@
 .cards {
     margin-right: 0.5em;
 }
+
+h3 {
+    color: darkslateblue;
+    text-decoration: underline;
+}
+
+.cards-color {
+    display: flex;
+    flex-wrap: wrap;
+}

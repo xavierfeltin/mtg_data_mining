@@ -16,6 +16,7 @@ import { SelectColorsComponent } from './select-colors/select-colors.component';
 import { CardsindexComponent } from './cardsindex/cardsindex.component';
 import { SelectTypesComponent } from './select-types/select-types.component';
 import { SelectModeComponent } from './select-mode/select-mode.component';
+import { SpinnerComponent } from './spinner/spinner.component';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { SelectModeComponent } from './select-mode/select-mode.component';
     SelectColorsComponent,
     CardsindexComponent,
     SelectTypesComponent,
-    SelectModeComponent
+    SelectModeComponent,
+    SpinnerComponent
   ],
   imports: [
     BrowserModule,

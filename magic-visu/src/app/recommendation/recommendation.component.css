@@ -1,8 +1,19 @@
 .cards {
     margin-right: 0.5em;
 }
+
 .nav-button{
     margin-top: 0.5em;
     margin-right: 0.5em;
     color: black;   
+}
+
+.information {
+    color: black;
+    font-style: italic;    
+}
+
+.cards-grid {
+    display: flex;
+    flex-wrap: wrap;
 }

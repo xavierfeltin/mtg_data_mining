@@ -1,3 +1,12 @@
 a {
     text-decoration: none;
 }
+
+body {
+    background-color: lightblue;
+}
+
+.information {
+    color: black;
+    font-style: italic;    
+}

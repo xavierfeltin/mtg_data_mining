@@ -1,8 +1,10 @@
 <ng-container *ngIf="card$ | async as card">
-  <h2>Recommendations for:</h2>
+  <h2>Recommendations for <b>{{card.name}}</b>:</h2>
   <app-cardview [card]="card"></app-cardview>
   <h2>Content Recommendations:</h2>
-  <div>
+  <p class="information">Recommendations are cards sharing similar textual information with the selected card (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Latent-Semantic-Analysis" target="_blank">more information</a>)
+  <br/> A score of 1 means the two cards have the same content </p>
+  <div class="cards-grid">
     <app-recommendationview
       *ngFor="let recommendation of card.contentRecommendations"
       [recommendation]="recommendation" class="cards"

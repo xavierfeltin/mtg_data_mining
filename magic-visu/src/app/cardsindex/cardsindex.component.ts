@@ -13,7 +13,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./cardsindex.component.css']
 })
 export class CardsindexComponent implements OnInit {
-  filterColor: string = 'blue';
+  filterColor: string = 'Blue';
   filterType: string = 'Creature';
 
   constructor() { }
