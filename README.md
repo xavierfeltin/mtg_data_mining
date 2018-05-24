@@ -10,11 +10,13 @@ At the moment, the approaches integrated into this project are :
 
 Each approach has its own folder with the associated source code and a main file. The project does not furnish a well packaged library.
 
-The code is developped in Python 3.
+Important links:
+  - **The wiki of this project**: https://github.com/xavierfeltin/mtg_data_mining/wiki
+  - **The proof of concept**: https://xavierfeltin.github.io/mtg_data_mining/
 
-The wiki of this project: https://github.com/xavierfeltin/mtg_data_mining/wiki
-
-The proof of concept: https://xavierfeltin.github.io/mtg_data_mining/
+Technical information:
+  - The scripts used to generate the recommendations is developped in Python 3.6
+  - The proof of concept is developped in Angular 6
 
 Thanks to [MTGDecks](http://mtgdecks.net) to provide sample of decks data for this project.
 
