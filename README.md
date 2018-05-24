@@ -24,5 +24,6 @@ Special thanks to:
   - [Guilhem Brouat](https://www.linkedin.com/in/guilhem-brouat-b09148a5/) for his mentoring on Angular
   - [Raphael Deau](https://www.linkedin.com/in/rapha%C3%ABl-deau-015a7712a/) for his feedbacks on Python
 
-This project is under MIT License
+The web application used as proof of concept is compliant with the Fan Content policy of Wizards.
+The project is under MIT License
 Copyright (c) 2018 Xavier FOLCH
