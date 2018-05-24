@@ -14,5 +14,13 @@ The code is developped in Python 3.
 
 The wiki detailing the different approaches and how they are applied to Magic the Gathering can be find here: https://github.com/xavierfeltin/mtg_data_mining/wiki
 
+The proof of concept can be find here: https://xavierfeltin.github.io/mtg_data_mining/
+
+Thanks to [MTGDecks](http://mtgdecks.net) to provide sample of decks data for this project.
+
+Special thanks to: 
+  - [Guilhem Brouat](https://www.linkedin.com/in/guilhem-brouat-b09148a5/) for his mentoring on Angular
+  - [Raphael Deau](https://www.linkedin.com/in/rapha%C3%ABl-deau-015a7712a/) for his feedbacks on Python
+
 This project is under MIT License
 Copyright (c) 2018 Xavier FOLCH
