@@ -25,5 +25,6 @@ Special thanks to:
   - [Raphael Deau](https://www.linkedin.com/in/rapha%C3%ABl-deau-015a7712a/) for his feedbacks on Python
 
 The web application used as proof of concept is compliant with the Fan Content policy of Wizards.
+
 The project is under MIT License
 Copyright (c) 2018 Xavier FOLCH
