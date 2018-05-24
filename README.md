@@ -12,9 +12,9 @@ Each approach has its own folder with the associated source code and a main file
 
 The code is developped in Python 3.
 
-The wiki detailing the different approaches and how they are applied to Magic the Gathering can be find here: https://github.com/xavierfeltin/mtg_data_mining/wiki
+The wiki of this project: https://github.com/xavierfeltin/mtg_data_mining/wiki
 
-The proof of concept can be find here: https://xavierfeltin.github.io/mtg_data_mining/
+The proof of concept: https://xavierfeltin.github.io/mtg_data_mining/
 
 Thanks to [MTGDecks](http://mtgdecks.net) to provide sample of decks data for this project.
 
