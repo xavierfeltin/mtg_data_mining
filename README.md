@@ -23,7 +23,8 @@ Thanks to [MTGDecks](http://mtgdecks.net) to provide sample of decks data for th
 Special thanks to: 
   - [Guilhem Brouat](https://www.linkedin.com/in/guilhem-brouat-b09148a5/) for his mentoring on Angular
   - [Raphael Deau](https://www.linkedin.com/in/rapha%C3%ABl-deau-015a7712a/) for his feedbacks on Python
-
+  - [Julien Zanon](https://www.linkedin.com/in/julien-zanon/) for his feedbacks on the project's content and the POC's UI
+  
 The web application used as proof of concept is compliant with the Fan Content policy of Wizards.
 
 The project is under MIT License
