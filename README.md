@@ -10,9 +10,22 @@ At the moment, the approaches integrated into this project are :
 
 Each approach has its own folder with the associated source code and a main file. The project does not furnish a well packaged library.
 
-The code is developped in Python 3.
+Important links:
+  - **The wiki of this project**: https://github.com/xavierfeltin/mtg_data_mining/wiki
+  - **The proof of concept**: https://xavierfeltin.github.io/mtg_data_mining/
 
-The wiki detailing the different approaches and how they are applied to Magic the Gathering can be find here: https://github.com/xavierfeltin/mtg_data_mining/wiki
+Technical information:
+  - The scripts used to generate the recommendations is developped in Python 3.6
+  - The proof of concept is developped in Angular 6
 
-This project is under MIT License
+Thanks to [MTGDecks](http://mtgdecks.net) to provide sample of decks data for this project.
+
+Special thanks to: 
+  - [Guilhem Brouat](https://www.linkedin.com/in/guilhem-brouat-b09148a5/) for his mentoring on Angular
+  - [Raphael Deau](https://www.linkedin.com/in/rapha%C3%ABl-deau-015a7712a/) for his feedbacks on Python
+  - [Julien Zanon](https://www.linkedin.com/in/julien-zanon/) for his feedbacks on the project's content and the POC's UI
+  
+The web application used as proof of concept is compliant with the Fan Content policy of Wizards.
+
+The project is under MIT License
 Copyright (c) 2018 Xavier FOLCH
