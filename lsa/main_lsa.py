@@ -6,8 +6,8 @@
 
 import pandas as pd
 import json
-from loader.deck_manager import MagicLoader, DeckManager
-from lsa.lsa_encoder import DataCleaner, LSAEncoder, LSAManager
+from loader.deck_manager import MagicLoader
+from lsa.lsa_encoder import LSAManager
 
 def encoding_magic_card(card_loader):
     lsa_manager = LSAManager(card_loader.hash_id_texts)

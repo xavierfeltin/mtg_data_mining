@@ -1,0 +1,9 @@
+scipy==1.0.0
+numpy==1.14.0
+tqdm==4.11.2
+pandas==0.19.2
+Unidecode==1.0.22
+nltk==3.2.5
+scikit_learn==0.19.1
+simplejson==3.14.0
+matplotlib==2.1.2
