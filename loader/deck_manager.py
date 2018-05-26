@@ -78,18 +78,19 @@ class DeckManager:
                                 file_cards.append(card)
                                 deck.append(card)
 
-                        self.decks.append(deck) #remove duplicates
+                        if len(deck) > 0:
+                            self.decks.append(deck) #remove duplicates
 
-                        if color_identity & ~MagicLoader.CODE_NO_COLOR != 0 and color_identity & MagicLoader.CODE_NO_COLOR != 0:
-                            # No color stay true if all cards are no color
-                            color_identity = color_identity ^ MagicLoader.CODE_NO_COLOR
+                            if color_identity & ~MagicLoader.CODE_NO_COLOR != 0 and color_identity & MagicLoader.CODE_NO_COLOR != 0:
+                                # No color stay true if all cards are no color
+                                color_identity = color_identity ^ MagicLoader.CODE_NO_COLOR
 
-                        if color_identity not in self.grouped_decks:
-                            self.grouped_decks[color_identity] = []
-                            self.grouped_cards[color_identity] = set([])
+                            if color_identity not in self.grouped_decks:
+                                self.grouped_decks[color_identity] = []
+                                self.grouped_cards[color_identity] = set([])
 
-                        self.grouped_decks[color_identity].append(deck)
-                        self.grouped_cards[color_identity] = self.grouped_cards[color_identity].union(set(deck))
+                            self.grouped_decks[color_identity].append(deck)
+                            self.grouped_cards[color_identity] = self.grouped_cards[color_identity].union(set(deck))
 
                 self.cards = set.union(self.cards, set(file_cards))
 

@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-from loader.loader_magic import MagicLoader, DeckManager
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
+from loader.deck_manager import MagicLoader, DeckManager
 from lsa.lsa_encoder import DataCleaner, LSAEncoder
 from association_rules.apriori_analyzer import APrioriAnalyzer
 from association_rules.fpgrowth_analyzer import FPGrowthAnalyzer

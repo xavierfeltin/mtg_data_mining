@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
 import pandas as pd
 import json
-from loader.loader_magic import MagicLoader, DeckManager
+from loader.deck_manager import MagicLoader, DeckManager
 from lsa.lsa_encoder import DataCleaner, LSAEncoder, LSAManager
 
 def encoding_magic_card(card_loader):

@@ -19,7 +19,7 @@ class Card:
     STRING_BLACK = 'Black'
     STRING_RED = 'Red'
     STRING_GREEN = 'Green'
-    STRING_NO_COLOR = 'No_Color'
+    STRING_NO_COLOR = 'No color'
 
     CODE_WHITE = 1
     CODE_BLUE = 2
@@ -40,20 +40,23 @@ class Card:
 
     def get_color_code(self):
         value = 0
-        for color in self.colors :
-            color = color.upper()
-            if color == Card.JSON_BLACK:
-                value = value | Card.CODE_BLACK
-            elif color == Card.JSON_BLUE:
-                value = value | Card.CODE_BLUE
-            elif color == Card.JSON_WHITE:
-                value = value | Card.CODE_WHITE
-            elif color == Card.JSON_RED:
-                value = value | Card.CODE_RED
-            elif color == Card.JSON_GREEN:
-                value = value | Card.CODE_GREEN
-            else:
-                value = value | Card.CODE_NO_COLOR
+        if len(self.colors) == 0:
+            value = Card.CODE_NO_COLOR
+        else:
+            for color in self.colors :
+                color = color.upper()
+                if color == Card.JSON_BLACK:
+                    value = value | Card.CODE_BLACK
+                elif color == Card.JSON_BLUE:
+                    value = value | Card.CODE_BLUE
+                elif color == Card.JSON_WHITE:
+                    value = value | Card.CODE_WHITE
+                elif color == Card.JSON_RED:
+                    value = value | Card.CODE_RED
+                elif color == Card.JSON_GREEN:
+                    value = value | Card.CODE_GREEN
+                else:
+                    value = value | Card.CODE_NO_COLOR
         return value
 
     def get_colors_names(self):

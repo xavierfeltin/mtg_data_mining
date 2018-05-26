@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
 import os
 import json
 import pandas as pd
 from tqdm import tqdm
-from loader.loader_magic import MagicLoader, DeckManager
+from loader.deck_manager import MagicLoader, DeckManager
 from collaborative_filtering.item_to_item import ItemToItem, Rating
 from lsa.lsa_encoder import LSAManager
-#from queue import Queue
-from threading import Thread
 from multiprocessing import Process, Queue, Pool, Manager
-
 from time import time, sleep
 import numpy as np
-
-#Global variable to manage jobs among threads
-jobs_queue = Queue()
 
 class JobData:
     '''
@@ -26,7 +25,6 @@ class JobData:
         self.game_card_catalog = game_card_catalog
         self.game_deck_database = game_deck_database
         self.cards_content_similarities = cards_content_similarities
-        #self.results_queue = results_queue
 
 def encoding_magic_card(card_loader):
     hash_id_texts = {}
@@ -67,45 +65,6 @@ def load_decks_database(card_loader):
 
     return deck_loader
 
-def global_recommandation():
-    print('Load magic environment')
-    card_loader = load_magic_environment()
-    deck_loader = load_decks_database(card_loader)
-
-    print('Convert card text into vector')
-    lsa_manager = encoding_magic_card(card_loader)
-
-    catalog = sorted(list(deck_loader.cards))
-    item_recommender = ItemToItem(list(deck_loader.cards))
-    print('Get ratings')
-    item_recommender.load_ratings(deck_loader.decks)
-    print('Compute similarities')
-    item_recommender.compute_similarities(deck_loader.decks)
-
-    print('Get recommendations for 16622')
-    recommendations = item_recommender.get_recommendation(16622, 10, lsa_manager)
-    print('Recommendation for ' + str(card_loader.hash_id_name[16622]) + ':')  # 16622, 620
-    for id_card, score in recommendations.items():
-        print('   - ' + str(card_loader.hash_id_name[id_card]) + ': ' + str(score))
-
-    print('Get recommendations for 620')
-    recommendations = item_recommender.get_recommendation(620, 10, lsa_manager)
-    print('Recommendation for ' + str(card_loader.hash_id_name[620]) + ':')  # 16622, 620
-    for id_card, score in recommendations.items():
-        print('   - ' + str(card_loader.hash_id_name[id_card]) + ': ' + str(score))
-
-    similiraties = {}
-    for id_card in catalog:
-        recommendations = item_recommender.get_recommendation(id_card, 5, lsa_manager)
-        suggestions = {}
-        for id_rec, score in recommendations.items():
-            suggestions[card_loader.hash_id_name[id_rec]] = {'item_similarity': score[0],
-                                                             'content_similarity': score[1]}
-        similiraties[card_loader.hash_id_name[id_card]] = suggestions
-
-    with open('./../similarities.json', 'w') as f:
-        json.dump(similiraties, f)
-
 def process_content_similarities(lsa_manager, multiverseid_in_decks):
     '''
     Compute the similarities for all the cards present in decks to avoid unecessary computing when
@@ -127,6 +86,16 @@ def process_content_similarities(lsa_manager, multiverseid_in_decks):
     return df
 
 def do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities, queue):
+    """
+    Process item to itemm recommendations for all the cards in the game deck database for the colors set in argument
+    :param game_mode: mode from which the decks are coming from
+    :param game_colors: colors to process in the deck database
+    :param game_card_catalog: list of cards in all the decks
+    :param game_deck_database: list of decks
+    :param cards_content_similarities: matrix containing the similarities by text for all the cards
+    :param queue: result queue used to send back the results
+    :return: none
+    """
     similiraties = {}
     for color in game_colors:
         print('Start processing ' + game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ':')
@@ -151,7 +120,6 @@ def do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_
 
             suggestions = []
             for id_rec, score in recommendations.items():
-                # suggestions[str(id_rec)] = {'item_similarity': round(score[0], 3), 'content_similarity': round(score[1], 3)}
                 suggestions.append({'multiverseid': int(id_rec), 'itemSimilarity': round(score[0], 3),
                                     'contentSimilarity': round(score[1], 3)})
 
@@ -162,11 +130,9 @@ def do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_
                 similiraties[id_card][game_mode][color] = None
 
             similiraties[id_card][game_mode][color] = suggestions
-
         print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Done!')
     queue.put(similiraties)
 
-#def worker():
 def worker(id, jobs_queue, results_queue):
     while True:
         data = jobs_queue.get()
@@ -178,11 +144,9 @@ def worker(id, jobs_queue, results_queue):
         game_card_catalog = data.game_card_catalog
         game_mode = data.game_mode
         cards_content_similarities = data.cards_content_similarities
-        #queue = data.results_queue
         queue = results_queue
 
         do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_content_similarities, queue)
-        #jobs_queue.task_done()
 
 def get_content_recommendation(multiverseid, cards_content_similarities, nb_recommendations):
     similarities = cards_content_similarities[multiverseid]
@@ -232,7 +196,6 @@ def process_recommendations(decks_by_mode, cards_content_similarities):
     :return: queue with the results
     '''
 
-    #results_queue = Queue()
     deck_series = []
     for mode in decks_by_mode.keys():
         deck_loader = decks_by_mode[mode]
@@ -264,37 +227,13 @@ def process_recommendations(decks_by_mode, cards_content_similarities):
     pool.close()
     pool.join()
 
-    '''
-    for i in range(number_wokers):
-        #t = Thread(target=worker) #share jobs_queue by common memory space
-        t = Process(target=worker, args=(jobs_queue,))
-        t.start()
-        threads.append(t)
-
-    for item in deck_series:
-        jobs_queue.put(item)
-
-    # block until all tasks are done
-    #jobs_queue.join()
-
-    # stop workers
-    for i in range(number_wokers):
-        jobs_queue.put(None)
-
-    for t in threads:
-        t.join()
-    '''
-
     return results_queue
 
-def test_multi_thread():
+def compute_similarities_multi_thread():
     start= time()
 
     print('Load magic environment')
     card_loader = load_magic_environment()
-
-    #print('Convert all magic cards text into vector')
-    #lsa_manager = encoding_magic_card(card_loader)
 
     files = os.listdir("./../data/decks_mtgdeck_net_extended")  # returns list
     paths = []
@@ -312,6 +251,11 @@ def test_multi_thread():
                 multiverseid_in_decks = multiverseid_in_decks.union(deck_loader.cards)
                 decks[mode] = deck_loader
 
+        if mode in decks:
+            print('Mode ' + str(mode) + ':')
+            for color, list_decks in decks[mode].grouped_decks.items():
+                print(' - ' + MagicLoader.get_json_color(color) + ': ' + str(len(list_decks)) + ' decks')
+
     # In the context of this study only:
     # To be sure that all the cards in the final recommendation json will have similarities score
     # On real website, procede with all Magic Cards to be more exhaustive
@@ -322,34 +266,6 @@ def test_multi_thread():
 
     cards_content_similarities = process_content_similarities(lsa_manager, list_multiverseid_in_decks)
     results_queue = process_recommendations(decks, cards_content_similarities)
-
-    '''
-    queue_results = Queue()
-    thread_pull = []
-    for mode in decks.keys():
-        deck_loader = decks[mode]
-        deck_database = deck_loader.grouped_decks
-        card_catalog = deck_loader.grouped_cards
-
-        print('mode: ' + mode)
-        for color in deck_loader.grouped_decks.keys():
-            print('  - ' + str(MagicLoader.get_json_color(color)) + ': ' + str(len(deck_loader.grouped_decks[color])))
-
-        game_colors = deck_loader.grouped_decks.keys()
-
-        thread_ = Thread(
-            target=job,
-            name="Thread1",
-            args=[mode, game_colors, card_catalog, deck_database, cards_content_similarities, queue_results],
-        )
-        thread_pull.append(thread_)
-
-    for thread_ in thread_pull:
-        thread_.start()
-
-    for thread_ in thread_pull:
-        thread_.join()
-    '''
 
     print('End processing ratings and similarities')
     print('Consolidate results')
@@ -391,4 +307,4 @@ def test_multi_thread():
     print('required time = ' + str((time() - start)) + ' seconds')
 
 if __name__ == "__main__":
-    test_multi_thread()
+    compute_similarities_multi_thread()

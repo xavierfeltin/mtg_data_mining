@@ -17,7 +17,6 @@ import math
 from tqdm import tqdm
 
 
-
 class Rating:
     def __init__(self, first_value, db_size = 0):
         self.first_value = first_value

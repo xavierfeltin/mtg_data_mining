@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+#
+# MIT License
+# Copyright (c) 2018 Xavier FOLCH
+#
+
 import os
-import numpy as np
 import matplotlib.pyplot as plt
-from loader.loader_magic import MagicLoader, DeckManager
+from loader.deck_manager import MagicLoader, DeckManager
 
 def load_magic_environment():
     print('Load deck')
@@ -26,7 +31,6 @@ def load_decks_database(card_loader):
         paths.append('./../data/decks_mtgdeck_net_extended/' + file)
 
     deck_loader.load_from_mtgdeck_csv(paths, card_loader)
-    deck_loader.extract_lands(card_loader.lands, card_loader)
     deck_loader.sort_decks()
 
     return deck_loader

@@ -61,7 +61,7 @@ class MagicLoader:
     STRING_BLACK = 'black'
     STRING_RED = 'red'
     STRING_GREEN = 'green'
-    STRING_NO_COLOR = 'no_color'
+    STRING_NO_COLOR = 'no color'
 
     COLORS = [CODE_WHITE, CODE_BLUE, CODE_BLACK, CODE_RED, CODE_GREEN, CODE_NO_COLOR]
     HASH_COLOR_CODE_STRING = {CODE_WHITE: STRING_WHITE, CODE_BLUE: STRING_BLUE, CODE_BLACK: STRING_BLACK, CODE_RED: STRING_RED, CODE_GREEN: STRING_GREEN, CODE_NO_COLOR: STRING_NO_COLOR}
@@ -82,6 +82,11 @@ class MagicLoader:
         self.cards_name = {}
 
     def load(self, path):
+        """
+        Load cards from AllCards-x-json from MTGJson
+        :param path: path to json file
+        :return: none
+        """
         read_json = simplejson.load(open(path, "r", encoding='UTF-8'))
 
         for internal_id, card in enumerate(read_json):
@@ -107,6 +112,11 @@ class MagicLoader:
         self.generate_dual_cards()
 
     def load_from_set(self, path):
+        """
+        Load cards from AllSets-x-json from MTGJson
+        :param path: path to json file
+        :return: none
+        """
         read_json = simplejson.load(open(path, "r", encoding='UTF-8'))
         set_lands = set()
         for extension_name in read_json:
@@ -142,6 +152,13 @@ class MagicLoader:
         self.add_dual_cards()
 
     def set_color_identities(self, read_json, internal_id, card):
+        """
+        Encode colors read into json into a binary format into self.hash_id_color
+        :param read_json: json data
+        :param internal_id: id of the card used as key for self.hash_id_color
+        :param card: card value
+        :return: none
+        """
         color_identity = self.get_field(read_json[card], 'colorIdentity')
         value = 0
 
@@ -248,6 +265,11 @@ class MagicLoader:
 
     @staticmethod
     def get_json_color(color_to_convert):
+        """
+        Convert color from binary format to string format
+        :param color_to_convert: binary color
+        :return: string
+        """
         color = ''
         for i, code in enumerate(MagicLoader.COLORS):
             if color_to_convert & code != 0:
