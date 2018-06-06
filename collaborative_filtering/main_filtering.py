@@ -9,10 +9,10 @@ import json
 import pandas as pd
 from tqdm import tqdm
 from loader.deck_manager import MagicLoader, DeckManager
-from collaborative_filtering.item_to_item import ItemToItem, Rating
+from collaborative_filtering.item_to_item import ItemToItem
 from lsa.lsa_encoder import LSAManager
-from multiprocessing import Process, Queue, Pool, Manager
-from time import time, sleep
+from multiprocessing import Pool, Manager
+from time import time
 import numpy as np
 
 class JobData:
@@ -108,7 +108,7 @@ def do_job(game_mode, game_colors, game_card_catalog, game_deck_database, cards_
         item_recommender.load_ratings(deck_database)
 
         print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Compute similarities...')
-        item_recommender.compute_similarities(deck_database)
+        item_recommender.compute_similarities(deck_database, ItemToItem.compute_cosine_angle_binary)
 
         print(game_mode + ' - ' + str(MagicLoader.get_json_color(color)) + ': Get recommendations for '+ str(len(card_catalog)) + ' cards ...')
         for id_card in card_catalog:
@@ -207,7 +207,6 @@ def process_recommendations(decks_by_mode, cards_content_similarities):
             print('  - ' + str(MagicLoader.get_json_color(color)) + ': ' + str(len(deck_loader.grouped_decks[color])))
             deck_series.append(JobData(mode, [color], card_catalog, deck_database, cards_content_similarities))
 
-    threads = []
     number_wokers = 4
     manager = Manager()
     pool = Pool(processes=number_wokers)
