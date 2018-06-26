@@ -19,7 +19,8 @@ from loader.magic_loader import MagicLoader
 from loader.deck_manager import DeckManager
 from collaborative_filtering.item_to_item import ItemToItem
 from topn_recommendations.models.item_based_deshpande import ItemBasedDeshpande
-from topn_recommendations.models.utils import ModelParameters, ModelResults, KeyGenerator
+from topn_recommendations.models.bpr_knn import BPRKNN
+from topn_recommendations.models.utils import ItemDeshpandeParamerers, BPRKNNParameters, ModelResults, KeyGenerator
 from lsa.lsa_encoder import LSAManager
 from stats.statistic_results import StatisticResults, ConsolidateResults
 
@@ -65,7 +66,8 @@ def encoding_magic_card_subsets(cards):
     lsa_manager.encode()
     return lsa_manager
 
-def test_model(k_neighbors,n_recommendations, decks, random_items, alpha, norm_sim, model_sim,lsa_manager):
+#def test_model(k_neighbors,n_recommendations, decks, random_items, alpha, norm_sim, model_sim,lsa_manager):
+def test_model(params):
     '''
     Build training and test sets
     Take randomly one card from each deck and then use the rest of the decks for training
@@ -83,35 +85,41 @@ def test_model(k_neighbors,n_recommendations, decks, random_items, alpha, norm_s
     training_set = deque()
     all_catalog = deque()
     testing_set = deque()
-    for i, deck in enumerate(decks):
-        rand_index = random_items[i]
-        training_deck = deck[:]
-        del training_deck[rand_index]
+    for i, deck in enumerate(params.decks):
+        rand_item = params.random_items[i]
+
+        training_deck = deck
         training_set.append(training_deck)
-        testing_set.append(deck[rand_index])
+        testing_set.append(rand_item)
         all_catalog.extend(training_deck)
     training_catalog = deque()
     training_catalog.extend(list(set(all_catalog)))
 
-    # Process red colored decks only on training set
-    modelTopN = ItemBasedDeshpande(training_catalog, training_set)
-    if model_sim == ModelParameters.MODEL_SIM_COSINE:
-        model_similarities = ItemToItem.compute_cosine_angle_binary
-    elif model_sim == ModelParameters.MODEL_SIM_COSINE_LSA:
-        model_similarities = ItemToItem.compute_cosine_angle_binary_lsa
-    elif model_sim == ModelParameters.MODEL_SIM_COSINE_ROW:
-        model_similarities = ItemToItem.compute_cosine_angle_binary_row
-    elif model_sim == ModelParameters.MODEL_SIM_COSINE_LSA_ROW:
-        model_similarities = ItemToItem.compute_cosine_angle_binary_lsa_row
-    else:
-        model_similarities = ItemToItem.compute_probability
+    if isinstance(params, ItemDeshpandeParamerers):
+        # Process red colored decks only on training set
+        modelTopN = ItemBasedDeshpande(training_catalog, training_set)
+        if params.similarity_model == ItemDeshpandeParamerers.MODEL_SIM_COSINE:
+            model_similarities = ItemToItem.compute_cosine_angle_binary
+        elif params.similarity_model== ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA:
+            model_similarities = ItemToItem.compute_cosine_angle_binary_lsa
+        elif params.similarity_model== ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW:
+            model_similarities = ItemToItem.compute_cosine_angle_binary_row
+        elif params.similarity_model== ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA_ROW:
+            model_similarities = ItemToItem.compute_cosine_angle_binary_lsa_row
+        else:
+            model_similarities = ItemToItem.compute_probability
 
-    modelTopN.build_model(k_neighbors, model_similarities, lsa_manager, alpha, normalize_similarities=norm_sim)
+        modelTopN.build_model(params.k, model_similarities, params.lsa_manager, params.alpha, normalize_similarities=params.norm_sim)
+    else:
+        modelTopN = BPRKNN(training_catalog, training_set)
+        modelTopN.build_model(params.random_items, N=params.n, lbd_I=params.lbd_I,
+                              lbd_J=params.lbd_J, learning_rate=params.learning_rate, epoch=params.epoch, batch_size=params.batch_size,
+                              decay=params.decay, nb_early_learning=params.nb_early_learning,min_leaning_rate=params.min_leaning_rate)
 
     nb_hits = 0
     arhr_score = 0
     for index, multiverseid_test in enumerate(testing_set):
-        recommendations = modelTopN.get_top_N_recommendations(training_set[index], n_recommendations)
+        recommendations = modelTopN.get_top_N_recommendations(training_set[index], params.n)
 
         if multiverseid_test in recommendations:
             position = recommendations.index.get_loc(multiverseid_test) + 1
@@ -128,14 +136,15 @@ def worker(id, jobs_queue, results_queue):
         if data is None:
             return 0
 
-        print('idRun: ' + str(data.id_run) + ', k:' + str(data.k) + ', color:'
-              + str(MagicLoader.get_json_color(data.color)) + ', nb decks: ' + str(len(data.decks)))
+        print('idRun: ' + str(data.id_run) + ', color:' + str(MagicLoader.get_json_color(data.color)) + ', nb decks: ' + str(len(data.decks)))
 
-        scores = test_model(data.k, data.n, data.decks, data.random_items, data.alpha, data.norm_sim, data.similarity_model, data.lsa_manager)
-        result = ModelResults(data.id_run, data.k, data.mode, data.color, scores)
+        scores = test_model(data)
+        #result = ModelResults(data.id_run, data.k, data.mode, data.color, scores)
+        result = ModelResults(data.id_run, data.mode, data.color, scores)
         results_queue.put(result)
 
-def process_recommendations(nb_run, k_min, k_max, n, decks, decks_random_items_run, alpha, norm_sim, model_sim, lsa_manager):
+#def process_recommendations(k, n, decks_runs, decks_random_items_run, alpha, norm_sim, model_sim, lsa_manager):
+def process_recommendations(model_parameters):
     '''
     Producer / Consumer model for multithreading
     :param: hash of decks grouped by game mode
@@ -144,12 +153,17 @@ def process_recommendations(nb_run, k_min, k_max, n, decks, decks_random_items_r
 
     tests_to_process = deque()
     for r in range(nb_runs):
-        for mode in decks:
-            for color in decks[mode]:
-                for k in range(k_min, k_max):
-                    tests_to_process.append(ModelParameters(r, k, n, decks[mode][color], decks_random_items_run[mode][color][r], mode, color, alpha, norm_sim, model_sim, lsa_manager))
+        for mode in model_parameters.decks:
+            for color in model_parameters.decks[mode]:
+                new_params = model_parameters.copy()
+                new_params.id_run = r
+                new_params.decks = model_parameters.decks[mode][color][r]
+                new_params.random_items = model_parameters.random_items[mode][color][r]
+                new_params.mode = mode
+                new_params.color = color
+                tests_to_process.append(new_params)
 
-    number_wokers = 6
+    number_wokers = 3
     manager = Manager()
     pool = Pool(processes=number_wokers)
     jobs_queue = manager.Queue()
@@ -163,7 +177,7 @@ def process_recommendations(nb_run, k_min, k_max, n, decks, decks_random_items_r
         jobs_queue.put(None)
 
     for i in range(number_wokers):
-        results = pool.apply_async(worker, (i, jobs_queue, results_queue))
+        _ = pool.apply_async(worker, (i, jobs_queue, results_queue))
 
     pool.close()
     pool.join()
@@ -233,8 +247,10 @@ def generate_excel_results(filename, nb_runs, k, statistics_HR, statistics_ARHR)
 
     workbook.close()
 
-def modelisation_multi_process(nb_run, k_min, k_max, n_recommendations, alpha, norm_sim, model_sim, studied_decks, decks_runs_random_items, lsa_manager):
-    results_queue = process_recommendations(nb_run, k_min, k_max, n_recommendations, studied_decks, decks_runs_random_items, alpha, norm_sim, model_sim, lsa_manager)
+#def modelisation_multi_process(k, n_recommendations, alpha, norm_sim, model_sim, studied_runs_decks, decks_runs_random_items, lsa_manager):
+def modelisation_multi_process(model_parameters):
+    #results_queue = process_recommendations(k, n_recommendations, studied_runs_decks, decks_runs_random_items, alpha, norm_sim, model_sim, lsa_manager)
+    results_queue = process_recommendations(model_parameters)
     results = {}
     while not results_queue.empty():
         model_score = results_queue.get()
@@ -243,14 +259,31 @@ def modelisation_multi_process(nb_run, k_min, k_max, n_recommendations, alpha, n
     return results
 
 def prepare_deck_data(decks_loader, mode, color, nb_runs):
+    '''
+    For each run, take out randomly one item from all the decks in the mode/color given in argument
+     - The separated item belong to the training set
+     - The rest of the deck belong to the testing set
+    :return:
+      - Array with Nb runs training sets (decks without an item)
+      - Array with Nb runs testing sets (randomly selected item in each deck)
+    '''
     decks_to_prepare = decks_loader[mode].grouped_decks[color]
+    runs_decks = []
     runs_random_items = []
     for i in range(nb_runs):
         random_items = []
+        decks_without_item = []
         for deck in decks_to_prepare:
-            random_items.append(randint(0, len(deck) - 1))
+            rand_index = randint(0, len(deck) - 1)
+            random_items.append(deck[rand_index])
+            deck_without_item = deck[:]
+            del deck_without_item[rand_index]
+            decks_without_item.append(deck_without_item)
+
         runs_random_items.append(random_items)
-    return decks_to_prepare, runs_random_items
+        runs_decks.append(decks_without_item)
+    #return decks_to_prepare, runs_random_items
+    return runs_decks, runs_random_items
 
 if __name__ == "__main__":
     print('Load Magic environment')
@@ -259,10 +292,10 @@ if __name__ == "__main__":
     lsa_manager = encoding_magic_card_subsets(get_cards_from_decks(decks_loader, card_loader))
 
     print('Preparing evaluations...')
-    studied_decks = {}
-    studied_decks[MagicLoader.JSON_COMMANDER] = {}
-    studied_decks[MagicLoader.JSON_LEGACY] = {}
-    studied_decks[MagicLoader.JSON_PAUPER] = {}
+    studied_runs_decks = {}
+    studied_runs_decks[MagicLoader.JSON_COMMANDER] = {}
+    studied_runs_decks[MagicLoader.JSON_LEGACY] = {}
+    studied_runs_decks[MagicLoader.JSON_PAUPER] = {}
     decks_runs_random_items = {}
     decks_runs_random_items[MagicLoader.JSON_COMMANDER] = {}
     decks_runs_random_items[MagicLoader.JSON_LEGACY] = {}
@@ -275,30 +308,31 @@ if __name__ == "__main__":
     alpha = 0.5
 
     # 1 color
-    studied_decks[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED], decks_runs_random_items[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED] = \
+    studied_runs_decks[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED], decks_runs_random_items[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED] = \
         prepare_deck_data(decks_loader, MagicLoader.JSON_COMMANDER, MagicLoader.CODE_RED, nb_runs)
-    studied_decks[MagicLoader.JSON_PAUPER][MagicLoader.CODE_RED], decks_runs_random_items[MagicLoader.JSON_PAUPER][MagicLoader.CODE_RED] = \
+
+    studied_runs_decks[MagicLoader.JSON_PAUPER][MagicLoader.CODE_RED], decks_runs_random_items[MagicLoader.JSON_PAUPER][MagicLoader.CODE_RED] = \
         prepare_deck_data(decks_loader, MagicLoader.JSON_PAUPER, MagicLoader.CODE_RED, nb_runs)
 
     # 3 colors
     black_blue_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK
-    studied_decks[MagicLoader.JSON_COMMANDER][black_blue_red], decks_runs_random_items[MagicLoader.JSON_COMMANDER][black_blue_red] \
+    studied_runs_decks[MagicLoader.JSON_COMMANDER][black_blue_red], decks_runs_random_items[MagicLoader.JSON_COMMANDER][black_blue_red] \
         = prepare_deck_data(decks_loader, MagicLoader.JSON_COMMANDER, black_blue_red, nb_runs)
-    studied_decks[MagicLoader.JSON_LEGACY][black_blue_red], decks_runs_random_items[MagicLoader.JSON_LEGACY][black_blue_red] \
+    studied_runs_decks[MagicLoader.JSON_LEGACY][black_blue_red], decks_runs_random_items[MagicLoader.JSON_LEGACY][black_blue_red] \
         = prepare_deck_data(decks_loader, MagicLoader.JSON_LEGACY, black_blue_red, nb_runs)
 
     # 4 colors
     black_blue_green_white = MagicLoader.CODE_WHITE | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_GREEN
-    studied_decks[MagicLoader.JSON_COMMANDER][black_blue_green_white], decks_runs_random_items[MagicLoader.JSON_COMMANDER][black_blue_green_white] \
+    studied_runs_decks[MagicLoader.JSON_COMMANDER][black_blue_green_white], decks_runs_random_items[MagicLoader.JSON_COMMANDER][black_blue_green_white] \
         = prepare_deck_data(decks_loader, MagicLoader.JSON_COMMANDER, black_blue_green_white, nb_runs)
-    studied_decks[MagicLoader.JSON_LEGACY][black_blue_green_white], decks_runs_random_items[MagicLoader.JSON_LEGACY][black_blue_green_white] \
+    studied_runs_decks[MagicLoader.JSON_LEGACY][black_blue_green_white], decks_runs_random_items[MagicLoader.JSON_LEGACY][black_blue_green_white] \
         = prepare_deck_data(decks_loader, MagicLoader.JSON_LEGACY, black_blue_green_white, nb_runs)
 
     # 5 colors
     five_colors = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_WHITE | MagicLoader.CODE_GREEN
-    studied_decks[MagicLoader.JSON_LEGACY][five_colors], decks_runs_random_items[MagicLoader.JSON_LEGACY][five_colors] \
+    studied_runs_decks[MagicLoader.JSON_LEGACY][five_colors], decks_runs_random_items[MagicLoader.JSON_LEGACY][five_colors] \
         = prepare_deck_data(decks_loader, MagicLoader.JSON_LEGACY, five_colors, nb_runs)
-    studied_decks[MagicLoader.JSON_PAUPER][five_colors], decks_runs_random_items[MagicLoader.JSON_PAUPER][five_colors] \
+    studied_runs_decks[MagicLoader.JSON_PAUPER][five_colors], decks_runs_random_items[MagicLoader.JSON_PAUPER][five_colors] \
         = prepare_deck_data(decks_loader, MagicLoader.JSON_PAUPER, five_colors, nb_runs)
 
     #modelisation_single_process(nb_run,k_min,k_max,n_recommendations)
@@ -306,15 +340,29 @@ if __name__ == "__main__":
     subtitles = deque()
     model_type = 'simu_cosine'
 
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, False, ModelParameters.MODEL_SIM_COSINE,studied_decks, decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, True, ModelParameters.MODEL_SIM_COSINE, studied_decks, decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, True, ModelParameters.MODEL_SIM_COSINE_ROW,studied_decks, decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, False,ModelParameters.MODEL_SIM_COSINE_LSA, studied_decks,decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, True, ModelParameters.MODEL_SIM_COSINE_LSA,studied_decks, decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, True, ModelParameters.MODEL_SIM_COSINE_LSA_ROW,studied_decks, decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, False, ModelParameters.MODEL_SIM_PROBA,studied_decks, decks_runs_random_items, lsa_manager))
-    results.append(modelisation_multi_process(nb_runs, 25, 26, n_recommendations, alpha, True,ModelParameters.MODEL_SIM_PROBA, studied_decks, decks_runs_random_items, lsa_manager))
 
+    results.append(modelisation_multi_process(BPRKNNParameters(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,
+                                                               lbd_I=0.05, lbd_J=0.01, learning_rate=0.1, epoch=200, batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate= 0.025)))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager)))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25,alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
+    '''
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA, lsa_manager))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA, lsa_manager))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager))
+    '''
+
+    subtitles.append('bpr-knn')
+    subtitles.append('cosine(+, row) 25k')
+    subtitles.append('cosine(-) 25k')
+    subtitles.append('proba(+) 25k')
+
+    '''
     subtitles.append('cosine(-) 25k')
     subtitles.append('cosine(+) 25k')
     subtitles.append('cosine(+, row) 25k')
@@ -323,6 +371,7 @@ if __name__ == "__main__":
     subtitles.append('cosine lsa(+, row) 25k')
     subtitles.append('proba(-) 25k')
     subtitles.append('proba(+) 25k')
+    '''
 
     print('Start consolidation and export statistics to excel')
     consolidated_results = deque()

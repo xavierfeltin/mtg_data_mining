@@ -30,10 +30,11 @@ class ConsolidateResults(Results):
         self.dict_arhr = {}
 
     def add_result(self, key, result):
-        id_run, k, mode, color = KeyGenerator.getElements(key)
+        #id_run, k, mode, color = KeyGenerator.getElements(key)
+        id_run, mode, color = KeyGenerator.getElements(key)
         id_run = int(id_run)
         color = int(color)
-        k = int(k)
+        #k = int(k)
 
         if mode not in self.modes:
             self.modes.append(mode)
