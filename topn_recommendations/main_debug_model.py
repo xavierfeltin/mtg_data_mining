@@ -6,62 +6,11 @@
 # Main for building and saving models
 #
 
-import os
-
+from topn_recommendations.utils import *
 from loader.magic_loader import MagicLoader
-from loader.deck_manager import DeckManager
-from collaborative_filtering.item_to_item import ItemToItem
 from topn_recommendations.models.bpr_knn import BPRKNN
-from random import randint
-
-def load_magic_environment():
-    print('Load magic environment')
-    card_loader = MagicLoader()
-    card_loader.load_from_set('./../data/magic_cards/AllSets-x.json')
-    return card_loader
-
-def load_decks(card_loader):
-    print('Load decks')
-
-    files = os.listdir("./../data/decks_mtgdeck_net_extended")  # returns list
-    paths = []
-    for file in files:
-        paths.append('./../data/decks_mtgdeck_net_extended/' + file)
-
-    decks = {}
-    for mode in MagicLoader.HASH_GAME_STRING_CODE.keys():
-        for path in paths:
-            if mode.lower() in path:
-                deck_loader = DeckManager()
-                deck_loader.load_from_mtgdeck_csv([path], cards_loader=card_loader, ignore_land=True)
-                deck_loader.sort_decks()
-                decks[mode] = deck_loader
-
-    return decks
-
-def get_cards_from_decks(decks_loader, card_loader):
-    multiverseid_in_decks = set()
-    for mode in decks_loader:
-        multiverseid_in_decks = multiverseid_in_decks.union(decks_loader[mode].cards)
-    list_multiverseid_in_decks = list(multiverseid_in_decks)
-    cards_in_decks = card_loader.extract_cards(list_multiverseid_in_decks)
-    return cards_in_decks
-
-def prepare_deck_data(decks_loader, mode, color, nb_runs):
-    decks_to_prepare = decks_loader[mode].grouped_decks[color]
-    runs_random_items = []
-    for i in range(nb_runs):
-        random_items = []
-        for deck in decks_to_prepare:
-            index = randint(0, len(deck) - 1)
-            random_items.append(deck[index])
-
-        for j, card in enumerate(random_items):
-            decks_to_prepare[j].remove(card)
-
-        runs_random_items.append(random_items)
-
-    return decks_to_prepare, runs_random_items
+from collections import deque
+from time import time
 
 if __name__ == "__main__":
     print('Load Magic environment')
@@ -69,27 +18,64 @@ if __name__ == "__main__":
     decks_loader = load_decks(card_loader)
 
     studied_decks = {}
-    studied_decks[MagicLoader.JSON_COMMANDER] = {}
     decks_runs_random_items = {}
-    decks_runs_random_items[MagicLoader.JSON_COMMANDER] = {}
 
-    studied_decks[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED], \
-    decks_runs_random_items[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED] = \
-        prepare_deck_data(decks_loader, MagicLoader.JSON_COMMANDER, MagicLoader.CODE_RED, 1)
+    mode = MagicLoader.JSON_COMMANDER
+    # mode = MagicLoader.JSON_LEGACY
 
-    set_catalog = set([])
-    for deck in studied_decks[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED]:
-        set_catalog = set_catalog.union(deck)
-    card_catalog = list(set_catalog)
+    color = MagicLoader.CODE_RED
+    # color = MagicLoader.CODE_WHITE | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_GREEN
 
-    print('Building model...')
+    nb_runs = 1
+    add_deck_serie(studied_decks, decks_runs_random_items, mode, color, decks_loader, nb_runs)
+    card_catalog = generate_card_catalog(decks_loader, mode, color)
 
-    model = BPRKNN(card_catalog, studied_decks[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED])
-    #best: LR: 0.1, decay 0.5, epoch_drop=50
-    model.build_model(decks_runs_random_items[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED][0], N=5, lbd_I=0.05, lbd_J=0.01, learning_rate=0.1, epoch=100, batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate = 0.025)
-    #model.build_model(decks_runs_random_items[MagicLoader.JSON_COMMANDER][MagicLoader.CODE_RED][0], 10, lbd_I=0.05, lbd_J=0.01, learning_rate=0.1, epoch=100, batch_size=50, epochs_drop=200, decay=0.5)
+    start = time()
+    #commander rouge: lbd_I=0.05, lbd_J=0.01
+    #legacy 4 color: lbd_I=0.01, lbd_J=0.005
 
-    print('Evaluation synthesis:')
-    scores = model.get_scores()
-    for ep, score in enumerate(scores):
-        print(str(ep) + '\t' + str(score[0]) + '\t' + str(score[1]))
+    scores = []
+    scores_topN = []
+    for i in range(nb_runs):
+        print('run: ' + str(i))
+
+        model = BPRKNN(card_catalog, studied_decks[mode][color][i], decks_runs_random_items[mode][color][i])
+        model.build_model(N=5, lbd_I=0.01,
+                          lbd_J=0.005, learning_rate=0.1, epoch=200, batch_size=100, decay=0.5, nb_early_learning=20,
+                          min_leaning_rate=0.025)
+
+        mod_scores = model.get_scores()
+        scores.append(mod_scores[len(mod_scores)-1])
+        print('internal: ' + str(mod_scores))
+
+        nb_hits = 0
+        arhr_score = 0
+        for index, multiverseid_test in enumerate(decks_runs_random_items[mode][color][i]):
+            recommendations = model.get_top_N_recommendations(studied_decks[mode][color][i][index], 5)
+
+            if multiverseid_test in recommendations:
+                position = recommendations.index.get_loc(multiverseid_test) + 1
+                arhr_score += 1.0 / position
+                nb_hits += 1
+        hr = nb_hits / len(decks_runs_random_items[mode][color][i])
+        arhr = arhr_score / len(decks_runs_random_items[mode][color][i])
+        scores_topN.append((hr, arhr))
+        print('top N: ' + str((hr, arhr)))
+
+    print('time numpy: ' + str(round(time() - start, 4) * 1000))
+
+    print('Evaluation synthesis from model:')
+    HR = 0
+    ARHR = 0
+    for score in scores:
+        HR += score[0]
+        ARHR += score[1]
+    print('HR: ' + str(HR/len(scores)) + '\t ARHR' + str(ARHR/len(scores)))
+
+    print('Evaluation synthesis from top N recommendations:')
+    HR = 0
+    ARHR = 0
+    for score in scores_topN:
+        HR += score[0]
+        ARHR += score[1]
+    print('HR: ' + str(HR/len(scores_topN)) + '\t ARHR' + str(ARHR/len(scores_topN)))

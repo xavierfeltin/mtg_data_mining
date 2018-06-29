@@ -11,6 +11,8 @@ import pandas as pd
 import math
 from scipy.special import expit
 from collections import deque, defaultdict
+from time import time
+import numpy as np
 
 class BPRKNN:
 
@@ -91,9 +93,13 @@ class BPRKNN:
         :param item_j: item j in deck
         '''
 
+        #start = time()
+
         x_di = sum([self.C.at[item_i,card] for card in deck if item_i != card])
         x_dj = sum([self.C.at[item_j,card] for card in deck if item_j != card])
         x_dij = x_di - x_dj
+
+        #x_dij = compute_derivative(self.C.loc[item_i].values, self.C.loc[item_j].values, self.C.index.values, deck, item_i, item_j)
 
         for card in deck:
             if card != item_i:
@@ -108,14 +114,15 @@ class BPRKNN:
                 self.gradientC[(item_j, card)] += -(1 - self.sigmoid(x_dij)) + lbd_J * self.C.at[item_j,card]
                 self.gradientC[(card, item_j)] += -(1 - self.sigmoid(x_dij)) + lbd_J * self.C.at[card,item_j]
             else:
-                g = lbd_J * self.C.at[item_j, card]
                 self.gradientC[(item_j, card)] += lbd_J * self.C.at[item_j,card]
                 self.gradientC[(card, item_j)] += lbd_J * self.C.at[card,item_j]
 
         for a, b in self.gradientC:
             self.C.at[a, b] += self._compute_momentum(a,b, learning_rate)
 
-        self.prevGradientC = self.gradientC.copy()
+        #self.prevGradientC = self.gradientC.copy()
+
+        #print('time: ' + str(round(time()-start,4) * 1000))
 
     def _eval(self, test_cards, N):
         '''
