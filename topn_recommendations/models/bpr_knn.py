@@ -10,6 +10,9 @@ from scipy.special import expit
 from collections import deque, defaultdict
 import numpy as np
 import pandas as pd
+import json
+from io import BytesIO
+import base64
 
 class BPRKNN:
     def __init__(self, cards, training_decks, testing_decks):
@@ -25,8 +28,12 @@ class BPRKNN:
         self.last_evaluations = deque()
 
         self.generate_translators(cards)
-        self.decks.extend(self.encode_list_decks(training_decks))
-        self.test_cards.extend(self.encode_deck(testing_decks))
+
+        if training_decks != None:
+            self.decks.extend(self.encode_list_decks(training_decks))
+
+        if testing_decks != None:
+            self.test_cards.extend(self.encode_deck(testing_decks))
 
     def generate_translators(self, cards):
         for i, card in enumerate(cards):
@@ -46,7 +53,9 @@ class BPRKNN:
         return encoded_deck
 
     def build_model(self, N=5, lbd_I=0.05, lbd_J=0.01, learning_rate=0.01, epoch=30, batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate = 0.025):
-        #print('Build models ...')
+        if len(self.decks) == 0 or len(self.test_cards) == 0: return;
+
+        # print('Build models ...')
         self._init_coefficients()
 
         ep = 0
@@ -247,3 +256,48 @@ class BPRKNN:
         else:
             #print('delta: N/A')
             return True
+
+    def save_coefficients(self, path):
+        '''
+        Save model's coefficients and cards used when learning the model
+        '''
+
+        serialized_model = {}
+        memfile = BytesIO()
+        np.save(memfile, self.C, allow_pickle=False)
+        memfile.seek(0)
+        serialized_model['coefficients'] = memfile.read().decode('latin-1') # latin-1 maps byte n to unicode code point n
+
+        #serialized_model['coefficients'] = json.dumps([str(self.C.dtype), base64.b64encode(self.C), self.C.shape])
+
+        serialized_model['cards'] = self.cards
+
+        with open(path, 'w') as outfile:
+            json.dump(serialized_model, outfile)
+
+    @staticmethod
+    def load_coefficients(path):
+        '''
+        Load model's coefficients and cards from saving file
+        '''
+
+        with open(path) as f:
+            data = json.load(f)
+
+        model = BPRKNN(data['cards'], None, None)
+
+        memfile = BytesIO()
+        memfile.write(data['coefficients'].encode('latin-1'))
+        memfile.seek(0)
+        model.C = np.load(memfile)
+
+        # build the numpy data type
+        #data_coefficient = data['coefficients']
+        #data_type = np.dtype(data_coefficient[0])
+
+        # decode the base64 encoded numpy array data and create a new numpy array with this data & type
+        #data_array = np.frombuffer(base64.decodebytes(data_coefficient[1]), data_type)
+        #data_array.reshape(data_coefficient[2])  # return the reshaped numpy array containing several data set
+        #model.C = data_array
+
+        return model

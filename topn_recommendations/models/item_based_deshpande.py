@@ -57,7 +57,8 @@ class ItemBasedDeshpande:
         for multiverseid in built_deck:
             deck[multiverseid] = 1
 
-        similarities = pd.Series(self.model.as_matrix().dot(deck.as_matrix()), index=self.card_catalog)
+        #similarities = pd.Series(self.model.as_matrix().dot(deck.as_matrix()), index=self.card_catalog)
+        similarities = pd.Series(self.model.values.dot(deck.values), index=self.card_catalog)
         for multiverseid in built_deck:
             similarities[multiverseid] = 0 #Avoid to recommend alreasdy selected cards
 

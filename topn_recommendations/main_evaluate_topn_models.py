@@ -161,7 +161,7 @@ def process_recommendations(model_parameters):
                 new_params.color = color
                 tests_to_process.append(new_params)
 
-    number_wokers = 3
+    number_wokers = 6
     manager = Manager()
     pool = Pool(processes=number_wokers)
     jobs_queue = manager.Queue()
@@ -309,23 +309,27 @@ if __name__ == "__main__":
     alpha = 0.5
 
     # 1 color
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, MagicLoader.CODE_RED, decks_loader, nb_runs)
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, MagicLoader.CODE_RED, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, MagicLoader.CODE_RED, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, MagicLoader.CODE_RED, decks_loader, nb_runs)
 
     # 3 colors
     black_blue_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_red, decks_loader, nb_runs)
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_red, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_red, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_red, decks_loader, nb_runs)
 
     # 4 colors
     black_blue_green_white = MagicLoader.CODE_WHITE | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_GREEN
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_green_white, decks_loader, nb_runs)
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_green_white, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_green_white, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_green_white, decks_loader, nb_runs)
+
+    black_blue_green_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_GREEN
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_green_red,decks_loader, nb_runs)
 
     # 5 colors
     five_colors = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_WHITE | MagicLoader.CODE_GREEN
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, five_colors, decks_loader, nb_runs)
-    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, five_colors, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, five_colors, decks_loader, nb_runs)
+    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, five_colors, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_VINTAGE, five_colors, decks_loader, nb_runs)
 
     #modelisation_single_process(nb_run,k_min,k_max,n_recommendations)
     results = deque()
@@ -335,8 +339,8 @@ if __name__ == "__main__":
     results.append(modelisation_multi_process(BPRKNNParameters(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,
                                                                lbd_I=0.01, lbd_J=0.005, learning_rate=0.1, epoch=200, batch_size=100, decay=0.5, nb_early_learning = 20, min_leaning_rate= 0.025)))
     results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager)))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25,alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
+    #results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25,alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    #results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
     '''
     results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
     results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
@@ -350,8 +354,8 @@ if __name__ == "__main__":
 
     subtitles.append('bpr-knn')
     subtitles.append('cosine(+, row) 25k')
-    subtitles.append('cosine(-) 25k')
-    subtitles.append('proba(+) 25k')
+    #subtitles.append('cosine(-) 25k')
+    #subtitles.append('proba(+) 25k')
 
     '''
     subtitles.append('cosine(-) 25k')
