@@ -25,6 +25,7 @@ import { DeckViewComponent } from './deck-view/deck-view.component';
 import { DeckConfigComponent } from './deck-config/deck-config.component';
 import { DeckFormComponent } from './deck-form/deck-form.component';
 import { DeckAttributesComponent } from './deck-attributes/deck-attributes.component';
+import { RecommendationListComponent } from './recommendation-list/recommendation-list.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +42,7 @@ import { DeckAttributesComponent } from './deck-attributes/deck-attributes.compo
     SelectModeComponent,
     SpinnerComponent,
     InputCardsComponent,    
-    TempMatrixComponent, DeckViewComponent, DeckConfigComponent, DeckFormComponent, DeckAttributesComponent    
+    TempMatrixComponent, DeckViewComponent, DeckConfigComponent, DeckFormComponent, DeckAttributesComponent, RecommendationListComponent    
   ],
   imports: [
     BrowserModule,

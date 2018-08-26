@@ -1,14 +1,5 @@
-.cards {
-    margin-right: 0.5em;
-}
-
 .nav-button{
     margin-top: 0.5em;
     margin-right: 0.5em;
     color: black;   
-}
-
-.cards-grid {
-    display: flex;
-    flex-wrap: wrap;
 }

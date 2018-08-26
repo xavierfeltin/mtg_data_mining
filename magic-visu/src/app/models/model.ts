@@ -1,11 +1,18 @@
 import { Card } from "./card";
 import { CardRecommendation } from "./card-recommendation";
 
-export class ModelLSA {
+export abstract class Model {
+    cards: number[];
+    coefficients: any;
+    public abstract getRecommendations(card: Card, nbRecommendations: number): CardRecommendation[];
+}
+
+export class ModelLSA extends Model {
     cards: number[];
     coefficients: {[key: string]: number[]};
 
-    constructor(cards: number[], coefficients: {[key: string]: number[]}) {        
+    constructor(cards: number[], coefficients: {[key: string]: number[]}) {    
+        super();    
         this.cards = [...cards];
         this.coefficients = {};
         for(const multiverseid of Object.keys(coefficients)){
@@ -41,11 +48,12 @@ export class ModelLSA {
     }
 }
 
-export class ModelTopN {
+export class ModelTopN extends Model {
     cards: number[];
     coefficients: number[][];
 
-    constructor(cards: number[], coefficients: number[][]) {        
+    constructor(cards: number[], coefficients: number[][]) {     
+        super();   
         this.cards = [...cards];
         this.coefficients = [];
         const nbColumns = coefficients.length;
@@ -85,7 +93,7 @@ export class ModelTopN {
         return recommendations;     
     }
 
-    private findIndexToInsert(arr, value) {
+    public findIndexToInsert(arr, value) {
         let i = 0;
         let j = arr.length;
         let mid = 0;
@@ -119,7 +127,7 @@ export class ModelTopN {
         }
     }
 
-    private insertData(arr, value, pos) {
+    public insertData(arr, value, pos) {
         return [...arr.slice(0, pos),value, ...arr.slice(pos, arr.length)];
     }
 }

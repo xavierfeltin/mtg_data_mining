@@ -22,7 +22,7 @@ export class RecommendationComponent {
   colors: string[];
   mode: string;
   selectedCard : Card;
-  modelLSA: ModelLSA;
+  modelLSA$: Observable<ModelLSA>;
   modelTopN$: Observable<ModelTopN>;
 
   constructor(
@@ -41,23 +41,17 @@ export class RecommendationComponent {
     this.colors = this.deckService.getColors().map(color => color.name);
     this.mode = this.deckService.getMode().name;
     this.card$.subscribe(card => this.selectedCard = card);
-    this.modelService.loadLSAModel(this.colors, this.mode).subscribe(model => this.modelLSA = model);
-    //this.modelTopN$ = this.modelService.loadTopNModel(this.colors, this.mode);
-  }
-
-  getCardOf(recommendation: CardRecommendation): Observable<Card> {
-    return this.cardService.getCard(recommendation.multiverseid);
+    this.modelLSA$ = this.modelService.loadLSAModel(this.colors, this.mode);
+    this.modelTopN$ = this.modelService.loadTopNModel(this.colors, this.mode);
   }
 
   formatColor(colors: string[]): string {
     return colors.join(' / ');
   }
 
-  /*
   onSelect(card: Card): void{
     this.selectedCard = card;
   }
-  */
 
   goBack(): void {
     this.location.back();

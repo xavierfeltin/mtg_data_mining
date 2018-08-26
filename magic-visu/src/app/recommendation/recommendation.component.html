@@ -5,29 +5,13 @@
   <h2>Content Recommendations:</h2>
   <p class="information">Recommendations are cards sharing similar textual information with the selected card (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Latent-Semantic-Analysis" target="_blank">more information</a>)
   <br/> A score of 1 means the two cards have the same content </p>
-  <div class="cards-grid">
-    <app-recommendationview
-      *ngFor="let recommendation of this.modelLSA.getContentRecommendations(this.selectedCard, 5)"
-      [recommendation]="recommendation" class="cards"
-      [card]="getCardOf(recommendation) | async"
-    >
-    </app-recommendationview>
-  </div>
-
-  <!--
+  <app-recommendation-list [model]="modelLSA$ | async" [card]="card" [nbRecommendations]="5" [modelType]="'LSA'"></app-recommendation-list>
+  
   <h2>Item Recommendations:</h2>
   <p class="information">Recommendations are cards played the most together with the selected card (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Collaborative-Filtering" target="_blank">more information</a>)
   <br/> A score of 1 means the two cards are only played together </p>
-  <div class="cards-grid">
-    <app-recommendationview
-      *ngFor="let recommendation of (this.modelTopN|async).getItemRecommendations(this.selectedCard, 5)"
-      [recommendation]="recommendation" class="cards"
-      [card]="getCardOf(recommendation) | async"
-    >
-    </app-recommendationview>
-  </div>
-  -->
-
+  <app-recommendation-list [model]="modelTopN$ | async" [card]="card" [nbRecommendations]="5" [modelType]="'TOPN'"></app-recommendation-list>
+  
   <!--app-recommendation-child-game [card]="card" [colors]="colors$|async" [mode]="mode$|async" [recommendations]="itemRecommendations"></app-recommendation-child-game-->
 </ng-container>
 

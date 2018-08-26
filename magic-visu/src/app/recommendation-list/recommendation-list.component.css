@@ -1,0 +1,8 @@
+.cards-grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.card {
+    margin-right: 0.5em;
+}
