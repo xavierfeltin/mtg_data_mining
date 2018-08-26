@@ -1,0 +1,9 @@
+form{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 20px;
+}
+
+.full-width {
+    grid-column: 1 / 3;
+}

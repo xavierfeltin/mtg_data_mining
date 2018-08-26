@@ -5,7 +5,7 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 
 @Component({
   selector: 'app-cardview',  
-  template: `<a routerLink="/recommendation/{{card.multiverseid}}"><img [src]="cardUrl" [alt]="card.name"></a>`,
+  template: `<a routerLink="/recommendation/{{card.multiverseid}}" draggable [dragData]="card"><img [src]="cardUrl" [alt]="card.name"></a>`,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 

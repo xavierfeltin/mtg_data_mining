@@ -4,20 +4,21 @@ import { GameMode } from "./models/game-mode";
 import { ColorCombination } from "./models/color-combination";
 
 export const CARDS: Card[] = [
-    {name: 'Pia Nalaar', multiverseid: 417697, manaCost: 0, colors: [], types:[], contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Abrade', multiverseid: 430772, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Magma Spray', multiverseid: 380452, manaCost: 0, colors: [], types:[], contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Aethersphere Harvester', multiverseid: 423809, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Bomat Courier', multiverseid: 418828, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Chandra, Torch of Defiance', multiverseid: 418739, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Earthshaker Khenra', multiverseid: 431376, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Slobad, Goblin Tinkerer', multiverseid: 421803, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Pia and Kiran Nalaar', multiverseid: 442783, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Gnome-Made Engine', multiverseid: 439537, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Ravenous Intruder', multiverseid: 423761, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}},
-    {name: 'Whirler Rogue', multiverseid: 442779, manaCost: 0, colors: [], types:[],  contentRecommendations: [], itemRecommendations: {}}
+    {name: 'Pia Nalaar', multiverseid: 417697, manaCost: 0, colors: [], types:[]/*, contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Abrade', multiverseid: 430772, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Magma Spray', multiverseid: 380452, manaCost: 0, colors: [], types:[]/*, contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Aethersphere Harvester', multiverseid: 423809, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Bomat Courier', multiverseid: 418828, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Chandra, Torch of Defiance', multiverseid: 418739, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Earthshaker Khenra', multiverseid: 431376, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Slobad, Goblin Tinkerer', multiverseid: 421803, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Pia and Kiran Nalaar', multiverseid: 442783, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Gnome-Made Engine', multiverseid: 439537, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Ravenous Intruder', multiverseid: 423761, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/},
+    {name: 'Whirler Rogue', multiverseid: 442779, manaCost: 0, colors: [], types:[]/*,  contentRecommendations: [], itemRecommendations: {}*/}
 ];
 
+/*
 let contentRecommendations: CardRecommendation[] = [
     {multiverseid: CARDS[7].multiverseid, itemSimilarity: null, contentSimilarity: 0.791},
     {multiverseid: CARDS[8].multiverseid, itemSimilarity: null, contentSimilarity: 0.785},
@@ -49,3 +50,4 @@ let itemRecommendationsCommanderBlackRed: CardRecommendation[] = [
 ];
 CARDS[0].itemRecommendations['commander'] = {};
 CARDS[0].itemRecommendations['commander']['black_red'] = itemRecommendationsCommanderBlackRed;
+*/

@@ -1,5 +1,10 @@
 <a routerLink="/">
     <h1>{{title}}</h1>
 </a>
-<router-outlet></router-outlet>
+<div style="float: left; width: 20%; overflow: hidden; border: solid; margin-right: 10px; height: 800px;">
+    <app-deck-view></app-deck-view>
+</div>
+<div style="overflow: hidden;">
+    <router-outlet></router-outlet>
+</div>
 <p class="information">  -- This website is a fan content not endorsed or sponsored by Wizards -- </p>

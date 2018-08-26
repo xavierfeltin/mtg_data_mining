@@ -7,19 +7,17 @@ import { Card } from '../models/card';
   selector: 'app-cardsview',
   template: `
     <ng-container *ngIf="cards$ | async as cards; else loading">
-    <app-cardview *ngFor="let card of cards$ | async | paginate: { itemsPerPage: 12, currentPage: p }; let i = index" 
+    <app-cardview *ngFor="let card of cards$ | async | paginate: { itemsPerPage: 5, currentPage: p }; let i = index" 
       [card]="card" class="cards">
     </app-cardview>
     <pagination-controls (pageChange)="p = $event"></pagination-controls>    
     </ng-container>
-    <ng-template #loading>      
-      <app-spinner></app-spinner>
-    </ng-template>
   `,
   styleUrls: ['./cardsview.component.css']
 })
 export class CardsviewComponent implements OnChanges {
   @Input() filterColor: string;
+  @Input() authorizedColors: string[];
   @Input() filterType: string;
   @Input() filterName: string;
   cards$: Observable<Card[]>;
@@ -30,15 +28,18 @@ export class CardsviewComponent implements OnChanges {
 
   ngOnChanges() {    
     let colors = [this.filterColor];   
+    let secondaryColors = this.authorizedColors.filter(color => color !== this.filterColor);
+    
     if (this.filterColor === 'All Colors') {
-      colors = []
+      colors = [];
+      secondaryColors = [];
     }
 
     let types = [this.filterType];   
     if (this.filterType === 'All Types') {
       types = []
     }
-
-    this.cards$ = this.cardService.getCards(colors, types, this.filterName);
+    
+    this.cards$ = this.cardService.getCards(colors, types, this.filterName, secondaryColors);
   }
 }

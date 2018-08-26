@@ -1,0 +1,19 @@
+.hlayout{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 20px;
+}
+
+.nav-button{
+    color: black;   
+    max-height: 50px;
+    max-width: 50px;
+}
+
+.drag-hint {
+    border:#00bfff dashed 2px;
+}
+
+.drag-target-border {
+    border: #3c763d dashed 2px;
+}

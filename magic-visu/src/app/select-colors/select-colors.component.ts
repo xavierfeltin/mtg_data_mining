@@ -8,26 +8,20 @@ import { Color } from '../models/color';
   template: `
     <label for="color_selection" class="form-component"> Color: </label>
     <select id="color_selection" name="color_selection" size="1" class="form-component" (change)="onSelect($event.target.value)">
-      <option *ngFor="let color of colors$ | async" value={{color.name}} [selected]="color.name === selectedColor">{{color.name}}</option>      
+      <option *ngFor="let color of colors" value={{color.name}} [selected]="color.name === selectedColor">{{color.name}}</option>      
     </select>
   `,
   styleUrls: ['./select-colors.component.css']
 })
 export class SelectColorsComponent implements OnInit {
-  colors$: Observable<Color[]>;
+  //colors$: Observable<Color[]>;
   @Input() selectedColor: string;
+  @Input() colors: Color[];
   @Output() select: EventEmitter<string> = new EventEmitter();
 
-  constructor(private colorService: ColorService) { }
+  constructor(/*private colorService: ColorService*/) { }
 
-  ngOnInit() {        
-    this.colors$ = this.getColors();    
-  }
-
-  /** Get the list of available models */
-  getColors(): Observable<Color[]> {
-    return this.colorService.getColors();    
-  }
+  ngOnInit() {}
 
   onSelect(value) {        
     this.select.emit(value);

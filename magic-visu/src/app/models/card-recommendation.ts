@@ -1,5 +1,9 @@
 export class CardRecommendation {
     multiverseid: number;
-    itemSimilarity: number;
-    contentSimilarity: number;
+    score: number;    
+
+    constructor(id, score) {
+        this.multiverseid = id;
+        this.score = score;        
+    }
 }

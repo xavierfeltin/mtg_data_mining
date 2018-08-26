@@ -3,6 +3,7 @@
  */
 
 import { Card } from './models/card';
+import { filter } from 'rxjs/operators';
 
 export function compareCardsFn(a: Card, b: Card): number {
   //order by nb colors, color, manaCost and name
@@ -50,9 +51,30 @@ function compareBy(prop: keyof Card): (a: Card, b: Card) => number {
   };
 }
 
-export function filterColorsTypesNameFn(card: Card, filterColors: string[], filterTypes: string[], filterName: string): boolean {
+export function filterColorsTypesNameFn(card: Card, filterColors: string[], filterTypes: string[], filterName: string, filterSecondaryColors: string[]): boolean {
   if (filterName === '') {
     let keepOnColor = true;  
+    let mainColorPresent = false;
+    let onlyAuthorizedColorPresent = true;
+
+    const nbSecondaryColors = filterSecondaryColors.length;
+
+    if(filterColors.length > 0) {
+      //keep cards with the main colors (filter) and possibly secondary colors (authorized in the deck's colors)
+      for (const color of card.colors) {
+        if (filterColors.includes(color)) {
+          mainColorPresent = true;
+        }
+        
+        if(nbSecondaryColors > 0 && !filterSecondaryColors.includes(color) && !filterColors.includes(color)) {
+          onlyAuthorizedColorPresent = false;
+          break;
+        }
+      }
+      keepOnColor = mainColorPresent && onlyAuthorizedColorPresent;
+    }
+
+    /*
     if (filterColors.length > 0) {
       keepOnColor = false;
       for (const color of filterColors) {
@@ -62,6 +84,7 @@ export function filterColorsTypesNameFn(card: Card, filterColors: string[], filt
         }
       }
     }
+    */
 
     let keepOnType = true;
     if (filterTypes.length > 0) {

@@ -7,7 +7,7 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 @Component({
   selector: 'app-recommendationview',
   template: `
-    <div>
+    <div draggable [dragData]="card">
     <div class="score"> {{title}} </div>
     <a routerLink="/recommendation/{{recommendation.multiverseid}}">
       <img [src]="cardUrl" [alt]="card?.name" [title]="card?.name"/>
@@ -27,8 +27,6 @@ export class RecommendationviewComponent {
   }
 
   get title() {
-    return this.recommendation.itemSimilarity === null ?
-      `Content: ${this.recommendation.contentSimilarity}`
-      :`Item: ${this.recommendation.itemSimilarity.toFixed(3)} - Text: ${this.recommendation.contentSimilarity.toFixed(3)}`;
+    return `Content: ${this.recommendation.score.toFixed(3)}`
   }
 }

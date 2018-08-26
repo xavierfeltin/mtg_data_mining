@@ -8,12 +8,15 @@ export class Card {
     manaCost: number;
     colors: string[];
     types: string[];
-    contentRecommendations: CardRecommendation[];        
+    /*
+    new version: real time computation for recommendations
+    contentRecommendations: CardRecommendation[];            
     itemRecommendations:{
         [key: string]: {
             [key: string]: CardRecommendation[]
         }
     }
+    */
 }
 
 /*

@@ -1,0 +1,14 @@
+.hlayout{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 20px;
+    justify-items: center;
+    align-items: center;
+}
+
+.nav-button{
+    margin-top: 0.5em;
+    margin-right: 0.5em;
+    color: black;   
+    max-height: 50px;
+}
