@@ -1,44 +1,30 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import { Deck } from '../models/deck';
-import { DeckService } from '../deck.service';
 
 @Component({
   selector: 'app-deck-attributes',
   template: `
-    <p> Mode: {{deck.mode.name}} </p>
-    <p> Colors: </p>
-    <ul>
-    <li *ngFor="let color of deck.colors;">
-      {{color.name}}
-    </li>
-    </ul>    
-    <p> Cards: </p>    
-    <div droppable class="card card-outline-primary mb-3" [dragOverClass]="'drag-target-border'" [dragHintClass]="'drag-hint'" (onDrop)="onItemDrop($event)">
-      <ul>
-        <div class="hlayout" *ngFor="let card of deck.cards; let i = index">
-          <li>
-            <a routerLink="/recommendation/{{card.multiverseid}}"> {{card.name}} </a>
-          </li>
-          <button class="nav-button" (click)="onRemoveCard($event, card)"> X </button>
-        </div>
-      </ul>
+    <div style="padding: 0px 5px 5px 5px;">
+      <ng-container *ngIf="!deck.isUndefined(); else empty">    
+        <p class="subtitle"> Mode: <span class="information"> {{deck.mode.name}} </span> </p>
+        <p class="subtitle"> Colors: <span class="information"> {{colors}} </span> </p>
+      </ng-container>
+      <ng-template #empty>      
+        <p class="information"> No deck created... </p>
+      </ng-template>    
     </div>
   `,
   styleUrls: ['./deck-attributes.component.css']
 })
-export class DeckAttributesComponent implements OnInit {
+export class DeckAttributesComponent implements OnInit, OnChanges {
   @Input() deck: Deck;
+  colors: string;
 
-  constructor(private deckService: DeckService) { }
+  constructor() { }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
-  onRemoveCard(event, card) {
-    this.deckService.removeCard(card);
-  }
-
-  onItemDrop(event) {
-    this.deckService.addCard(event.dragData);
+  ngOnChanges() {
+    this.colors = this.deck['colors'].map(color => color.name).join(' / ');
   }
 }

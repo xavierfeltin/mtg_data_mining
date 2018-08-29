@@ -14,6 +14,9 @@ import { ModelService } from '../model.service';
   selector: 'app-deck-config',
   template: `
     <h2> Create a new deck </h2>
+    <p class=information> You may find the data repartition between the different modes and colors inside the 
+      <a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Proof-of-concept#decks-repartitions" target="_"> wiki </a> 
+      <br/> Models with less than 30 decks as input are not available </p>
     <i> This deck will replace the current one </i>
     <app-deck-form [colors]="color$ | async" [modes]="mode$ | async" (create)="onSubmit($event)"></app-deck-form>
   `,
@@ -38,6 +41,8 @@ export class DeckConfigComponent implements OnInit {
   async onSubmit(event: Deck) {
     await this.deckService.update(event).toPromise();  
     this.cardService.cleanCache();
+    this.modelService.cleanCache();
+    this.deckService.cleanCache();
     this.router.navigate(['catalog']);
   }
 }

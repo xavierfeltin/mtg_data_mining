@@ -13,18 +13,26 @@ export class Deck {
         this.mode = new Mode();
     }
 
-    public createDeck(colors: string[], mode: string) {
-        this.cards = [];    
-        this.colors = [];
+    public isUndefined() {
+        return this.cards.length == 0 && this.colors.length == 0 && this.mode.name === '';
+    }
+
+    public static createDeck(colors: string[], mode: string): Deck {
+        let newDeck = new Deck();
+
+        newDeck.cards = [];    
+        newDeck.colors = [];
 
         colors.forEach(function(color) {
-            this.colors.push(new Color(color));
+            newDeck.colors.push(new Color(color));
         }, this);      
-        this.mode = new Mode(mode);
+        newDeck.mode = new Mode(mode);
+
+        return newDeck;
     }    
 
     public addCard(card: Card) {
-        if (this.cards.indexOf(card) == -1) {this.cards.push(card);}
+        if (this.cards.indexOf(card) == -1) {this.cards = [...this.cards, card]}
     }
 
     public removeCard(card: Card) {

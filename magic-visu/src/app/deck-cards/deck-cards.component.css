@@ -1,0 +1,22 @@
+.hlayout{
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    grid-gap: 20px;
+}
+
+.nav-button{
+    color: black;
+    background-color: transparent;   
+    max-height: 50px;
+    max-width: 50px;
+    border: none;
+    cursor: pointer; 
+}
+
+.drag-hint {
+    border:#00bfff dashed 2px;
+}
+
+.drag-target-border {
+    border: #3c763d dashed 2px;
+}

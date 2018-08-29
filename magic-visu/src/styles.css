@@ -25,10 +25,18 @@ body{
   font-style: italic;    
 }
 
+.subtitle {
+  color: #369;  
+}
+
 .form-component{
   margin-top: 0.2em;
   margin-right: 0.2em;
   margin-bottom: 0.2em;
+}
+
+ul {
+  list-style-type: square;
 }
 
 /* everywhere else */

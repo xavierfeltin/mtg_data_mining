@@ -56,8 +56,6 @@ export class DeckFormComponent implements OnInit {
 		  .keys(form.value.deck_colors)
 		  .filter(color => form.value.deck_colors[color]);
     
-    let deck = new Deck();
-    deck.createDeck(colors, form.value.deck_modes);
-    this.create.emit(deck);
+    this.create.emit(Deck.createDeck(colors, form.value.deck_modes));
   }
 }

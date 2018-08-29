@@ -14,8 +14,7 @@ export class CardviewComponent implements OnInit {
   
   constructor() { }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   get cardUrl() {
     return `${CARD_IMG_URL}${this.card.multiverseid}`;

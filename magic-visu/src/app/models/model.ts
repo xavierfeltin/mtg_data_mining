@@ -4,7 +4,7 @@ import { CardRecommendation } from "./card-recommendation";
 export abstract class Model {
     cards: number[];
     coefficients: any;
-    public abstract getRecommendations(card: Card, nbRecommendations: number): CardRecommendation[];
+    public abstract getRecommendations(cards: Card[], nbRecommendations: number): CardRecommendation[];
 }
 
 export class ModelLSA extends Model {
@@ -20,8 +20,9 @@ export class ModelLSA extends Model {
         }        
     }
 
-    public getRecommendations(card: Card, nbRecommendations: number): CardRecommendation[] {
+    public getRecommendations(cards: Card[], nbRecommendations: number): CardRecommendation[] {
         let recommendations = [];
+        const card = cards[0];
         const card_coeff = this.coefficients[card.multiverseid];
         const nbCoefficients = card_coeff.length;
 
@@ -62,16 +63,29 @@ export class ModelTopN extends Model {
         }        
     }
 
-    public getRecommendations(card: Card, nbRecommendations: number): CardRecommendation[] {
-        let recommendations = [];
-        const indexCard = this.cards.findIndex(function(value, index, array) { return value == card.multiverseid});
+    public getRecommendations(cards: Card[], nbRecommendations: number): CardRecommendation[] {
         const nbRows = this.coefficients.length; //square matrix
+        let recommendations = [];
+        let indexes = []
+
+        if (cards.length == 0) {
+            return recommendations;
+        }
+        
+        for(const card of cards) {
+            const indexCard = this.cards.findIndex(function(value, index, array) { return value == card.multiverseid});
+            indexes.push(indexCard);
+        }
         
         let results = [];
         let indexResults = [];
         for(let i = 0; i < nbRows; i++) {
-            if (i != indexCard) {
-                const coeff = this.coefficients[i][indexCard]; 
+            if (!indexes.includes(i)) {
+                let coeff = 0.0;
+                for(const indexCard of indexes) {
+                    coeff += this.coefficients[i][indexCard];
+                }
+
                 if(results.length < nbRecommendations || coeff > results[results.length -1]) {
                     const indexToInsert = this.findIndexToInsert(results, coeff);
                     results = this.insertData(results, coeff, indexToInsert);
@@ -84,7 +98,7 @@ export class ModelTopN extends Model {
                 }
             }
         }
-        
+
         const maxLength = results.length;
         for (let i = 0; i < maxLength; i++) {
             recommendations.push(new CardRecommendation(this.cards[indexResults[i]], results[i]));
