@@ -44,7 +44,7 @@ export class RecommendationviewComponent implements OnInit {
     if (Object.keys(this.contributions).length > 0) {
       let meaningfulContribs = [];
       for(const card of this.contributions) {
-        if (this.recommendation.contributions[card.multiverseid] >= 0.1) {
+        if (this.recommendation.contributions[card.multiverseid]) {
           meaningfulContribs.push({name: card.name, contribution: this.recommendation.contributions[card.multiverseid]});
         }
       }
@@ -59,7 +59,7 @@ export class RecommendationviewComponent implements OnInit {
       });
 
       let title = 'Since you selected: \n';
-      for(const contrib of meaningfulContribs) {
+      for(const contrib of meaningfulContribs.slice(0,10)) {
         title += ` - ${contrib['name']}: ${(contrib['contribution'] * 100.0).toFixed(0)}% \n`        
       }    
         

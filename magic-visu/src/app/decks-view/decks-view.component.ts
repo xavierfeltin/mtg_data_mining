@@ -12,6 +12,10 @@ import { Observable } from 'rxjs';
       <app-select-deck (select)="onSelectDeck($event)" [selectedDeck]="filterDeck"></app-select-deck>
       <app-deck-display [multiverseids]="deckService.getDeckAt(idDeck) | async"></app-deck-display>  
     </ng-container>
+
+    <ng-template #loading>      
+      <app-spinner></app-spinner>
+    </ng-template>
   `,
   styleUrls: ['./decks-view.component.css']
 })
