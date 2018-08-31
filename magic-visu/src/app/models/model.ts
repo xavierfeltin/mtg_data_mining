@@ -79,29 +79,39 @@ export class ModelTopN extends Model {
         
         let results = [];
         let indexResults = [];
+        let contributions = [];
         for(let i = 0; i < nbRows; i++) {
             if (!indexes.includes(i)) {
                 let coeff = 0.0;
+                let contribution = {};
                 for(const indexCard of indexes) {
-                    coeff += this.coefficients[i][indexCard];
+                    const value = this.coefficients[i][indexCard];
+                    coeff += value;
+                    contribution[this.cards[indexCard]] = value ; 
                 }
 
+                for(const indexCard of Object.keys(contribution)) {
+                    contribution[indexCard] = contribution[indexCard] / coeff; 
+                }                
+                
                 if(results.length < nbRecommendations || coeff > results[results.length -1]) {
                     const indexToInsert = this.findIndexToInsert(results, coeff);
                     results = this.insertData(results, coeff, indexToInsert);
-                    indexResults = this.insertData(indexResults, i, indexToInsert);                    
+                    indexResults = this.insertData(indexResults, i, indexToInsert);    
+                    contributions = this.insertData(contributions, contribution, indexToInsert);                
                 }
-
+                
                 if(results.length > nbRecommendations) {
                     results.pop();
                     indexResults.pop();
-                }
+                    contributions.pop();
+                }                
             }
         }
 
         const maxLength = results.length;
         for (let i = 0; i < maxLength; i++) {
-            recommendations.push(new CardRecommendation(this.cards[indexResults[i]], results[i]));
+            recommendations.push(new CardRecommendation(this.cards[indexResults[i]], results[i], contributions[i]));
         }
         
         return recommendations;     
@@ -142,6 +152,6 @@ export class ModelTopN extends Model {
     }
 
     public insertData(arr, value, pos) {
-        return [...arr.slice(0, pos),value, ...arr.slice(pos, arr.length)];
+        return [...arr.slice(0, pos), value, ...arr.slice(pos, arr.length)];
     }
 }

@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { map, publishReplay, refCount } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map, publishReplay, refCount, catchError } from 'rxjs/operators';
 import { compareCardsFn, filterColorsTypesNameFn } from './card.utils';
 import { Card } from './models/card';
 import { ModelLSA, ModelTopN } from './models/model';
@@ -38,6 +38,7 @@ export class ModelService {
       .pipe(
         publishReplay(),
         refCount(),
+        catchError(this.handleError)
       );
     }
     return this._topN;
@@ -47,4 +48,9 @@ export class ModelService {
     this._lsa = null;
     this._topN = null;
   }
+
+  private handleError(error: HttpErrorResponse) {
+    return throwError(
+      'Something bad happened; please try again later.');
+  };
 }

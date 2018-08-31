@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Deck } from './models/deck';
 import { Card } from './models/card';
-import { Observable, of } from 'rxjs';
-import { count} from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators'
 import { Color } from './models/color';
 import { Mode } from './models/mode';
 import { map, publishReplay, refCount } from 'rxjs/operators';
@@ -70,9 +70,10 @@ export class DeckService {
       const mode = this._deck.mode.name;
       const filename = 'decks_' + mode + '_' + colors.join('_');
       this._decks = this.http.get<number[][]>('./assets/' + filename + '.json')
-      .pipe(        
+      .pipe(                        
         publishReplay(),
         refCount(),
+        catchError(this.handleError)
       );
     }
     return this._decks;
@@ -94,4 +95,20 @@ export class DeckService {
   cleanCache() {
     this._decks = null;
   }
+
+  private handleError(error: HttpErrorResponse) {
+    if (error.error instanceof ErrorEvent) {
+      // A client-side or network error occurred. Handle it accordingly.
+      console.error('An error occurred:', error.error.message);
+    } else {
+      // The backend returned an unsuccessful response code.
+      // The response body may contain clues as to what went wrong,
+      console.error(
+        `Backend returned code ${error.status}, ` +
+        `body was: ${error.error}`);
+    }
+    // return an observable with a user-facing error message
+    return throwError(
+      'Something bad happened; please try again later.');
+  };
 }

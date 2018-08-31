@@ -21,8 +21,10 @@ import { ModelTopN } from '../models/Model';
       <app-cardsview [cards]="getCards()|async"> </app-cardsview>
 
       <h2>Deck Recommendations:</h2>
-      <p class="information">Recommendations are cards to complete the cards of your deck (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Deck-recommendations" target="_blank">more information</a>)
-      <br/> An higher score means the recommandation is played more often with the cards from the deck </p>
+      <p class="information">Recommendations are based on the cards present in your deck (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Deck-recommendations" target="_blank">more information</a>)
+      <br/> A higher score means the card is played more often with the cards in your deck
+      <br/> The details of the contribution of your deck on the recommendations are displayed on the cards tooltip 
+      </p>
       <app-recommendation-list [model]="modelTopN$ | async" [cards]="deckService.getCards() | async" [nbRecommendations]="5" [modelType]="'TOPN'"></app-recommendation-list>
     </ng-container>
 
