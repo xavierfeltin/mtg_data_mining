@@ -12,15 +12,12 @@ import { CardsviewComponent } from './cardsview/cardsview.component';
 import { AppRoutingModule } from './/app-routing.module';
 import { RecommendationComponent } from './recommendation/recommendation.component';
 import { RecommendationviewComponent } from './recommendationview/recommendationview.component';
-import { RecommendationChildGameComponent } from './recommendation-child-game/recommendation-child-game.component';
-import { RecommendationChildColorComponent } from './recommendation-child-color/recommendation-child-color.component';
 import { SelectColorsComponent } from './select-colors/select-colors.component';
 import { CardsindexComponent } from './cardsindex/cardsindex.component';
 import { SelectTypesComponent } from './select-types/select-types.component';
 import { SelectModeComponent } from './select-mode/select-mode.component';
 import { SpinnerComponent } from './spinner/spinner.component';
 import { InputCardsComponent } from './input-cards/input-cards.component';
-import { TempMatrixComponent } from './temp-matrix/temp-matrix.component';
 import { DeckViewComponent } from './deck-view/deck-view.component';
 import { DeckConfigComponent } from './deck-config/deck-config.component';
 import { DeckFormComponent } from './deck-form/deck-form.component';
@@ -37,16 +34,22 @@ import { SelectDeckComponent } from './select-deck/select-deck.component';
     CardviewComponent,
     CardsviewComponent,
     RecommendationComponent,
-    RecommendationviewComponent,
-    RecommendationChildGameComponent,
-    RecommendationChildColorComponent,
+    RecommendationviewComponent,    
     SelectColorsComponent,
     CardsindexComponent,
     SelectTypesComponent,
     SelectModeComponent,
     SpinnerComponent,
     InputCardsComponent,    
-    TempMatrixComponent, DeckViewComponent, DeckConfigComponent, DeckFormComponent, DeckAttributesComponent, RecommendationListComponent, DeckCardsComponent, DeckDisplayComponent, DecksViewComponent, SelectDeckComponent    
+    DeckViewComponent, 
+    DeckConfigComponent,
+    DeckFormComponent, 
+    DeckAttributesComponent, 
+    RecommendationListComponent, 
+    DeckCardsComponent, 
+    DeckDisplayComponent, 
+    DecksViewComponent, 
+    SelectDeckComponent    
   ],
   imports: [
     BrowserModule,

@@ -10,9 +10,7 @@
   <h2>Item Recommendations:</h2>
   <p class="information">Recommendations are cards played the most together with the selected card (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Collaborative-Filtering" target="_blank">more information</a>)
   <br/> A score of 1 means the two cards are only played together </p>
-  <app-recommendation-list [model]="modelTopN$ | async" [cards]="[card]" [nbRecommendations]="5" [modelType]="'TOPN'"></app-recommendation-list>
-  
-  <!--app-recommendation-child-game [card]="card" [colors]="colors$|async" [mode]="mode$|async" [recommendations]="itemRecommendations"></app-recommendation-child-game-->
+  <app-recommendation-list [model]="modelTopN$ | async" [cards]="[card]" [nbRecommendations]="5" [modelType]="'TOPN'"></app-recommendation-list>  
 </ng-container>
 
 <button (click)="goBack()" class="nav-button">Go Back</button>
