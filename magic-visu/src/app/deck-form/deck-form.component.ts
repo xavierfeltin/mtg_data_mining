@@ -32,18 +32,21 @@ import { Deck } from '../models/deck';
   styleUrls: ['./deck-form.component.css']
 })
 export class DeckFormComponent implements OnInit {
-  @Input() colors: Color[];
-  @Input() modes: Mode[];
+  @Input() colors: Color[] = [];
+  @Input() modes: Mode[] = [];
   @Output()  create: EventEmitter<Deck> = new EventEmitter<Deck>();
-
   formDeck: FormGroup;  
 
   constructor(private fb: FormBuilder) {}
 
   ngOnInit() {
+    let initMode = ''
+    if (this.modes.length > 0) {
+      initMode = this.modes[0].name;
+    }
     this.formDeck = this.fb.group({
       deck_colors: this.fb.group({}),      
-      deck_modes: this.modes[0].name,
+      deck_modes: initMode,
     });    
 
     this.colors.forEach(color => {

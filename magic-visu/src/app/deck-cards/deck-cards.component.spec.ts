@@ -1,5 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NgDragDropModule } from 'ng-drag-drop';
 import { DeckCardsComponent } from './deck-cards.component';
 
 describe('DeckCardsComponent', () => {
@@ -8,7 +10,11 @@ describe('DeckCardsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DeckCardsComponent ]
+      declarations: [ DeckCardsComponent ],
+      imports: [
+        NgDragDropModule.forRoot(), 
+        RouterTestingModule,
+        HttpClientTestingModule]
     })
     .compileComponents();
   }));

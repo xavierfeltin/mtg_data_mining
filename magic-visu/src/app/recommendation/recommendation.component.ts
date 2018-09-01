@@ -15,12 +15,12 @@ import { ModelService } from '../model.service';
   styleUrls: ['./recommendation.component.css']
 })
 export class RecommendationComponent {
-  card$: Observable<Card>;
-  colors: string[];
-  mode: string;
-  selectedCard : Card;
-  modelLSA$: Observable<ModelLSA>;
-  modelTopN$: Observable<ModelTopN>;
+  card$: Observable<Card> = null;
+  colors: string[] = [];
+  mode: string = '';
+  selectedCard : Card = new Card();
+  modelLSA$: Observable<ModelLSA> = null;
+  modelTopN$: Observable<ModelTopN> = null;
 
   constructor(
     private route: ActivatedRoute,

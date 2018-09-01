@@ -15,7 +15,7 @@ import { Observable } from 'rxjs';
   styleUrls: ['./deck-display.component.css']
 })
 export class DeckDisplayComponent implements OnInit {  
-  @Input() multiverseids: number [];
+  @Input() multiverseids: number [] = [];
   filterType: string = 'All Types';
   filterName: string = '';
 

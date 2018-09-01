@@ -20,9 +20,9 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 })
 
 export class RecommendationviewComponent implements OnInit {
-  @Input() card: Card;
-  @Input() recommendation: CardRecommendation;
-  contributions: Card[];
+  @Input() card: Card = new Card();
+  @Input() recommendation: CardRecommendation = new CardRecommendation(0, 0, {});
+  contributions: Card[] = [];
 
   constructor(private cardService: CardService) {}
 

@@ -32,7 +32,6 @@ export class DeckService {
   }
 
   getColors(): Color[]{
-    //return of([...this._deck.colors, new Color('No color')]);
     return this._deck.colors;
   }
 
@@ -40,17 +39,9 @@ export class DeckService {
     return this._deck.mode;
   }
 
-  //TODO: delete in future if unused
-  createDeck(colors: string[], mode: string) {
-    //this._deck.createDeck(colors, mode);    
-    this._deck = Deck.createDeck(colors, mode);
-  }
-
   update(deck: Deck): Observable<Deck>{
     this._deck = Deck.createDeck(deck.colors.map(color => color.name), deck.mode.name);
     this._deck.cards = [...deck.cards];
-    //this._deck.colors = [...deck.colors];
-    //this._deck.mode = new Mode(deck.mode.name);
     return of(this._deck);
   }
 

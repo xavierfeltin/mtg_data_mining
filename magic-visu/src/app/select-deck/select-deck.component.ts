@@ -14,8 +14,8 @@ import { map } from 'rxjs/Operators';
   styleUrls: ['./select-deck.component.css']
 })
 export class SelectDeckComponent implements OnInit {
-  decks: string[];
-  @Input() selectedDeck: string;
+  decks: string[] = [];
+  @Input() selectedDeck: string = '';
   @Output() select: EventEmitter<string> = new EventEmitter();
 
   constructor(private deckService: DeckService) { }

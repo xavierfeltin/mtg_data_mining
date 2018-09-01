@@ -10,7 +10,7 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 })
 
 export class CardviewComponent implements OnInit {
-  @Input() card: Card;
+  @Input() card: Card = new Card();
   
   constructor() { }
 

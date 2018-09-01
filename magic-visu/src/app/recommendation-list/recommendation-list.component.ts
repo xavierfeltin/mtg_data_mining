@@ -25,11 +25,11 @@ import { CardService } from '../card.service';
   styleUrls: ['./recommendation-list.component.css']
 })
 export class RecommendationListComponent implements OnInit, OnChanges {
-  @Input() model: Model;
-  @Input() cards: Card[];
+  @Input() model: Model = new ModelLSA([], {});
+  @Input() cards: Card[] = [];
   @Input() nbRecommendations: number = 5;
-  @Input() modelType: string;
-  recommendations: CardRecommendation[];
+  @Input() modelType: string = '';
+  recommendations: CardRecommendation[] = [];
 
   constructor(private cardService: CardService) { }
 

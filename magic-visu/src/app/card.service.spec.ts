@@ -1,15 +1,19 @@
 import { TestBed, inject } from '@angular/core/testing';
+import {
+  HttpClientTestingModule
+} from '@angular/common/http/testing';
 
-import { CardServiceService } from './card-service.service';
+import { CardService } from './card.service';
 
-describe('CardServiceService', () => {
+describe('CardService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [CardServiceService]
+      imports: [HttpClientTestingModule],
+      providers: [CardService]
     });
   });
 
-  it('should be created', inject([CardServiceService], (service: CardServiceService) => {
+  it('should be created', inject([CardService], (service: CardService) => {
     expect(service).toBeTruthy();
   }));
 });

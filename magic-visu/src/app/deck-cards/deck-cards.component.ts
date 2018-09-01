@@ -35,8 +35,8 @@ import { TYPES } from '../store/store-type'
   styleUrls: ['./deck-cards.component.css']
 })
 export class DeckCardsComponent implements OnInit {  
-  @Input() cards: Card[];  
-  types: string[];
+  @Input() cards: Card[] = [];  
+  types: string[] = [];
   
 
   constructor(private deckService: DeckService) { }

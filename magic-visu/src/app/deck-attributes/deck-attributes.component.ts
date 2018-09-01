@@ -17,8 +17,8 @@ import { Deck } from '../models/deck';
   styleUrls: ['./deck-attributes.component.css']
 })
 export class DeckAttributesComponent implements OnInit, OnChanges {
-  @Input() deck: Deck;
-  colors: string;
+  @Input() deck: Deck = new Deck();
+  colors: string = '';
 
   constructor() { }
 
