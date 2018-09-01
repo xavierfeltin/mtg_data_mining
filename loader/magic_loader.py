@@ -270,9 +270,9 @@ class MagicLoader:
         :param color_to_convert: binary color
         :return: string
         """
-        color = ''
+        color = []
         for i, code in enumerate(MagicLoader.COLORS):
             if color_to_convert & code != 0:
-                color += MagicLoader.HASH_COLOR_CODE_STRING[code]
-                color += '_'
-        return color[0:len(color)-1]
+                color.append(MagicLoader.HASH_COLOR_CODE_STRING[code].capitalize())
+        color.sort()
+        return "_".join(color)

@@ -7,6 +7,7 @@
 # - http://www.datascienceassn.org/sites/default/files/users/user1/lsa_presentation_final.pdf
 # - https://machinelearningmastery.com/clean-text-machine-learning-python/
 
+import json
 from random import randint
 from math import ceil
 from nltk.tokenize import word_tokenize
@@ -40,7 +41,7 @@ class DataCleaner:
         Clean and homogeneize the data
         """
 
-        max_length = len(max(self.dirty_data, key=len))
+        #max_length = len(max(self.dirty_data, key=len))
         for data in self.dirty_data:
             data = data.lower()
             data = data.replace('\n', '')
@@ -165,7 +166,11 @@ class LSAEncoder:
 
 class LSAManager:
     def __init__(self, cards_content):
-        self.cards_content = cards_content
+        #self.cards_content = cards_content
+        self.cards_content = {}
+        for card in cards_content:
+            self.cards_content[card.multiverseid] = card.full_text
+
         self.cards_encoded = {}
         self.encoder = None
 
@@ -205,3 +210,17 @@ class LSAManager:
         #similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(self.cards_encoded[list_cards]).T)
         similarity = np.asarray(np.asmatrix(self.cards_encoded[card_1]) * np.asmatrix(encoded_list).T)
         return similarity[0]
+
+    def save(self, catalog, path, filename):
+        '''
+        Save the LSA coefficients for the cards in the catalog
+        :param catalog: list of cards to save
+        '''
+        json_data = {}
+        json_data['cards'] = catalog
+        json_data['coefficients'] = {}
+        for multiverseid in catalog:
+            json_data['coefficients'][multiverseid] = list(self.cards_encoded[multiverseid])
+
+        with open(path + '/' + filename + '.json', 'w') as outfile:
+            json.dump(json_data, outfile)

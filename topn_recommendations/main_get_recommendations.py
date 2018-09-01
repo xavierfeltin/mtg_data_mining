@@ -10,7 +10,6 @@ import os
 
 from loader.magic_loader import MagicLoader
 from loader.deck_manager import DeckManager
-from topn_recommendations.models.item_based_deshpande import ItemBasedDeshpande
 from topn_recommendations.models.bpr_knn import BPRKNN
 
 def load_magic_environment():
@@ -43,11 +42,12 @@ if __name__ == "__main__":
     card_loader = load_magic_environment()
     decks_loader = load_decks(card_loader)
 
-    black_blue_green_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLACK | MagicLoader.CODE_BLUE | MagicLoader.CODE_GREEN
-    decks = decks_loader[MagicLoader.JSON_LEGACY].grouped_decks[black_blue_green_red]
+    blue_white = MagicLoader.CODE_BLUE | MagicLoader.CODE_WHITE
+    decks = decks_loader[MagicLoader.JSON_STANDARD].grouped_decks[blue_white]
 
     print('Getting recommendations for :')
-    # https://deckstats.net/decks/629/1008688-czech-pile/en
+
+    #Example of deck from https://deckstats.net/decks/629/1008688-czech-pile/en
     built_decks = [3897, 414380, 27251, 423724, 3107, 1852, 195297, 394613, 806, 414388, 139512, 205019, 4083, 145969, 409889, 430619, 290529, 416834, 227676]
 
     hash_card_support = {}
@@ -72,14 +72,37 @@ if __name__ == "__main__":
         print('  - ' + str(card.multiverseid) + ' - ' + card.name + ' - support: ' + str(hash_card_support[multiverseid]))  # Expect Goblins
     print('Cards represented in ' + str(len(targeted_decks)) + ' decks')
 
-    #filename = 'model_cosine_lsa_row_25_' + MagicLoader.JSON_LEGACY + '_' + str(black_blue_green_red)
-    #model = ItemBasedDeshpande.load_coefficients('./generated_models/' + filename)
-
-    filename = 'model_bpr_knn_' + MagicLoader.JSON_LEGACY + '_' + str(black_blue_green_red) + '.json'
-    model = BPRKNN.load_coefficients('./generated_models/' + filename)
-
     n = 10
+    print('BPR KNN:')
+    filename = 'Standard_Blue_White_bprknn.json'
+    model = BPRKNN.load_coefficients_from_string('./generated_models/' + filename)
     recommendations = model.get_top_N_recommendations(built_decks, n)
+    contributions = model.get_contributions(recommendations.index, built_decks, max_contributors = 10, thresold=0.1)
+
     for multiverseid, score in recommendations.iteritems():
         card = card_loader.cards_multiverseid[int(multiverseid)]
-        print('  - ' + str(card.multiverseid) + ' - ' + card.name)
+        if len(contributions[int(multiverseid)]) > 0:
+            contrib_cards = ', '.join(map(lambda x: card_loader.cards_multiverseid[x[0]].name + '(' + str(round(x[1]*100.0, 2)) + '%)', contributions[multiverseid]))
+        else:
+            contrib_cards = 'global contribution'
+        print('  - ' + str(card.multiverseid) + ' - ' + card.name + ', because you selected: ' + contrib_cards)
+
+    '''    
+    print('Item KNN:')
+    k = 25
+    filename = 'model_item_knn_cosine_' + MagicLoader.JSON_LEGACY + '_' + str(black_blue_green_red) + '_' + str(k) + '.json'
+    model = ItemBasedDeshpande.load_coefficients('./generated_models/' + filename)
+    recommendations = model.get_top_N_recommendations(built_decks, n)
+    contributions = model.get_contributions(recommendations.index, built_decks, max_contributors = 10)
+
+    for multiverseid, score in recommendations.iteritems():
+        card = card_loader.cards_multiverseid[int(multiverseid)]
+        if len(contributions[int(multiverseid)]) > 0:
+            contrib_cards = ', '.join(
+                map(lambda x: card_loader.cards_multiverseid[x[0]].name + '(' + str(round(x[1] * 100.0, 2)) + '%)',
+                    contributions[multiverseid]))
+        else:
+            contrib_cards = 'global contribution'
+
+        print('  - ' + str(card.multiverseid) + ' - ' + card.name + ', because you selected: ' + contrib_cards)
+    '''

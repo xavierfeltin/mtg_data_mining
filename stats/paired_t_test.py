@@ -2,6 +2,8 @@
 #
 # MIT License
 # Copyright (c) 2018 Xavier FOLCH
+#
+# Class to manage Paired T-Test
 
 from scipy import stats
 from numpy import average, std, subtract

@@ -7,11 +7,7 @@
 # Statistics are based on paired t-tests
 #
 
-
-import os
-from random import randint
 from multiprocessing import Pool, Manager
-from collections import deque
 import xlsxwriter
 from numpy import isnan
 
@@ -113,7 +109,7 @@ def test_model(params):
         modelTopN = BPRKNN(training_catalog, training_set,testing_set)
         modelTopN.build_model(N=params.n, lbd_I=params.lbd_I,
                               lbd_J=params.lbd_J, learning_rate=params.learning_rate, epoch=params.epoch, batch_size=params.batch_size,
-                              decay=params.decay, nb_early_learning=params.nb_early_learning,min_leaning_rate=params.min_leaning_rate)
+                              decay=params.decay, nb_early_learning=params.nb_early_learning,min_leaning_rate=params.min_leaning_rate,normalize=params.normalize)
 
     nb_hits = 0
     arhr_score = 0
@@ -141,7 +137,6 @@ def worker(id, jobs_queue, results_queue):
         result = ModelResults(data.id_run, data.mode, data.color, scores)
         results_queue.put(result)
 
-#def process_recommendations(k, n, decks_runs, decks_random_items_run, alpha, norm_sim, model_sim, lsa_manager):
 def process_recommendations(model_parameters):
     '''
     Producer / Consumer model for multithreading
@@ -309,26 +304,26 @@ if __name__ == "__main__":
     alpha = 0.5
 
     # 1 color
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, MagicLoader.CODE_RED, decks_loader, nb_runs)
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, MagicLoader.CODE_RED, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, MagicLoader.CODE_RED, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, MagicLoader.CODE_RED, decks_loader, nb_runs)
 
     # 3 colors
     black_blue_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_red, decks_loader, nb_runs)
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_red, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_red, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_red, decks_loader, nb_runs)
 
     # 4 colors
     black_blue_green_white = MagicLoader.CODE_WHITE | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_GREEN
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_green_white, decks_loader, nb_runs)
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_green_white, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_COMMANDER, black_blue_green_white, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_green_white, decks_loader, nb_runs)
 
     black_blue_green_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_GREEN
     add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, black_blue_green_red,decks_loader, nb_runs)
 
     # 5 colors
     five_colors = MagicLoader.CODE_RED | MagicLoader.CODE_BLUE | MagicLoader.CODE_BLACK | MagicLoader.CODE_WHITE | MagicLoader.CODE_GREEN
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, five_colors, decks_loader, nb_runs)
-    #add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, five_colors, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_LEGACY, five_colors, decks_loader, nb_runs)
+    add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_PAUPER, five_colors, decks_loader, nb_runs)
     add_deck_serie(studied_runs_decks, decks_runs_random_items, MagicLoader.JSON_VINTAGE, five_colors, decks_loader, nb_runs)
 
     #modelisation_single_process(nb_run,k_min,k_max,n_recommendations)
@@ -336,37 +331,50 @@ if __name__ == "__main__":
     subtitles = deque()
     model_type = 'simu_cosine'
 
+    '''
     results.append(modelisation_multi_process(BPRKNNParameters(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,
                                                                lbd_I=0.01, lbd_J=0.005, learning_rate=0.1, epoch=200, batch_size=100, decay=0.5, nb_early_learning = 20, min_leaning_rate= 0.025)))
+    results.append(modelisation_multi_process(BPRKNNParameters(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None,
+                                                                lbd_I=0.01, lbd_J=0.005, learning_rate=0.1, epoch=200, batch_size=100, decay=0.5,
+                                                                nb_early_learning=20, min_leaning_rate=0.025, normalize=True)))
     results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager)))
-    #results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25,alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
-    #results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
-    '''
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA, lsa_manager))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA, lsa_manager))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager))
-    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25,alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
     '''
 
+    #cosine (-)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    #cosine(+)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_COSINE, lsa_manager)))
+    # cosine(+,row)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_ROW, lsa_manager)))
+    # cosine_lsa(-)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, False,ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA, lsa_manager)))
+    # cosine_lsa(+)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None,  None,  25, alpha, True,ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA, lsa_manager)))
+    # cosine_lsa(+, row)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25,alpha, True, ItemDeshpandeParamerers.MODEL_SIM_COSINE_LSA_ROW, lsa_manager)))
+    # cosine_proba(-)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, False, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
+    # cosine_proba(+)
+    results.append(modelisation_multi_process(ItemDeshpandeParamerers(None, n_recommendations, studied_runs_decks, decks_runs_random_items, None, None, 25, alpha, True, ItemDeshpandeParamerers.MODEL_SIM_PROBA, lsa_manager)))
+
+    '''
     subtitles.append('bpr-knn')
+    subtitles.append('bpr-knn(+)')
     subtitles.append('cosine(+, row) 25k')
     #subtitles.append('cosine(-) 25k')
     #subtitles.append('proba(+) 25k')
+    '''
 
-    '''
-    subtitles.append('cosine(-) 25k')
-    subtitles.append('cosine(+) 25k')
-    subtitles.append('cosine(+, row) 25k')
-    subtitles.append('cosine lsa(-) 25k')
-    subtitles.append('cosine lsa(+) 25k')
-    subtitles.append('cosine lsa(+, row) 25k')
-    subtitles.append('proba(-) 25k')
-    subtitles.append('proba(+) 25k')
-    '''
+    subtitles.append('cosine(-)')
+    subtitles.append('cosine(+)')
+    subtitles.append('cosine(+, row)')
+    subtitles.append('cosine lsa(-)')
+    subtitles.append('cosine lsa(+)')
+    subtitles.append('cosine lsa(+, row)')
+    subtitles.append('proba(-)')
+    subtitles.append('proba(+)')
 
     print('Start consolidation and export statistics to excel')
     consolidated_results = deque()

@@ -4,15 +4,13 @@
 # Copyright (c) 2018 Xavier FOLCH
 #
 
-import sys
-
 class Card:
-
     JSON_WHITE = 'W'
     JSON_BLUE = 'U'
     JSON_BLACK = 'B'
     JSON_RED = 'R'
     JSON_GREEN = 'G'
+    JSON_NO_COLOR = 'NC'
 
     STRING_WHITE = 'White'
     STRING_BLUE = 'Blue'
@@ -70,7 +68,22 @@ class Card:
                 if abbr == Card.JSON_GREEN: colors.append(Card.STRING_GREEN)
                 if abbr == Card.JSON_RED: colors.append(Card.STRING_RED)
                 if abbr == Card.JSON_WHITE: colors.append(Card.STRING_WHITE)
-            return colors
+            return sorted(colors)
+
+    def get_colors_abbr(self):
+        if len(self.colors) == 0:
+            return [Card.JSON_NO_COLOR]
+        else:
+            return sorted(self.colors)
 
     def is_basic_land(self):
         return ('Land' in self.types and self.description == '')
+
+    def to_json(self):
+        json_data = {}
+        json_data['multiverseid'] = self.multiverseid
+        json_data['name'] = self.name
+        json_data['types'] = self.types
+        json_data['colors'] = self.get_colors_names()
+        json_data['manaCost'] = self.mana_cost
+        return json_data

@@ -52,7 +52,13 @@ class BPRKNN:
             encoded_deck.append(self.encoder[card])
         return encoded_deck
 
-    def build_model(self, N=5, lbd_I=0.05, lbd_J=0.01, learning_rate=0.01, epoch=30, batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate = 0.025):
+    def build(self, parameters):
+        self.build_model(N=parameters['N'], lbd_I=parameters['lbd_I'], lbd_J=parameters['lbd_J'],
+                         learning_rate=parameters['learning_rate'], epoch=parameters['epoch'], batch_size=parameters['batch_size'],
+                         decay=parameters['decay'], nb_early_learning = parameters['nb_early_learning'],
+                         min_leaning_rate = parameters['min_leaning_rate'], normalize=parameters['normalize'])
+
+    def build_model(self, N=5, lbd_I=0.05, lbd_J=0.01, learning_rate=0.01, epoch=30, batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate = 0.025, normalize=False):
         if len(self.decks) == 0 or len(self.test_cards) == 0: return;
 
         # print('Build models ...')
@@ -77,6 +83,9 @@ class BPRKNN:
             self.scores.append(evaluation)
             self._add_evaluations(evaluation[0], evaluation[1], nb_early_learning)
             ep += 1
+
+        if normalize:
+            self._normalize()
 
     def _get_testing_scores(self, built_deck, n_recommendations):
         '''
@@ -120,6 +129,107 @@ class BPRKNN:
 
         res = res.nlargest(n_recommendations)
         return res[res > 0.0]
+
+    def get_contributions(self, recommendations, built_deck, thresold=None, max_contributors = 5):
+        '''
+        Return for each recommendations the n cards with the most influence on the recommendation
+        :param recommendations: list of recommendations
+        :param built_deck: selected cards by the player used for the recommendations
+        :param thresold: minimum percentage value to be considered have an influence on the recommendations
+        :param max_contributors: maximum number of influential cards returned for each recommendation
+        :return: hash with the recommendation as key, and an array of pair values (contributor, percentage of contribution)
+        '''
+        encoded_recommendations = self.encode_deck(recommendations)
+        encoded_deck = self.encode_deck(built_deck)
+        contribution = {}
+
+        if thresold is None:
+            thresold = 1.0/len(built_deck)
+
+        matrix_contributions = np.zeros((len(recommendations), len(built_deck)), dtype=np.float64)
+        for i, rec_card in enumerate(encoded_recommendations):
+            sum = 0.0
+            for j, built_card in enumerate(encoded_deck):
+                matrix_contributions[i][j] = self.C[rec_card][built_card]
+                sum += self.C[rec_card][built_card]
+
+            matrix_contributions[i] = matrix_contributions[i] / sum
+            indexes = matrix_contributions[i].argsort()[::-1]
+
+            relevant_cards = [(self.decoder[encoded_deck[x]], matrix_contributions[i][x]) for x in indexes if matrix_contributions[i][x] > thresold]
+            contribution[self.decoder[rec_card]] = relevant_cards[0:max_contributors]
+        return contribution
+
+    def save_coefficients(self, path):
+        '''
+        Save model's coefficients and cards used when learning the model
+        '''
+
+        self.save_string_coefficients(path)
+
+        ''' For numpy binary format
+        serialized_model = {}
+        memfile = BytesIO()
+        np.save(memfile, self.C, allow_pickle=False)
+        memfile.seek(0)
+        serialized_model['coefficients'] = memfile.read().decode('latin-1') # latin-1 maps byte n to unicode code point n
+
+        #serialized_model['coefficients'] = json.dumps([str(self.C.dtype), base64.b64encode(self.C), self.C.shape])
+
+        serialized_model['cards'] = self.cards
+
+        with open(path, 'w') as outfile:
+            json.dump(serialized_model, outfile)
+        '''
+
+    def save_binary_coefficients(self, path):
+        np.save(path, self.C, allow_pickle=False)
+
+    def save_string_coefficients(self, path):
+        serialized_model = {}
+
+        serialized = []
+        for i in range(len(self.C)):
+            serialized.append(self.C[i].tolist())
+
+        serialized_model['coefficients'] = serialized
+        serialized_model['cards'] = self.cards
+
+        with open(path, 'w') as outfile:
+            json.dump(serialized_model, outfile)
+
+    @staticmethod
+    def load_coefficients(path):
+        '''
+        Load model's coefficients and cards from saving file
+        '''
+
+        with open(path) as f:
+            data = json.load(f)
+
+        model = BPRKNN(data['cards'], None, None)
+
+        memfile = BytesIO()
+        memfile.write(data['coefficients'].encode('latin-1'))
+        memfile.seek(0)
+        model.C = np.load(memfile)
+
+        return model
+
+    @staticmethod
+    def load_coefficients_from_string(path):
+        with open(path) as f:
+            data = json.load(f)
+
+        model = BPRKNN(data['cards'], None, None)
+        model.C = np.asarray(data['coefficients'],dtype=np.float64).reshape((len(model.cards), len(model.cards)))
+        a = 0
+        return model
+
+    @staticmethod
+    def get_default_parameters():
+        return {'N':5, 'lbd_I':0.05, 'lbd_J':0.01, 'learning_rate':0.01, 'epoch':30, 'batch_size':50, 'decay':0.5,
+                'nb_early_learning': 10, 'min_leaning_rate': 0.025, 'normalize':False}
 
     def _train(self, deck, item_i, item_j, lbd_I, lbd_J, learning_rate):
         '''
@@ -220,6 +330,9 @@ class BPRKNN:
     def get_scores(self):
         return self.scores
 
+    def get_name(self):
+        return 'bprknn'
+
     def _compute_momentum(self, a, b, learning_rate, gradientC):
         '''
         source: https://towardsdatascience.com/stochastic-gradient-descent-with-momentum-a84097641a5d
@@ -257,47 +370,7 @@ class BPRKNN:
             #print('delta: N/A')
             return True
 
-    def save_coefficients(self, path):
-        '''
-        Save model's coefficients and cards used when learning the model
-        '''
-
-        serialized_model = {}
-        memfile = BytesIO()
-        np.save(memfile, self.C, allow_pickle=False)
-        memfile.seek(0)
-        serialized_model['coefficients'] = memfile.read().decode('latin-1') # latin-1 maps byte n to unicode code point n
-
-        #serialized_model['coefficients'] = json.dumps([str(self.C.dtype), base64.b64encode(self.C), self.C.shape])
-
-        serialized_model['cards'] = self.cards
-
-        with open(path, 'w') as outfile:
-            json.dump(serialized_model, outfile)
-
-    @staticmethod
-    def load_coefficients(path):
-        '''
-        Load model's coefficients and cards from saving file
-        '''
-
-        with open(path) as f:
-            data = json.load(f)
-
-        model = BPRKNN(data['cards'], None, None)
-
-        memfile = BytesIO()
-        memfile.write(data['coefficients'].encode('latin-1'))
-        memfile.seek(0)
-        model.C = np.load(memfile)
-
-        # build the numpy data type
-        #data_coefficient = data['coefficients']
-        #data_type = np.dtype(data_coefficient[0])
-
-        # decode the base64 encoded numpy array data and create a new numpy array with this data & type
-        #data_array = np.frombuffer(base64.decodebytes(data_coefficient[1]), data_type)
-        #data_array.reshape(data_coefficient[2])  # return the reshaped numpy array containing several data set
-        #model.C = data_array
-
-        return model
+    def _normalize(self):
+        for j in range(len(self.C)):
+            norm = np.linalg.norm(self.C[:][j])
+            self.C[:][j] /= norm

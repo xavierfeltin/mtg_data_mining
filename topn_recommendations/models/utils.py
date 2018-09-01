@@ -36,7 +36,7 @@ class ItemDeshpandeParamerers(ModelParameters):
 
 class BPRKNNParameters(ModelParameters):
     def __init__(self, id_run, n, decks, random_items, mode, color, lbd_I=0.05, lbd_J=0.01, learning_rate=0.01, epoch=30,
-                 batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate = 0.025):
+                 batch_size=50, decay=0.5, nb_early_learning = 10, min_leaning_rate = 0.025, normalize=False):
         ModelParameters.__init__(self, id_run, n,decks, random_items, mode, color)
         self.lbd_I = lbd_I
         self.lbd_J = lbd_J
@@ -46,10 +46,11 @@ class BPRKNNParameters(ModelParameters):
         self.decay = decay
         self.nb_early_learning = nb_early_learning
         self.min_leaning_rate = min_leaning_rate
+        self.normalize = normalize
 
     def copy(self):
         return BPRKNNParameters(self.id_run, self.n, self.decks, self.random_items, self.mode, self.color, self.lbd_I,
-           self.lbd_J, self.learning_rate, self.epoch, self.batch_size, self.decay, self.nb_early_learning, self.min_leaning_rate)
+           self.lbd_J, self.learning_rate, self.epoch, self.batch_size, self.decay, self.nb_early_learning, self.min_leaning_rate, self.normalize)
 
 class ModelResults:
     #def __init__(self,id_run, k,mode,color, results):

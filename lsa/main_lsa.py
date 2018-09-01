@@ -46,7 +46,7 @@ def print_similarities_card(card_name, nb_recommendations, lsa_manager, card_loa
     for i in range(nb):
         recommendations[card_loader.hash_id_name[similarities.index[i]]] = similarities.iloc[i]['content_similarity']
 
-    with open('./../cntent_similarities_' + card_name.lower() + '.json', 'w') as f:
+    with open('./../content_similarities_' + card_name.lower() + '.json', 'w') as f:
         json.dump(recommendations, f)
 
 if __name__ == "__main__":

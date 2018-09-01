@@ -3,13 +3,9 @@
 # MIT License
 # Copyright (c) 2018 Xavier FOLCH
 #
-# Main for building and saving models
+# Main for generating models and saving them
 #
 
-import os
-
-from loader.magic_loader import MagicLoader
-from loader.deck_manager import DeckManager
 from lsa.lsa_encoder import LSAManager
 from collaborative_filtering.item_to_item import ItemToItem
 from topn_recommendations.models.item_based_deshpande import ItemBasedDeshpande
@@ -59,6 +55,42 @@ def encoding_magic_card_subsets(cards):
     lsa_manager.encode()
     return lsa_manager
 
+def generate_item_knn_model(card_catalog, mode, color, training_set):
+    k = 25
+    alpha = 0.5
+    norm_similarities = True
+    model_similarities = ItemToItem.compute_cosine_angle_binary_row
+    model = ItemBasedDeshpande(card_catalog, training_set)
+    model.build_model(k, model_similarities, lsa_manager, alpha, norm_similarities)
+
+    print('Saving model...')
+    filename = 'model_item_knn_cosine_' + mode + '_' + str(color) + '_' + str(k) + '.json'
+    model.save_coefficients('./generated_models/' + filename)
+
+def generate_bpr_knn_model(card_catalog, mode, color, training_set, testing_set):
+    nb_runs = 1
+    best_model = None
+    for i in range(nb_runs):
+        print('run ' + str(i))
+
+        model = BPRKNN(card_catalog, training_set, testing_set)
+        model.build_model(N=5, lbd_I=0.01,
+                          lbd_J=0.005, learning_rate=0.1, epoch=200, batch_size=100, decay=0.5, nb_early_learning=20,
+                          min_leaning_rate=0.025, normalize=True)
+
+        if best_model is None:
+            best_model = model
+        else:
+            if best_model.get_scores()[-1][0] < model.get_scores()[-1][0]:
+                best_model = model
+            elif best_model.get_scores()[-1][0] == model.get_scores()[-1][0] and best_model.get_scores()[-1][1] < model.get_scores()[-1][1]:
+                best_model = model
+
+    print('Saving model...')
+    filename = 'model_bpr_knn_' + mode + '_' + str(color) + '_string.json'
+    best_model.save_string_coefficients('./generated_models/' + filename)
+
+
 if __name__ == "__main__":
     print('Load Magic environment')
     card_loader = load_magic_environment()
@@ -70,9 +102,6 @@ if __name__ == "__main__":
         set_cards = set_cards.union(decks_loader[mode].cards)
     card_catalog = list(set_cards)
 
-    #black_blue_green_red = MagicLoader.CODE_RED | MagicLoader.CODE_BLACK | MagicLoader.CODE_BLUE | MagicLoader.CODE_GREEN
-    #decks = decks_loader[MagicLoader.JSON_LEGACY].grouped_decks[black_blue_green_red]
-
     studied_decks = {}
     decks_runs_random_items = {}
 
@@ -82,32 +111,6 @@ if __name__ == "__main__":
     card_catalog = generate_card_catalog(decks_loader, mode, color)
 
     print('Building model...')
-    # Model configuration
-    #k = 25
-    #alpha = 0.5
-    #norm_similarities = True
-    #model_similarities = ItemToItem.compute_cosine_angle_binary_lsa_row
-    #model = ItemBasedDeshpande(card_catalog, decks)
-    #model.build_model(k, model_similarities, lsa_manager, alpha, norm_similarities)
-
-    nb_runs = 10
-    best_model = None
-    for i in range(nb_runs):
-        print('run ' + str(i))
-
-        model = BPRKNN(card_catalog, studied_decks[mode][color][0], decks_runs_random_items[mode][color][0])
-        model.build_model(N=5, lbd_I=0.01,
-                          lbd_J=0.005, learning_rate=0.1, epoch=200, batch_size=100, decay=0.5, nb_early_learning=20,
-                          min_leaning_rate=0.025)
-
-        if best_model is None:
-            best_model = model
-        else:
-            if best_model.get_scores()[-1][0] < model.get_scores()[-1][0]:
-                best_model = model
-            elif best_model.get_scores()[-1][0] == model.get_scores()[-1][0] and best_model.get_scores()[-1][1] < model.get_scores()[-1][1]:
-                best_model = model
-
-    print('Saving model...')
-    filename = 'model_bpr_knn_' + mode + '_' + str(color)  + '.json'
-    best_model.save_coefficients('./generated_models/' + filename)
+    #generate_item_knn_model(card_catalog, mode, color, studied_decks[mode][color][0])
+    generate_bpr_knn_model(card_catalog, mode, color,  studied_decks[mode][color][0], decks_runs_random_items[mode][color][0])
+    

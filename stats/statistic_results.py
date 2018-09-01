@@ -2,6 +2,9 @@
 #
 # MIT License
 # Copyright (c) 2018 Xavier FOLCH
+#
+# Classes to consolidate several results of statistics measures
+
 
 from collections import deque
 from topn_recommendations.models.utils import KeyGenerator

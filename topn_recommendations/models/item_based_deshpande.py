@@ -21,6 +21,11 @@ class ItemBasedDeshpande:
         self.decks = decks
         self.model = None
 
+    def build(self, parameters):
+        self.build_model(k_neighbors=parameters['k_neighbors'], similarity_model=parameters['similarity_model'], lsa_manager=parameters['lsa_manager'],
+                         alpha=parameters['alpha'], normalize_similarities=parameters['normalize_similarities'],
+                         recommender=parameters['recommender'])
+
     def build_model(self, k_neighbors, similarity_model, lsa_manager, alpha = 0.5, normalize_similarities = False, recommender=None):
         '''
         Get the similarities from the item manager and force values lower than the last k values to 0
@@ -66,6 +71,26 @@ class ItemBasedDeshpande:
         recommendations = similarities.nlargest(n)
         return recommendations[recommendations > 0.0]
 
+    def get_contributions(self, recommendations, built_deck, thresold=None, max_contributors = 5):
+        contribution = {}
+
+        if thresold is None:
+            thresold = 1.0/len(built_deck)
+
+        matrix_contributions = np.zeros((len(recommendations), len(built_deck)), dtype=np.float64)
+        for i, rec_card in enumerate(recommendations):
+            sum = 0.0
+            for j, built_card in enumerate(built_deck):
+                matrix_contributions[i][j] = self.model.at[rec_card, built_card]
+                sum += self.model.at[rec_card, built_card]
+
+            matrix_contributions[i] = matrix_contributions[i] / sum
+            indexes = matrix_contributions[i].argsort()[::-1]
+
+            relevant_cards = [(built_deck[x], matrix_contributions[i][x]) for x in indexes if matrix_contributions[i][x] > thresold]
+            contribution[rec_card] = relevant_cards[0:max_contributors]
+        return contribution
+
     def compute_items_similarities(self, similarity_model, lsa_manager, alpha):
         item_recommender = ItemToItem(self.card_catalog)
         item_recommender.load_ratings(self.decks)
@@ -76,6 +101,9 @@ class ItemBasedDeshpande:
         #self.model.to_json(path)
         self.model.to_pickle(path)
 
+    def get_name(self):
+        return 'itemknn'
+
     @staticmethod
     def load_coefficients(path):
         #self.model = pd.read_json(path)
@@ -83,3 +111,8 @@ class ItemBasedDeshpande:
         model = ItemBasedDeshpande(list(df.index), [])
         model.model = df
         return model
+
+    @staticmethod
+    def get_default_parameters():
+        return {'k_neighbors':10, 'similarity_model':None, 'lsa_manager':None,
+                'alpha':0.5, 'normalize_similarities':False, 'recommender':None}
