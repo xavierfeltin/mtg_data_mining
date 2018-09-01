@@ -1,12 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { map, publishReplay, refCount, catchError } from 'rxjs/operators';
-import { compareCardsFn, filterColorsTypesNameFn } from './card.utils';
-import { Card } from './models/card';
+import { publishReplay, refCount, catchError } from 'rxjs/operators';
 import { ModelLSA, ModelTopN } from './models/model';
-import { CardRecommendation } from './models/card-recommendation';
-import { COLORS } from './store/store-color';
 
 
 @Injectable({

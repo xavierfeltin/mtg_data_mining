@@ -15,7 +15,6 @@ export class ColorService {
   }
 
   getReducedColors(): Observable<Color[]>{
-    //return of([...COLORS.slice(0, COLORS.length-1), new Color('No Color')]);
     return of(COLORS);
   }
 }

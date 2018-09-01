@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ModeService } from '../mode.service';
-//import { Mode } from '../models/mode';
 import { Card } from '../models/card';
 
 @Component({

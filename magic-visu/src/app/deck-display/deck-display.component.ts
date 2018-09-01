@@ -1,5 +1,4 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { DeckService } from '../deck.service';
 import { CardService } from '../card.service';
 import { Card } from '../models/card';
 import { Observable } from 'rxjs';
