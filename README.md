@@ -1,12 +1,14 @@
 # Magic the gathering: Data Mining
 
 This is an exploratory project on data mining.
-The objective is to implement the concepts that may be used in a recommendation system for assisting players to build cards deck.
 
-At the moment, the approaches integrated into this project are :
-  - Latent semantic analysis
-  - Association rules
-  - Collaborative filtering
+The objective is to implement the concepts that may be used in a recommendation system for assisting players to build cards deck. 
+Recommendations are made depending of the previously selected cards in the player's deck.
+
+The project allows making different type of recommendations:
+  - Cards with a content similar to a particular card (Latent semantic analysis)
+  - Cards usually played with a particular card (Collaborative filtering)
+  - Cards usually played with a set of cards (TopN recommendations)
 
 The project is structured into different module each corresponding to a different approach. A web interface is as well developped in order to exploit the models with a concrete application. 
 
