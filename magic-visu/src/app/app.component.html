@@ -1,7 +1,19 @@
+
 <div style="float: left; width: 20%; overflow: hidden; margin-right: 10px;">
     <app-deck-view></app-deck-view>
 </div>
+
+<div class="menu" style="overflow: hidden;">
+    <div class="hlayout">   
+        <a routerLink="/catalog" id="menu"> All Cards </a>
+        <a routerLink="/recommendations" id="menu"> Recommendations </a>
+        <a routerLink="/decks" id="menu"> All Decks </a>
+        <a routerLink="/" id="menu"> New Deck </a>    
+    </div>
+</div>
+
 <div style="overflow: hidden;">
     <router-outlet></router-outlet>
 </div>
-<p class="information">  -- This website is a fan content not endorsed or sponsored by Wizards -- </p>
+
+<p style="margin: 50px 0px 0px 5px;" class="information">  -- This website is a fan content not endorsed or sponsored by Wizards -- </p>

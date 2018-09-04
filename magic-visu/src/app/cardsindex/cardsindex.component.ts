@@ -18,14 +18,7 @@ import { ModelTopN } from '../models/Model';
         <app-select-types (select)="onSelectType($event)" [selectedType]="filterType"></app-select-types>
         <app-input-cards (keyup.enter)="onValidateName($event.target.value)" [defaultValue]="filterName"></app-input-cards>
       </div>
-      <app-cardsview [cards]="getCards()|async"> </app-cardsview>
-
-      <h2>Deck Recommendations:</h2>
-      <p class="information">Recommendations are based on the cards present in your deck (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Deck-recommendations" target="_blank">more information</a>)
-      <br/> A higher score means the card is played more often with the cards in your deck
-      <br/> The details of the contribution of your deck on the recommendations are displayed in the cards tooltip 
-      </p>
-      <app-recommendation-list [model]="modelTopN$ | async" [cards]="deckService.getCards() | async" [nbRecommendations]="5" [modelType]="'TOPN'"></app-recommendation-list>
+      <app-cardsview [cards]="getCards()|async" [nb]=10> </app-cardsview>
     </ng-container>
 
     <ng-template #loading>      
@@ -55,7 +48,7 @@ export class CardsindexComponent implements OnInit {
       this.modelTopN$ = this.modelService.loadTopNModel(this.deck.colors.map(color => color.name), this.deck.mode.name);
       this.colors = [...this.deck.colors];
       this.colorsNames = this.colors.map(color => color.name);
-      this.filterColor = this.colors[0].name;      
+      this.filterColor = this.colors.length == 0 ? '' : this.colors[0].name;      
       this.cards$ = this.cardService.loadCards(this.deck.colors.map(color => color.name), this.deck.mode.name);
       this.decks$ = this.deckService.loadDecks();
     });        

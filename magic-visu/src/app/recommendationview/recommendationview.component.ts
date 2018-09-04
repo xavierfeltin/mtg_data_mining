@@ -8,11 +8,11 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 @Component({
   selector: 'app-recommendationview',
   template: `
-    <div draggable [dragData]="card">
-    <div class="score"> {{title}} </div>
-    <a routerLink="/recommendation/{{recommendation.multiverseid}}">
-      <img [src]="cardUrl" [alt]="card?.name" [title]="toolTip"/>
-    </a>
+    <div>
+      <div class="score"> {{title}} </div>
+      <a draggable [dragData]="card" class="card" routerLink="/recommendation/{{recommendation.multiverseid}}">
+        <img [src]="cardUrl" [alt]="card?.name" [title]="toolTip"/>
+      </a>
     </div>
     `,
   styleUrls: ['./recommendationview.component.css'],

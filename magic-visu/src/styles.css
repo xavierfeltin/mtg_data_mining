@@ -4,18 +4,22 @@ h1 {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 250%;
 }
+
 h2, h3 {
   color: #444;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: lighter;
 }
+
 body {
   margin: 2em;
 }
+
 body, input[text], button {
   color: #888;
   font-family: Cambria, Georgia;
 }
+
 body{
   background-color: rgb(253, 253, 229);
 }
@@ -37,6 +41,17 @@ body{
 
 ul {
   list-style-type: square;
+}
+
+.fieldset-magic {
+  border:2px solid lightgray;
+  padding: 5px;
+  max-width: 300px;  
+}
+
+.deck-block { 
+  margin: 0px 5px 5px 5px; 
+  border:2px solid lightgray;
 }
 
 /* everywhere else */

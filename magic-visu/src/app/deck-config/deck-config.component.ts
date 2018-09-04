@@ -17,7 +17,7 @@ import { ModelService } from '../model.service';
     <p class=information> You may find the data repartition between the different modes and colors inside the 
       <a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Proof-of-concept#decks-repartitions" target="_"> wiki </a> 
       <br/> Models with less than 30 decks as input are not available </p>
-    <i> This deck will replace the current one </i>
+    <i class=information> This deck will replace the current one </i>
     <app-deck-form [colors]="color$ | async" [modes]="mode$ | async" (create)="onSubmit($event)"></app-deck-form>
     <ng-container *ngIf="errors.length > 0">
       <p class="information"> Something occured when loading assets for {{mode}} - {{colors.join(' / ')}} ... </p>

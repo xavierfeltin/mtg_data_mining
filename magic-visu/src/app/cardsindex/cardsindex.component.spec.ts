@@ -48,6 +48,7 @@ class InputCardsStubComponent {
 @Component({selector: 'app-cardsview', template: ''})
 class CardsViewStubComponent {
   @Input() cards: Card[];
+  @Input() nb: number;
 }
 
 @Component({selector: 'app-recommendation-list', template: ''})

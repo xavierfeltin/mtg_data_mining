@@ -6,17 +6,18 @@ import { TYPES } from '../store/store-type'
 @Component({
   selector: 'app-deck-cards',
   template: `
-  <div style="border: solid; margin: 5px; padding: 5px;">     
-    <div style="min-height: 100px;" droppable class="card card-outline-primary mb-3" [dragOverClass]="'drag-target-border'" [dragHintClass]="'drag-hint'" (onDrop)="onItemDrop($event)">
+  <div class="deck-block" style="padding: 5px;">     
+    <div style="min-height: 100px;" droppable [dragOverClass]="'drag-target-border'" [dragHintClass]="'drag-hint'" (onDrop)="onItemDrop($event)">
       <ng-container *ngIf="cards.length > 0; else empty">      
-
+      
+        <p class=information> {{cards.length}} selected cards </p>
         <ng-container *ngFor="let type of types"> 
             <ng-container *ngIf="filterByType(type).length > 0"> 
             <span class="subtitle"> {{type}}: </span>
             <ul>
               <div class="hlayout" *ngFor="let card of filterByType(type); let i = index">
                 <li>
-                  <a routerLink="/recommendation/{{card.multiverseid}}"> {{card.name}} </a>
+                  <app-card-link [card]="card"></app-card-link>
                 </li>
                 <button class="nav-button" (click)="onRemoveCard($event, card)"> ❌ </button>
               </div>
@@ -27,7 +28,7 @@ import { TYPES } from '../store/store-type'
       </ng-container>
     </div>
   </div>  
-
+  
   <ng-template #empty>      
     <p class="information"> Drag and drop here some cards ! </p>
   </ng-template> 
@@ -36,8 +37,7 @@ import { TYPES } from '../store/store-type'
 })
 export class DeckCardsComponent implements OnInit {  
   @Input() cards: Card[] = [];  
-  types: string[] = [];
-  
+  types: string[] = [];  
 
   constructor(private deckService: DeckService) { }
 

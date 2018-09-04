@@ -5,6 +5,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import {NgxPaginationModule} from 'ngx-pagination'; //https://github.com/michaelbromley/ngx-pagination
 import { NgDragDropModule } from 'ng-drag-drop';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
 
 import { AppComponent } from './app.component';
 import { CardviewComponent } from './cardview/cardview.component';
@@ -27,6 +28,8 @@ import { DeckCardsComponent } from './deck-cards/deck-cards.component';
 import { DeckDisplayComponent } from './deck-display/deck-display.component';
 import { DecksViewComponent } from './decks-view/decks-view.component';
 import { SelectDeckComponent } from './select-deck/select-deck.component';
+import { CardLinkComponent } from './card-link/card-link.component';
+import { DeckRecommendationsComponent } from './deck-recommendations/deck-recommendations.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +52,7 @@ import { SelectDeckComponent } from './select-deck/select-deck.component';
     DeckCardsComponent, 
     DeckDisplayComponent, 
     DecksViewComponent, 
-    SelectDeckComponent    
+    SelectDeckComponent, CardLinkComponent, DeckRecommendationsComponent    
   ],
   imports: [
     BrowserModule,
@@ -57,7 +60,8 @@ import { SelectDeckComponent } from './select-deck/select-deck.component';
     HttpClientModule,
     NgxPaginationModule,
     ReactiveFormsModule,
-    NgDragDropModule.forRoot()
+    NgDragDropModule.forRoot(),
+    TooltipModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

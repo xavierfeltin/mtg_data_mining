@@ -8,19 +8,19 @@ import { Deck } from '../models/deck';
   selector: 'app-deck-form',
   template: `
     <form [formGroup]="formDeck" (ngSubmit)="onSubmit(formDeck)">
-      <fieldset formGroupName="deck_colors">
+      <fieldset class="fieldset-magic" formGroupName="deck_colors">
         <legend> Colors </legend>        
             <div *ngFor="let color of colors;">
-              <input type="checkbox" [formControlName]="color.name"/>
-              <label [for]="color.name">{{color.name}}</label>
+              <input class="form-component" type="checkbox" [formControlName]="color.name"/>
+              <label class="form-component" [for]="color.name">{{color.name}}</label>
             </div>        
         </fieldset>
 
-        <fieldset>
+        <fieldset class="fieldset-magic">
         <legend> Mode </legend>
           <div *ngFor="let mode of modes; let i = index;">                        
-            <input type="radio" formControlName="deck_modes" [value]="mode.name" [checked]="i==0"/>
-            <label [for]="mode.name">{{mode.name}}</label>
+            <input class="form-component" type="radio" formControlName="deck_modes" [value]="mode.name" [checked]="i==0"/>
+            <label class="form-component" [for]="mode.name">{{mode.name}}</label>
           </div>        
         </fieldset>
     

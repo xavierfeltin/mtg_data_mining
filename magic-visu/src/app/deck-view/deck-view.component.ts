@@ -8,13 +8,7 @@ import { Card } from '../models/card';
 @Component({
   selector: 'app-deck-view',
   template: `
-    <div class="hlayout">   
-      <a routerLink="/catalog" id="menu"> Cards </a>
-      <a routerLink="/decks" id="menu"> Decks </a>
-      <a routerLink="/" id="menu"> New Deck </a>    
-    </div>
-
-    <div style="border: solid; margin: 5px;">      
+    <div class="deck-block">      
       <h2 style="padding: 5px 5px 0px 5px;"> My deck </h2>      
       <app-deck-attributes [deck]="deckService.getDeck() | async"> </app-deck-attributes>
     </div>
