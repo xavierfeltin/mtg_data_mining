@@ -7,7 +7,7 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 @Component({
   selector: 'app-card-link',
   template: `
-    <a routerLink="/recommendation/{{card.multiverseid}}" [tooltip]="popTemplate" placement="right" content="body"> {{card.name}} </a>
+    {{nbInstance}} <a routerLink="/recommendation/{{card.multiverseid}}" [tooltip]="popTemplate" placement="right" content="body"> {{card.name}} </a>
 
     <ng-template #popTemplate>
       <div [innerHtml]="htmlTooltip"> </div>
@@ -17,6 +17,7 @@ const CARD_IMG_URL = 'http://gatherer.wizards.com/Handlers/Image.ashx?type=card&
 })
 export class CardLinkComponent implements OnInit {
   @Input() card: Card = new Card();
+  @Input() nbInstance: number = 0;
   htmlTooltip: SafeHtml;
 
   constructor(private sanitizer: DomSanitizer) { }

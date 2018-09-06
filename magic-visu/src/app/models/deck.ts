@@ -1,9 +1,11 @@
 import { Card } from "./card";
 import { Color } from "./color";
 import { Mode } from "./mode";
+import { LAND } from "../store/store-type";
 
 export class Deck {
     cards: Card[];
+    instances: {};
     colors: Color[];
     mode: Mode;
 
@@ -11,6 +13,7 @@ export class Deck {
         this.cards = [];
         this.colors = [];
         this.mode = new Mode();
+        this.instances = {};
     }
 
     public isUndefined() {
@@ -31,11 +34,37 @@ export class Deck {
         return newDeck;
     }    
 
-    public addCard(card: Card) {
-        if (this.cards.indexOf(card) == -1) {this.cards = [...this.cards, card]}
+    public addCard(newCard: Card) {
+        if (this.cards.findIndex(card => card.multiverseid == newCard.multiverseid) == -1) {
+            this.cards = [...this.cards, newCard];
+            this.instances[newCard.multiverseid] = 1;
+        }
+    }
+
+    //Add an instance of the card
+    //Maximum instance is 3. Except for Commander which is 1.
+    //Lands are not concerned by this restriction
+    public addInstance(card: Card) {
+        if (Object.keys(this.instances).includes(card.multiverseid.toString())) {
+            if ((this.mode.name !== 'Commander' && this.instances[card.multiverseid] < 3)
+            || card.types.includes(LAND)) {
+                this.instances[card.multiverseid]++;
+            }
+        }
+    }
+
+    //Remove an instance of the card
+    //Minimum instance is 1. User needs to delete the card itself otherwise.
+    public removeInstance(card: Card) {
+        if (Object.keys(this.instances).includes(card.multiverseid.toString())) {
+            if (this.instances[card.multiverseid] > 1) {
+                this.instances[card.multiverseid]--;
+            }
+        }
     }
 
     public removeCard(card: Card) {
         this.cards = this.cards.filter(obj => obj.multiverseid !== card.multiverseid && obj.name !== card.name);
+        delete this.instances[card.multiverseid];
     }
 }

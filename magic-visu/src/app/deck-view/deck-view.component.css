@@ -1,6 +1,4 @@
-.nav-button{
-    margin-top: 0.5em;
-    margin-right: 0.5em;
-    color: black;   
-    max-height: 50px;
+.hlayout {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
 }

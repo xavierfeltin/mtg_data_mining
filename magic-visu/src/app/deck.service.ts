@@ -6,6 +6,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators'
 import { Color } from './models/color';
 import { Mode } from './models/mode';
+import { LAND } from './store/store-type';
 import { map, publishReplay, refCount } from 'rxjs/operators';
 import { CardService } from './card.service';
 
@@ -31,6 +32,25 @@ export class DeckService {
     return of(this._deck.cards);
   }
 
+  getAllCards(): Observable<Card[]>{
+    let allCards = [];
+    for(const card of this._deck.cards) {
+      const nbInstances = this._deck.instances[card.multiverseid];
+      for(let i = 0; i < nbInstances; i++) {
+        allCards.push(card);
+      }
+    }
+    return of(allCards);
+  }
+
+  getActiveCards(): Observable<Card[]>{
+    return of(this._deck.cards.filter(card => !card.types.includes(LAND)));
+  }
+
+  getInstances(): Observable<{}>{    
+    return of(this._deck.instances);
+  }
+
   getColors(): Color[]{
     return this._deck.colors;
   }
@@ -52,6 +72,16 @@ export class DeckService {
 
   addCard(card: Card) {
     this._deck.addCard(card);
+    return of(this._deck);
+  }
+
+  incrementCard(card: Card) {
+    this._deck.addInstance(card);
+    return of(this._deck);
+  }
+
+  decrementCard(card: Card) {
+    this._deck.removeInstance(card);
     return of(this._deck);
   }
 

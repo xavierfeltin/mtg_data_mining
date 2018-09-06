@@ -1,3 +1,4 @@
+/*
 import { Card } from "../models/card";
 import { Deck } from "../models/deck";
 import { COLORS } from "./store-color";
@@ -8,9 +9,7 @@ const card1: Card = {
     name: 'card 1',
     manaCost: 1,
     colors: [COLORS[0].name],
-    types: [MODES[0].name] /*,
-    contentRecommendations: [],
-    itemRecommendations: {}*/
+    types: [MODES[0].name]
 };
 
 const card2: Card = {
@@ -18,9 +17,7 @@ const card2: Card = {
     name: 'card 2',
     manaCost: 1,
     colors: [COLORS[0].name],
-    types: [MODES[1].name]/*,
-    contentRecommendations: [],
-    itemRecommendations: {}*/
+    types: [MODES[1].name]
 };
 
 const card3: Card = {
@@ -28,12 +25,11 @@ const card3: Card = {
     name: 'card 3',
     manaCost: 1,
     colors: [COLORS[0].name],
-    types: [MODES[2].name]/*,
-    contentRecommendations: [],
-    itemRecommendations: {}*/
+    types: [MODES[2].name]
 };
 
 export const DECK: Deck = new Deck();
 DECK.cards = [card1, card2, card3];
 DECK.colors = [COLORS[0], COLORS[1]];
 DECK.mode = MODES[0];
+*/

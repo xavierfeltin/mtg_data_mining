@@ -4,7 +4,7 @@ import { Card } from '../models/card';
 @Component({
   selector: 'app-cardsview',
   template: `
-    <ng-container *ngIf="cards.length >0; else loading">
+    <ng-container *ngIf="cards.length >0; else empty">
     <div class="cards">
       <app-cardview *ngFor="let card of cards | paginate: { itemsPerPage: nb, currentPage: p }; let i = index" 
         [card]="card">
@@ -13,8 +13,8 @@ import { Card } from '../models/card';
     <pagination-controls style="margin-top: 5px;" (pageChange)="p = $event"></pagination-controls>    
     </ng-container>
 
-    <ng-template #loading>      
-      <app-spinner></app-spinner>
+    <ng-template #empty>      
+      <p class="information"><b> No card to display ... </b></p>
     </ng-template>
   `,
   styleUrls: ['./cardsview.component.css']

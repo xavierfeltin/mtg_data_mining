@@ -30,6 +30,9 @@ import { DecksViewComponent } from './decks-view/decks-view.component';
 import { SelectDeckComponent } from './select-deck/select-deck.component';
 import { CardLinkComponent } from './card-link/card-link.component';
 import { DeckRecommendationsComponent } from './deck-recommendations/deck-recommendations.component';
+import { DeckStatsComponent } from './deck-stats/deck-stats.component';
+import { MydeckDisplayComponent } from './mydeck-display/mydeck-display.component';
+import { ExportDeckComponent } from './export-deck/export-deck.component';
 
 @NgModule({
   declarations: [
@@ -52,7 +55,12 @@ import { DeckRecommendationsComponent } from './deck-recommendations/deck-recomm
     DeckCardsComponent, 
     DeckDisplayComponent, 
     DecksViewComponent, 
-    SelectDeckComponent, CardLinkComponent, DeckRecommendationsComponent    
+    SelectDeckComponent, 
+    CardLinkComponent, 
+    DeckRecommendationsComponent, 
+    DeckStatsComponent, 
+    MydeckDisplayComponent, 
+    ExportDeckComponent    
   ],
   imports: [
     BrowserModule,

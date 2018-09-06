@@ -1,6 +1,7 @@
 <ng-container *ngIf="card$ | async as card">
   <h2>Recommendations for <b>{{card.name}}</b> in ({{mode}} - {{formatColor(colors)}}):</h2>
   <app-cardview [card]="card"></app-cardview>
+  <button class="nav-button" style="margin: 0.2em;" (click)="onAddCard($event, card)"> Add to deck </button>
 
   <h2>Content Recommendations:</h2>
   <p class="information">Recommendations are cards sharing similar textual information with the selected card (<a href="https://github.com/xavierfeltin/mtg_data_mining/wiki/Latent-Semantic-Analysis" target="_blank">more information</a>)

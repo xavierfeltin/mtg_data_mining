@@ -1,3 +1,4 @@
+/*
 import {Card} from './models/card';
 
 export const CARDS: Card[] = [
@@ -14,3 +15,4 @@ export const CARDS: Card[] = [
     {name: 'Ravenous Intruder', multiverseid: 423761, manaCost: 0, colors: [], types:[]},
     {name: 'Whirler Rogue', multiverseid: 442779, manaCost: 0, colors: [], types:[]}
 ];
+*/

@@ -7,6 +7,7 @@ import { Card } from '../models/card';
 import { Color } from '../models/color';
 import { Observable } from 'rxjs';
 import { ModelTopN } from '../models/Model';
+import { NO_COLOR } from '../store/store-color';
 
 @Component({
   selector: 'app-cardsindex',

@@ -10,3 +10,5 @@ export const TYPES: Type[] = [
     {name: 'Tribal'},
     {name: 'Sorcery'}
 ];
+
+export const LAND: string = 'Land';

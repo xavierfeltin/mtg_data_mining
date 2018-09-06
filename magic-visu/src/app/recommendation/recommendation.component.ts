@@ -53,4 +53,12 @@ export class RecommendationComponent {
   goBack(): void {
     this.location.back();
   }
+
+  onItemDrop(event) {    
+    
+  }
+
+  onAddCard(event, card) {
+    this.deckService.addCard(Card.createCard(card));
+  }
 }
